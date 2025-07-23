@@ -16,16 +16,20 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['primevue/api', 'jszip'],
+    include: ['primevue/api', 'jszip', 'exceljs'],
   },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['vue', 'vue-router'],
-          primevue: ['primevue']
+          primevue: ['primevue'],
+          editor: ['@ckeditor/ckeditor5-build-classic', 'quill'],
+          utils: ['exceljs', 'jszip', 'file-saver', 'html2canvas', 'jspdf'],
+          supabase: ['@supabase/supabase-js']
         }
       }
     }
