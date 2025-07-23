@@ -1,0 +1,494 @@
+import { createRouter, createWebHistory } from 'vue-router'
+import HomeView from '../views/HomeView.vue'
+import LoginView from '../views/LoginView.vue'
+import SignupView from '../views/SignupView.vue'
+import AdminNoticesView from '../views/admin/AdminNoticesView.vue'
+import NoticesView from '@/views/user/NoticesView.vue'
+
+import AdminCompaniesApprovedView from '../views/admin/AdminCompaniesApprovedView.vue'
+import AdminCompaniesPendingView from '../views/admin/AdminCompaniesPendingView.vue'
+import AdminCompanyCreateView from '../views/admin/AdminCompanyCreateView.vue'
+import AdminCompanyDetailView from '../views/admin/AdminCompanyDetailView.vue'
+import AdminCompanyEditView from '../views/admin/AdminCompanyEditView.vue'
+import AdminProductsView from '../views/admin/AdminProductsView.vue'
+import AdminProductCreateView from '../views/admin/AdminProductCreateView.vue'
+import AdminClientsView from '../views/admin/AdminClientsView.vue'
+import AdminClientsCreateView from '../views/admin/AdminClientsCreateView.vue'
+import AdminPharmaciesView from '../views/admin/AdminPharmaciesView.vue'
+import AdminPharmaciesCreateView from '../views/admin/AdminPharmaciesCreateView.vue'
+import AdminWholesaleRevenueView from '../views/admin/AdminWholesaleRevenueView.vue'
+import AdminWholesaleRevenueCreateView from '../views/admin/AdminWholesaleRevenueCreateView.vue'
+
+import AdminDirectRevenueView from '../views/admin/AdminDirectRevenueView.vue'
+import AdminDirectRevenueCreateView from '../views/admin/AdminDirectRevenueCreateView.vue'
+import AdminSettlementMonthsView from '../views/admin/AdminSettlementMonthsView.vue'
+import AdminSettlementMonthsCreateView from '../views/admin/AdminSettlementMonthsCreateView.vue'
+import AdminSettlementMonthsDetailView from '../views/admin/AdminSettlementMonthsDetailView.vue'
+import AdminSettlementMonthsEditView from '../views/admin/AdminSettlementMonthsEditView.vue'
+
+import { supabase } from '@/supabase'; // <<< Supabase 클라이언트 임포트
+import { ref, onMounted } from 'vue'
+
+function sanitizeFileName(name) {
+  // 한글, 공백, 특수문자 제거 → 영문, 숫자, 언더스코어, 점만 남김
+  return name.replace(/[^a-zA-Z0-9._-]/g, '_');
+}
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: '/',
+      name: 'home',
+      component: () => import('@/views/ApiTestView.vue'),
+      meta: { requiresAuth: false }
+    },
+    // {
+    //   path: '/about',
+    //   name: 'about',
+    //   // route level code-splitting
+    //   // this generates a separate chunk (About.[hash].js) for this route
+    //   // which is lazy-loaded when the route is visited.
+    //   component: () => import('../views/AboutView.vue')
+    // },
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginView
+    },
+    {
+      path: '/reset-password',
+      name: 'ResetPassword',
+      component: () => import('@/views/ResetPasswordView.vue'),
+      meta: { layout: 'empty' }
+    },
+    {
+      path: '/signup',
+      name: 'signup',
+      component: SignupView
+    },
+    // { // <<< 기존 About 라우트 예시 (참고용)
+    //   path: '/about',
+    //   name: 'about',
+    //   component: () => import('../views/AboutView.vue')
+    // },
+    { // <<< 여기에 새로운 Companies 라우트 추가
+      path: '/admin/companies/approved',
+      name: 'AdminCompaniesApproved',
+      component: () => import('@/views/admin/AdminCompaniesApprovedView.vue'),
+      meta: { menu: '업체 관리', submenu: '승인 업체', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/companies/pending',
+      name: 'AdminCompaniesPending',
+      component: () => import('@/views/admin/AdminCompaniesPendingView.vue'),
+      meta: { menu: '업체 관리', submenu: '미승인 업체', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/notices',
+      name: 'AdminNotices',
+      component: () => import('@/views/admin/AdminNoticesView.vue'),
+      meta: { menu: '공지사항 관리', submenu: '공지사항 목록', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/notices/create',
+      name: 'AdminNoticeCreate',
+      component: () => import('@/views/admin/AdminNoticeCreateView.vue'),
+      meta: { menu: '공지사항 관리', submenu: '공지사항 등록', requiresAuth: true, isAdmin: true },
+    },
+    // 추가된 관리자 라우트
+    // {
+    //   path: '/admin/approval-requests',
+    //   name: 'admin-approval-requests',
+    //   component: AdminApprovalRequestsView, // 삭제
+    //   meta: { requiresAuth: true, role: 'admin' }
+    // },
+    {
+      path: '/admin/products',
+      name: 'AdminProducts',
+      component: () => import('@/views/admin/AdminProductsView.vue'),
+      meta: { menu: '제품 관리', submenu: '제품 목록', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/products/create',
+      name: 'admin-product-create',
+      component: AdminProductCreateView,
+      meta: { requiresAuth: true, role: 'admin' }
+    },
+    {
+      path: '/admin/products/:id',
+      name: 'admin-product-detail',
+      component: () => import('../views/admin/AdminProductDetailView.vue'),
+      meta: { requiresAuth: true, role: 'admin' }
+    },
+    {
+      path: '/admin/products/:id/edit',
+      name: 'admin-product-edit',
+      component: () => import('../views/admin/AdminProductEditView.vue'),
+      meta: { requiresAuth: true, role: 'admin' }
+    },
+    {
+      path: '/admin/clients',
+      name: 'AdminClients',
+      component: () => import('@/views/admin/AdminClientsView.vue'),
+      meta: { menu: '병의원 관리', submenu: '병의원 목록', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/clients/create',
+      name: 'AdminClientCreate',
+      component: () => import('@/views/admin/AdminClientsCreateView.vue'),
+      meta: { menu: '병의원 관리', submenu: '병의원 등록', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/clients/:id',
+      name: 'AdminClientDetail',
+      component: () => import('@/views/admin/AdminClientsDetailView.vue'),
+      meta: { menu: '병의원 관리', submenu: '병의원 상세', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/clients/:id/edit',
+      name: 'admin-clients-edit',
+      component: () => import('../views/admin/AdminClientsEditView.vue'),
+      meta: { requiresAuth: true, role: 'admin' }
+    },
+    {
+      path: '/admin/clients/assign-companies',
+      name: 'AdminClientsAssignCompanies',
+      component: () => import('@/views/admin/AdminClientsAssignCompaniesView.vue'),
+      meta: { menu: '병의원 관리', submenu: '담당업체 지정', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/clients/commission-grades',
+      name: 'AdminClientsCommissionGrades',
+      component: () => import('@/views/admin/AdminClientsCommissionGradesView.vue'),
+      meta: { menu: '병의원 관리', submenu: '수수료 등급 설정', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/clients/assign-pharmacies',
+      name: 'AdminClientsAssignPharmacies',
+      component: () => import('@/views/admin/AdminClientsAssignPharmaciesView.vue'),
+      meta: { menu: '병의원 관리', submenu: '문전약국 지정', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/pharmacies',
+      name: 'AdminPharmacies',
+      component: () => import('@/views/admin/AdminPharmaciesView.vue'),
+      meta: { menu: '문전약국 관리', submenu: '문전약국 목록', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/pharmacies/create',
+      name: 'admin-pharmacies-create',
+      component: AdminPharmaciesCreateView,
+      meta: { requiresAuth: true, role: 'admin' }
+    },
+    {
+      path: '/admin/pharmacies/:id',
+      name: 'admin-pharmacies-detail',
+      component: () => import('../views/admin/AdminPharmaciesDetailView.vue'),
+      meta: { requiresAuth: true, role: 'admin' }
+    },
+    {
+      path: '/admin/pharmacies/:id/edit',
+      name: 'admin-pharmacies-edit',
+      component: () => import('../views/admin/AdminPharmaciesEditView.vue'),
+      meta: { requiresAuth: true, role: 'admin' }
+    },
+    {
+      path: '/admin/wholesale-revenue',
+      name: 'AdminWholesaleRevenue',
+      component: () => import('@/views/admin/AdminWholesaleRevenueView.vue'),
+      meta: { menu: '매출 관리', submenu: '도매매출 목록', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/wholesale-revenue/create',
+      name: 'admin-wholesale-revenue-create',
+      component: AdminWholesaleRevenueCreateView,
+      meta: { requiresAuth: true, role: 'admin' }
+    },
+    {
+      path: '/admin/direct-revenue',
+      name: 'AdminDirectRevenue',
+      component: () => import('@/views/admin/AdminDirectRevenueView.vue'),
+      meta: { menu: '매출 관리', submenu: '직거래매출 목록', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/direct-revenue/create',
+      name: 'admin-direct-revenue-create',
+      component: AdminDirectRevenueCreateView,
+      meta: { requiresAuth: true, role: 'admin' }
+    },
+    {
+      path: '/admin/settlement-month',
+      name: 'admin-settlement-month',
+      component: AdminSettlementMonthsView,
+      meta: { requiresAuth: true, role: 'admin' }
+    },
+    {
+      path: '/admin/performance/register',
+      name: 'AdminPerformanceRegister',
+      component: () => import('@/views/admin/AdminPerformanceRegisterView.vue'),
+      meta: { menu: '실적 관리', submenu: '실적 등록', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/performance/companies',
+      name: 'AdminPerformanceCompanies',
+      component: () => import('@/views/admin/AdminPerformanceCompaniesView.vue'),
+      meta: { menu: '실적 관리', submenu: '업체별 등록 현황', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/performance/whole',
+      name: 'AdminPerformanceWhole',
+      component: () => import('@/views/admin/AdminPerformanceWholeView.vue'),
+      meta: { menu: '실적 관리', submenu: '전체 등록 현황', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/performance-list',
+      name: 'AdminPerformanceRegisterList',
+      component: () => import('../views/admin/AdminPerformanceRegisterList.vue'),
+      meta: { requiresAuth: true, role: 'admin' },
+      redirect: '/admin/performance/whole'
+    },
+    {
+      path: '/admin/performance/review',
+      name: 'AdminPerformanceReview',
+      component: () => import('@/views/admin/AdminPerformanceReviewView.vue'),
+      meta: { menu: '정산 관리', submenu: '실적 검수', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/absorption-analysis',
+      name: 'AdminAbsorptionAnalysis',
+      component: () => import('@/views/admin/AdminAbsorptionAnalysisView.vue'),
+      meta: { menu: '정산 관리', submenu: '흡수율 분석', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/settlement-months',
+      name: 'AdminSettlementMonths',
+      component: () => import('@/views/admin/AdminSettlementMonthsView.vue'),
+      meta: { menu: '실적 관리', submenu: '정산월 관리', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/settlement-months/create',
+      name: 'AdminSettlementMonthsCreate',
+      component: () => import('@/views/admin/AdminSettlementMonthsCreateView.vue'),
+      meta: { menu: '실적 관리', submenu: '정산월 등록', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/settlement-months/:id',
+      name: 'admin-settlement-months-detail',
+      component: AdminSettlementMonthsDetailView,
+      meta: { requiresAuth: true, role: 'admin' }
+    },
+    {
+      path: '/admin/settlement-months/:id/edit',
+      name: 'AdminSettlementMonthsEdit',
+      component: () => import('@/views/admin/AdminSettlementMonthsEditView.vue'),
+      meta: { menu: '실적 관리', submenu: '정산월 수정', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/notices',
+      name: 'Notices',
+      component: () => import('@/views/user/NoticesView.vue'),
+      meta: { menu: '공지사항 조회', submenu: '공지사항 목록', requiresAuth: true },
+    },
+    {
+      path: '/notices/:id',
+      name: 'NoticeDetail',
+      component: () => import('@/views/user/NoticeDetailView.vue'),
+      meta: { menu: '공지사항 조회', submenu: '공지사항 상세', requiresAuth: true },
+    },
+    {
+      path: '/admin/notices/:id',
+      name: 'AdminNoticeDetail',
+      component: () => import('../views/admin/AdminNoticeDetailView.vue'),
+      meta: { requiresAuth: true, role: 'admin' }
+    },
+    {
+      path: '/admin/notices/:id/edit',
+      name: 'AdminNoticeEdit',
+      component: () => import('@/views/admin/AdminNoticeEditView.vue'),
+      meta: { menu: '공지사항 관리', submenu: '공지사항 수정', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/companies/create',
+      name: 'admin-company-create',
+      component: AdminCompanyCreateView,
+      meta: { requiresAuth: true, role: 'admin' }
+    },
+    {
+      path: '/admin/companies/:id',
+      name: 'AdminCompanyDetail',
+      component: () => import('@/views/admin/AdminCompanyDetailView.vue'),
+      meta: { menu: '업체 관리', submenu: '업체 상세', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/companies/:id/edit',
+      name: 'admin-company-edit',
+      component: AdminCompanyEditView,
+      meta: { requiresAuth: true, role: 'admin' }
+    },
+    {
+      path: '/products',
+      name: 'Products',
+      component: () => import('@/views/user/ProductsView.vue'),
+      meta: { menu: '제품 조회', submenu: '제품 목록', requiresAuth: true },
+    },
+    {
+      path: '/products/:id',
+      name: 'user-product-detail',
+      component: () => import('../views/user/ProductDetailView.vue'),
+      meta: { requiresAuth: true, role: 'user' }
+    },
+    {
+      path: '/clients',
+      name: 'Clients',
+      component: () => import('@/views/user/ClientsView.vue'),
+      meta: { menu: '병의원 조회', submenu: '병의원 목록', requiresAuth: true },
+    },
+    {
+      path: '/clients/:id',
+      name: 'user-client-detail',
+      component: () => import('../views/user/ClientsDetailView.vue'),
+      meta: { requiresAuth: true, role: 'user' }
+    },
+    {
+      path: '/performance/register',
+      name: 'PerformanceRegister',
+      component: () => import('@/views/user/PerformanceRegister.vue'),
+      meta: { menu: '실적 관리', submenu: '실적 등록', requiresAuth: true },
+    },
+    {
+      path: '/performance/list',
+      name: 'PerformanceRegisterList',
+      component: () => import('@/views/user/PerformanceRegisterList.vue'),
+      meta: { menu: '실적 관리', submenu: '등록 현황', requiresAuth: true },
+    },
+    {
+      path: '/performance/register/edit',
+      name: 'PerformanceRegisterEdit',
+      component: () => import('@/views/user/PerformanceRegisterEdit.vue'),
+      meta: { menu: '실적 관리', submenu: '실적 등록', requiresAuth: true },
+    },
+    {
+      path: '/my-info',
+      name: 'MyInfo',
+      component: () => import('@/views/user/MyInfoView.vue'),
+      meta: { menu: '내 정보', submenu: '내 정보', requiresAuth: true },
+    },
+    {
+      path: '/my-info/edit',
+      name: 'MyInfoEdit',
+      component: () => import('@/views/user/MyInfoEditView.vue'),
+      meta: { menu: '내 정보', submenu: '내 정보 수정', requiresAuth: true },
+    },
+    {
+      path: '/my-info/change-password',
+      name: 'ChangePassword',
+      component: () => import('@/views/user/ChangePasswordView.vue'),
+      meta: { menu: '내 정보', submenu: '비밀번호 변경', requiresAuth: true },
+    },
+    {
+      path: '/admin/settlement-share',
+      name: 'AdminSettlementShare',
+      component: () => import('@/views/admin/AdminSettlementShareView.vue'),
+      meta: {
+        menu: '정산 관리',
+        submenu: '정산내역서 공유',
+        requiresAuth: true,
+        isAdmin: true,
+      },
+    },
+    {
+      path: '/admin/settlement-share/detail',
+      name: 'AdminSettlementShareDetail',
+      component: () => import('@/views/admin/AdminSettlementShareDetailView.vue'),
+      meta: {
+        menu: '정산 관리',
+        submenu: '정산내역서 상세',
+        requiresAuth: true,
+        isAdmin: true,
+      },
+    },
+    {
+      path: '/settlements',
+      name: 'Settlements',
+      component: () => import('@/views/user/SettlementShareDetailView.vue'),
+      meta: { menu: '정산내역서 조회', submenu: '월별 정산 목록', requiresAuth: true },
+    },
+    {
+      path: '/manual',
+      component: () => import('@/views/ManualView.vue')
+    },
+    {
+      path: '/admin-manual',
+      component: () => import('@/views/ManualView.vue')
+    },
+    {
+      path: '/api-test',
+      name: 'ApiTest',
+      component: () => import('@/views/ApiTestView.vue'),
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/test',
+      name: 'Test',
+      component: () => import('@/views/ApiTestView.vue'),
+      meta: { requiresAuth: false }
+    }
+  ]
+})
+
+// 임시로 라우터 가드 비활성화 - 테스트용
+router.beforeEach(async (to, from, next) => {
+  console.log(`[Router Guard] Navigating from: ${from.fullPath} to: ${to.fullPath}`);
+  
+  // 모든 경로 허용 (테스트용)
+  console.log('[Router Guard] Allowing all routes for testing');
+  return next();
+});
+
+const files = ref([]); // 여러 파일 저장
+const fileNames = ref([]);
+
+function onFileChange(e) {
+  files.value = Array.from(e.target.files).slice(0, 5); // 최대 5개
+  fileNames.value = files.value.map(f => f.name);
+}
+
+async function uploadFiles() {
+  let fileUrls = [];
+  for (const f of files.value) {
+    const safeName = sanitizeFileName(f.name);
+    const filePath = `attachments/${Date.now()}_${safeName}`;
+    const { data, error } = await supabase.storage
+      .from('notices')
+      .upload(filePath, f);
+    if (error) {
+      alert('파일 업로드 실패: ' + error.message);
+      return;
+    }
+    const url = data?.path
+      ? supabase.storage.from('notices').getPublicUrl(data.path).data.publicUrl
+      : null;
+    fileUrls.push(url);
+  }
+
+  const { error: insertError } = await supabase.from('notices').insert([
+    {
+      title: title.value,
+      content: content.value,
+      is_pinned: isPinned.value,
+      view_count: 0,
+      file_url: fileUrls // 배열 또는 문자열
+    }
+  ]);
+}
+
+const userType = ref('');
+
+onMounted(async () => {
+  // 기존 공지사항 데이터 불러오는 코드 아래에 추가
+  const { data: { session } } = await supabase.auth.getSession();
+  userType.value = session?.user?.user_metadata?.user_type || '';
+});
+
+export default router

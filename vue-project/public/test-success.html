@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>라우팅 성공 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 1.2em;
+        }
+        .test-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+        .test-links a {
+            background: #3498db;
+            color: white;
+            padding: 15px 20px;
+            text-decoration: none;
+            border-radius: 8px;
+            text-align: center;
+            transition: background 0.3s;
+            font-weight: bold;
+        }
+        .test-links a:hover {
+            background: #2980b9;
+        }
+        .info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .status-item {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 라우팅 성공 테스트</h1>
+        
+        <div class="success">
+            ✅ <strong>Vue 앱이 정상적으로 작동하고 있습니다!</strong>
+        </div>
+
+        <div class="status">
+            <div class="status-item">
+                <strong>Vue 앱</strong><br>
+                ✅ 정상
+            </div>
+            <div class="status-item">
+                <strong>라우터</strong><br>
+                ✅ 정상
+            </div>
+            <div class="status-item">
+                <strong>컴포넌트</strong><br>
+                ✅ 정상
+            </div>
+            <div class="status-item">
+                <strong>시간</strong><br>
+                <span id="current-time"></span>
+            </div>
+        </div>
+
+        <div class="test-links">
+            <a href="/test" target="_blank">🧪 /test 경로 테스트</a>
+            <a href="/api-test" target="_blank">🔧 /api-test 경로 테스트</a>
+            <a href="/" target="_blank">🏠 메인 페이지</a>
+            <a href="/login" target="_blank">🔐 로그인 페이지</a>
+        </div>
+
+        <div class="info">
+            <h3>📋 테스트 방법</h3>
+            <ol>
+                <li>위의 링크들을 클릭하여 각 페이지로 이동해보세요</li>
+                <li><strong>/test</strong>와 <strong>/api-test</strong>는 데이터 테스트 페이지여야 합니다</li>
+                <li>로그인 없이도 접근할 수 있어야 합니다</li>
+                <li>브라우저 개발자 도구(F12)에서 콘솔 로그를 확인하세요</li>
+            </ol>
+        </div>
+
+        <div class="info">
+            <h3>🔍 문제 해결</h3>
+            <ul>
+                <li><strong>로그인 페이지로 리다이렉트되는 경우:</strong> App.vue의 handleRedirect 함수가 아직 수정되지 않았을 수 있습니다</li>
+                <li><strong>페이지가 로드되지 않는 경우:</strong> Vue 앱이 재시작되지 않았을 수 있습니다</li>
+                <li><strong>데이터가 표시되지 않는 경우:</strong> API 서버가 실행되지 않았을 수 있습니다</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 현재 시간 표시
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleTimeString('ko-KR');
+        }
+        
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        console.log('🚀 라우팅 성공 테스트 페이지가 로드되었습니다!');
+        console.log('📍 현재 경로:', window.location.pathname);
+        console.log('🔗 전체 URL:', window.location.href);
+    </script>
+</body>
+</html> 

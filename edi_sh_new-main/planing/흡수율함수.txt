@@ -1,0 +1,7 @@
+-- 1. 분석 대상 실적의 "연결 KEY"가 올바른지 확인
+SELECT DISTINCT
+    TRIM(p.standard_code) as standard_code,
+    rdv.prescription_month
+FROM review_details_view rdv
+JOIN products p ON rdv.product_id = p.id
+WHERE rdv.settlement_month = '2025-06' AND rdv.review_status = '완료';

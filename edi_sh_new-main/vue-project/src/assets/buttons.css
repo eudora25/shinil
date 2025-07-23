@@ -1,0 +1,577 @@
+/* ========================================== */
+/* 버튼 스타일 시스템 - Shinil Pharm          */
+/* ========================================== */
+
+/* ========================================== */
+/* 1. CSS 변수 정의 (색상 시스템)              */
+/* ========================================== */
+:root {
+  /* 기본 색상 팔레트 */
+  --primary-color: #5fa56b;
+  --primary-color-hover: #4e9e5c;
+  --primary-color-light: #8fc89e;
+  --primary-color-lightest: #e3f3e8;
+
+  --primary-blue: #1976d2;
+  --primary-blue-hover: #1565c0;
+  --primary-blue-light: #e3f2fd;
+  --primary-blue-lightest: #f1f8ff;
+
+  /* 상태 색상 */
+  --success: #28a745;
+  --success-hover: #24963f;
+  --success-light: #6fdc8c;
+  --success-lightest: #e6f9ed;
+
+  --danger: #dc3545;
+  --danger-hover: #c82333;
+  --danger-light: #ff6f7d;
+  --danger-lightest: #ffeaea;
+
+  --warning: #ffc107;
+  --warning-hover: #e0b200;
+  --warning-dark: #b8860b;
+  --warning-light: #ffe066;
+  --warning-lightest: #fffbe6;
+
+  /* 중립 색상 (그레이 스케일) */
+  --white: #ffffff;
+  --gray-100: #f8f9fa;
+  --gray-200: #e9ecef;
+  --gray-300: #dee2e6;
+  --gray-400: #ced4da;
+  --gray-500: #adb5bd;
+  --gray-600: #6c757d;
+  --gray-700: #495057;
+  --gray-800: #343a40;
+  --gray-900: #212529;
+
+  /* 텍스트 색상 */
+  --text-white: #ffffff;
+  --text-dark: #333333;
+
+  /* 디자인 토큰 */
+  --border-radius: 4px;
+  --border-radius-large: 4px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --focus-shadow: 0 0 0 2px rgba(95, 165, 107, 0.25);
+  
+  /* 폰트 크기 */
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+}
+
+/* ========================================== */
+/* 2. 기본 버튼 스타일 (일반 크기)             */
+/* ========================================== */
+/*
+사용처: 
+- 로그인/회원가입 폼의 제출 버튼
+- 모달 창의 확인/취소 버튼  
+- CRUD 작업의 저장/취소 버튼
+- 폼 하단의 액션 버튼들
+*/
+
+/* 기본 버튼 공통 스타일 */
+.btn-primary,
+.btn-secondary,
+.btn-list,
+.btn-cancel,
+.btn-success,
+.btn-warning,
+.btn-add,
+.btn-save,
+.btn-edit,
+.btn-delete,
+.btn-danger,
+.btn-excell-upload,
+.btn-excell-download,
+.btn-excell-template,
+.btn-upload,
+.btn-download,
+.btn-close,
+.btn-reset-password,
+.btn-select-all,
+.btn-select-none,
+.file-upload-label,
+.file-label {
+  padding: 0.35rem 1rem !important;
+  margin: 0 0.5rem !important;
+  font-size: var(--font-size-base) !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--border-radius) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  transition: all 0.2s ease-in-out !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+
+
+.btn-restore-sm {
+  padding: 0.1rem 0.45rem !important;
+  margin: 0 0.5rem !important;
+  font-size: var(--font-size-base) !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--border-radius) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  transition: all 0.2s ease-in-out !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.btn-restore-sm {
+  background: var(--success) !important;
+  border-color: var(--success) !important;
+  color: var(--text-white) !important;
+}
+
+
+/* 기본 버튼 색상 스타일 */
+.btn-primary,
+.btn-list,
+.btn-excell-download {
+  background: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: var(--text-white) !important;
+}
+
+.btn-add,
+.btn-save,
+.btn-excell-upload {
+  background: var(--primary-blue) !important;
+  border-color: var(--primary-blue) !important;
+  color: var(--text-white) !important;
+}
+
+.btn-success {
+  background: var(--success) !important;
+  border-color: var(--success) !important;
+  color: var(--text-white) !important;
+}
+
+.btn-warning,
+.btn-edit {
+  background: var(--warning) !important;
+  border-color: var(--warning) !important;
+  color: var(--text-dark) !important;
+}
+
+.btn-danger,
+.btn-delete {
+  background: var(--danger) !important;
+  border-color: var(--danger) !important;
+  color: var(--text-white) !important;
+}
+
+.btn-secondary,
+.btn-excell-template {
+  background: var(--gray-600) !important;
+  border-color: var(--gray-600) !important;
+  color: var(--text-white) !important;
+}
+
+.btn-reset-password {
+  background: var(--gray-800) !important;
+  border-color: var(--gray-800) !important;
+  color: var(--text-white) !important;
+}
+
+.btn-cancel,
+.btn-upload,
+.btn-download,
+.btn-close,
+.btn-select-all,
+.btn-select-none {
+  background: var(--gray-200) !important;
+  border-color: var(--gray-400) !important;
+  color: var(--text-dark) !important;
+}
+
+.file-upload-label {
+  background: var(--gray-100) !important;
+  border-color: var(--gray-400) !important;
+  color: var(--text-dark) !important;
+}
+
+.file-label {
+  background: var(--gray-200) !important;
+  border-color: var(--gray-400) !important;
+  color: var(--text-dark) !important;
+}
+
+/* 배경 없는 닫기 버튼 */
+.btn-close-nobg {
+  font-size: 1rem !important;
+  background: none !important;
+  border: none !important;
+  color: var(--text-dark) !important;
+  padding: 0.25rem !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+}
+
+/* 버튼 크기 변형 */
+.btn-sm {
+  padding: 0.35rem 0.8rem !important;
+  font-size: var(--font-size-sm) !important;
+}
+
+.btn-lg {
+  padding: 0.8rem 1.5rem !important;
+  font-size: var(--font-size-lg) !important;
+}
+
+/* ========================================== */
+/* 3. 특수 버튼 스타일 (로그인/회원가입)        */
+/* ========================================== */
+
+/* 로그인 버튼 */
+.login-btn {
+  width: 100% !important;
+  padding: 1.5rem 1rem !important;
+  background: var(--primary-color) !important;
+  border: none !important;
+  border-radius: var(--border-radius) !important;
+  font-size: var(--font-size-base) !important;
+  color: var(--text-white) !important;
+}
+
+/* 회원가입 버튼 */
+.signup-btn {
+  flex: 1 !important;
+  padding: 0.5rem 1rem !important;
+  background: var(--primary-blue) !important;
+  border: none !important;
+  border-radius: var(--border-radius) !important;
+  font-size: var(--font-size-base) !important;
+  color: var(--text-white) !important;
+}
+
+/* 취소 버튼 */
+.cancel-btn {
+  flex: 1 !important;
+  padding: 0.5rem 1rem !important;
+  background: var(--gray-400) !important;
+  border: none !important;
+  border-radius: var(--border-radius) !important;
+  font-size: var(--font-size-base) !important;
+  color: var(--text-dark) !important;
+}
+
+/* ========================================== */
+/* 4. 작은 버튼 스타일 (테이블용 -sm 접미사)    */
+/* ========================================== */
+/*
+사용처:
+- DataTable 내의 행별 액션 버튼 (편집, 삭제, 승인 등)
+- 실적 등록 화면의 행 추가/삭제 버튼
+- 승인/대기 상태 변경 버튼
+- 테이블 행의 간단한 액션들
+*/
+
+/* 작은 버튼 공통 스타일 */
+.btn-primary-sm,
+.btn-add-sm,
+.btn-approve-sm,
+.btn-pending-sm,
+.btn-save-sm,
+.btn-edit-sm,
+.btn-delete-sm,
+.btn-cancel-sm,
+.btn-view-sm,
+.btn-input-sm,
+.btn-detail,
+.btn-upload-sm,
+.btn-download-sm {  
+  padding: 0.15rem 0.4rem !important;
+  margin: 0 0.2rem !important;
+  font-size: var(--font-size-sm) !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--border-radius) !important;
+  cursor: pointer !important;
+  text-align: center !important;
+  transition: all 0.2s ease-in-out !important;
+  box-shadow: none !important;
+}
+
+/* 작은 버튼 색상 스타일 (외곽선 스타일) */
+.btn-approve-sm,
+.btn-add-sm {
+  background: var(--white) !important;
+  color: var(--primary-blue) !important;
+  border-color: var(--primary-blue) !important;
+}
+
+.btn-pending-sm,
+.btn-delete-sm {
+  background: var(--white) !important;
+  color: var(--danger) !important;
+  border-color: var(--danger) !important;
+}
+
+.btn-edit-sm {
+  background: var(--white) !important;
+  color: var(--warning-dark) !important;
+  border-color: var(--warning-dark) !important;
+}
+
+.btn-save-sm {
+  background: var(--primary-blue) !important;
+  color: var(--text-white) !important;
+  border-color: var(--primary-blue) !important;
+}
+
+.btn-detail,
+.btn-cancel-sm,
+.btn-view-sm,
+.btn-input-sm,
+.btn-upload-sm,
+.btn-download-sm {
+  background: var(--gray-100) !important;
+  color: var(--text-dark) !important;
+  border-color: var(--gray-500) !important;
+}
+
+
+
+
+
+
+/* ========================================== */
+/* 5. 뱃지 스타일                             */
+/* ========================================== */
+/*
+사용처:
+- 공지사항 필수 표시 (.required-badge)
+- 제품/거래처/문전약국 활성화 상태 표시 (.active-badge/.inactive-badge)
+- 상태 표시용 라벨들
+*/
+
+.required-badge,
+.active-badge,
+.inactive-badge {
+  padding: 0.3em 0.8em !important;
+  font-size: var(--font-size-sm) !important;
+  font-weight: 300 !important;
+  line-height: 1.2 !important;
+  border-radius: 40px !important;
+  display: inline-block !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  vertical-align: baseline !important;
+}
+
+.required-badge {
+  background: var(--danger) !important;
+  color: var(--text-white) !important;
+}
+
+.active-badge {
+  background: var(--primary-blue) !important;
+  color: var(--text-white) !important;
+}
+
+.inactive-badge {
+  background: var(--gray-600) !important;
+  color: var(--text-white) !important;
+  border: 1px solid var(--gray-400) !important;
+}
+
+/* ========================================== */
+/* 6. 액션 셀 스타일 (테이블용)                */
+/* ========================================== */
+/*
+사용처:
+- DataTable 내 버튼이 있는 셀의 배경
+- 실적 등록/조회 화면의 액션 셀
+- 테이블의 작업 열
+*/
+
+.action-cell {
+  padding: 0px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  background: none !important;
+}
+
+.action-cell-disabled {
+  padding: 0px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  background: var(--gray-100) !important;
+  opacity: 0.5 !important;
+}
+
+/* ========================================== */
+/* 7. 상호작용 효과 (호버, 포커스, 비활성화)    */
+/* ========================================== */
+
+/* 호버 효과 - 일반 버튼 */
+.btn-primary:hover:not(:disabled),
+.btn-secondary:hover:not(:disabled),
+.btn-list:hover:not(:disabled),
+.btn-cancel:hover:not(:disabled),
+.btn-success:hover:not(:disabled),
+.btn-warning:hover:not(:disabled),
+.btn-add:hover:not(:disabled),
+.btn-save:hover:not(:disabled),
+.btn-edit:hover:not(:disabled),
+.btn-delete:hover:not(:disabled),
+.btn-danger:hover:not(:disabled),
+.btn-excell-upload:hover:not(:disabled),
+.btn-excell-download:hover:not(:disabled),
+.btn-excell-template:hover:not(:disabled),
+.btn-reset-password:hover:not(:disabled),
+.btn-upload:hover:not(:disabled),
+.btn-download:hover:not(:disabled),
+.btn-close:hover:not(:disabled),
+.btn-select-all:hover:not(:disabled),
+.btn-select-none:hover:not(:disabled),
+.file-upload-label:hover:not(:disabled),
+.file-label:hover:not(:disabled),
+.login-btn:hover:not(:disabled),
+.signup-btn:hover:not(:disabled),
+.cancel-btn:hover:not(:disabled) {
+  opacity: 0.9 !important;
+  transform: translateY(0px) !important;
+  box-shadow: var(--shadow) !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+/* 호버 효과 - 작은 버튼 (배경색 변경) */
+.btn-approve-sm:hover:not(:disabled),
+.btn-add-sm:hover:not(:disabled) {
+  background: var(--primary-blue-hover) !important;
+  color: var(--text-white) !important;
+  border-color: var(--primary-blue-hover) !important;
+}
+
+.btn-pending-sm:hover:not(:disabled),
+.btn-delete-sm:hover:not(:disabled) {
+  background: var(--danger-hover) !important;
+  color: var(--text-white) !important;
+  border-color: var(--danger-hover) !important;
+}
+
+.btn-edit-sm:hover:not(:disabled) {
+  background: var(--warning-hover) !important;
+  color: var(--text-white) !important;
+  border-color: var(--warning-hover) !important;
+}
+
+.btn-save-sm:hover:not(:disabled) {
+  background: var(--primary-blue-hover) !important;
+  border-color: var(--primary-blue-hover) !important;
+}
+
+.btn-detail:hover:not(:disabled) {
+  background: var(--gray-300) !important;
+  border-color: var(--gray-500) !important;
+}
+
+.btn-cancel-sm:hover:not(:disabled),
+.btn-view-sm:hover:not(:disabled),
+.btn-input-sm:hover:not(:disabled),
+.btn-upload-sm:hover:not(:disabled),
+.btn-download-sm:hover:not(:disabled) {
+  background: var(--gray-300) !important;
+  border-color: var(--gray-500) !important;
+}
+
+/* 포커스 효과 */
+button:focus,
+.btn-primary:focus,
+.btn-secondary:focus,
+.btn-list:focus,
+.btn-cancel:focus,
+.btn-success:focus,
+.btn-warning:focus,
+.btn-add:focus,
+.btn-save:focus,
+.btn-edit:focus,
+.btn-delete:focus,
+.btn-danger:focus,
+.btn-excell-upload:focus,
+.btn-excell-download:focus,
+.btn-excell-template:focus,
+.btn-reset-password:focus,
+.btn-upload:focus,
+.btn-download:focus,
+.btn-close:focus,
+.btn-close-nobg:focus,
+.btn-select-all:focus,
+.btn-select-none:focus,
+.file-label:focus,
+.login-btn:focus,
+.signup-btn:focus,
+.cancel-btn:focus,
+.btn-primary-sm:focus,
+.btn-add-sm:focus,
+.btn-approve-sm:focus,
+.btn-pending-sm:focus,
+.btn-edit-sm:focus,
+.btn-delete-sm:focus,
+.btn-save-sm:focus,
+.btn-cancel-sm:focus,
+.btn-view-sm:focus,
+.btn-input-sm:focus,
+.btn-upload-sm:focus {
+  outline: none !important;
+  box-shadow: var(--focus-shadow) !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+/* 비활성화 상태 */
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-list:disabled,
+.btn-cancel:disabled,
+.btn-success:disabled,
+.btn-warning:disabled,
+.btn-add:disabled,
+.btn-save:disabled,
+.btn-edit:disabled,
+.btn-delete:disabled,
+.btn-danger:disabled,
+.btn-excell-upload:disabled,
+.btn-excell-download:disabled,
+.btn-excell-template:disabled,
+.btn-reset-password:disabled,
+.btn-upload:disabled,
+.btn-download:disabled,
+.btn-close:disabled,
+.btn-select-all:disabled,
+.btn-select-none:disabled,
+.file-label[disabled],
+.login-btn:disabled,
+.signup-btn:disabled,
+.cancel-btn:disabled,
+.btn-primary-sm:disabled,
+.btn-add-sm:disabled,
+.btn-approve-sm:disabled,
+.btn-pending-sm:disabled,
+.btn-edit-sm:disabled,
+.btn-delete-sm:disabled,
+.btn-save-sm:disabled,
+.btn-cancel-sm:disabled,
+.btn-view-sm:disabled,
+.btn-input-sm:disabled,
+.btn-upload-sm:disabled {
+  background: var(--gray-300) !important;
+  border-color: var(--gray-500) !important;
+  color: var(--gray-700) !important;
+  cursor: not-allowed !important;
+  opacity: 0.65 !important;
+  box-shadow: none !important;
+}

@@ -1,0 +1,10 @@
+{
+  "name": "edi_sh_new-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.0",
+    "xlsx": "^0.18.5"
+  }
+}
