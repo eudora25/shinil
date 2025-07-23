@@ -79,7 +79,7 @@ import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import { useRouter } from 'vue-router';
 import { supabase } from '@/supabase';
-import * as XLSX from 'xlsx';
+import { exportToExcel } from '@/utils/excelUtils';
 
 const products = ref([]);
 const filters = ref({ 'global': { value: null, matchMode: 'contains' } });

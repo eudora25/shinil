@@ -136,7 +136,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import { supabase } from '@/supabase'
-import * as XLSX from 'xlsx'
+import { exportToExcel } from '@/utils/excelUtils'
 
 const assignments = ref([])
 const loading = ref(false)

@@ -88,7 +88,7 @@ import { supabase } from '@/supabase'
 import Textarea from 'primevue/textarea'
 import Password from 'primevue/password'
 import { useRouter } from 'vue-router'
-import * as XLSX from 'xlsx'
+import { exportToExcel } from '@/utils/excelUtils'
 import TopNavigationBar from '@/components/TopNavigationBar.vue'
 
 // 컬럼 너비 관리
@@ -331,13 +331,33 @@ const downloadExcel = () => {
     수정일자: company.updated_at ? new Date(company.updated_at).toLocaleString('ko-KR') : '',
   }))
 
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport)
-  const workbook = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(workbook, worksheet, '승인업체목록')
+  const headers = [
+    { key: 'ID', header: 'ID' },
+    { key: 'No', header: 'No' },
+    { key: '아이디(이메일)', header: '아이디(이메일)' },
+    { key: '구분', header: '구분' },
+    { key: '업체명', header: '업체명' },
+    { key: '사업자등록번호', header: '사업자등록번호' },
+    { key: '대표자', header: '대표자' },
+    { key: '사업장소재지', header: '사업장소재지' },
+    { key: '유선전화', header: '유선전화' },
+    { key: '담당자', header: '담당자' },
+    { key: '휴대폰 번호', header: '휴대폰 번호' },
+    { key: '휴대폰 번호 2', header: '휴대폰 번호 2' },
+    { key: '수신용 이메일', header: '수신용 이메일' },
+    { key: '승인여부', header: '승인여부' },
+    { key: '수수료 등급', header: '수수료 등급' },
+    { key: '관리자', header: '관리자' },
+    { key: '비고', header: '비고' },
+    { key: '등록일자', header: '등록일자' },
+    { key: '승인일자', header: '승인일자' },
+    { key: '수정일자', header: '수정일자' }
+  ]
 
   const today = new Date().toISOString().split('T')[0]
-  const fileName = `승인업체목록_${today}.xlsx`
-  XLSX.writeFile(workbook, fileName)
+  const fileName = `승인업체목록_${today}`
+  
+  exportToExcel(dataToExport, fileName, headers, '승인업체목록')
 }
 
 function goList() {

@@ -423,7 +423,7 @@ import ColumnGroup from 'primevue/columngroup';
 import Row from 'primevue/row';
 import { supabase } from '@/supabase'
 import { useRouter } from 'vue-router'
-import * as XLSX from 'xlsx'
+import { exportToExcel } from '@/utils/excelUtils'
 
 const columnWidths = {
   no: '4%',

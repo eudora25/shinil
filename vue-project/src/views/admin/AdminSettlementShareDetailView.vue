@@ -84,7 +84,7 @@ import ColumnGroup from 'primevue/columngroup';
 import Row from 'primevue/row';
 import { useRoute, useRouter } from 'vue-router';
 import { supabase } from '@/supabase';
-import * as XLSX from 'xlsx';
+import { exportToExcel } from '@/utils/excelUtils';
 
 const route = useRoute();
 const router = useRouter();

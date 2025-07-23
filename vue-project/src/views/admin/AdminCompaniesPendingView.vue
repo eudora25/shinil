@@ -87,7 +87,7 @@ import { supabase } from '@/supabase'
 import Textarea from 'primevue/textarea'
 import Password from 'primevue/password'
 import { useRouter } from 'vue-router'
-import * as XLSX from 'xlsx'
+import { exportToExcel } from '@/utils/excelUtils'
 import TopNavigationBar from '@/components/TopNavigationBar.vue'
 
 // 컬럼 너비 관리

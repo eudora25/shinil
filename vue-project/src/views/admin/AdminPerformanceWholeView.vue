@@ -146,7 +146,7 @@ import Column from 'primevue/column';
 import ColumnGroup from 'primevue/columngroup';
 import Row from 'primevue/row';
 import { supabase } from '@/supabase';
-import * as XLSX from 'xlsx';
+import { exportToExcel } from '@/utils/excelUtils';
 
 const columnWidths = {
   no: '3%',

@@ -203,7 +203,7 @@ import Row from 'primevue/row';
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import { supabase } from '@/supabase'
-import * as XLSX from 'xlsx'
+import { exportToExcel } from '@/utils/excelUtils'
 
 const columnWidths = {
   no: '4%',

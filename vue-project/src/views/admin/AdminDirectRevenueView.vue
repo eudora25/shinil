@@ -219,7 +219,7 @@ import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/supabase'
-import * as XLSX from 'xlsx'
+import { exportToExcel } from '@/utils/excelUtils'
 
 // 컬럼 너비 한 곳에서 관리
 const columnWidths = {

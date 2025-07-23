@@ -186,7 +186,7 @@ import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import Dialog from 'primevue/dialog'
 import { supabase } from '@/supabase'
-import * as XLSX from 'xlsx'
+import { exportToExcel } from '@/utils/excelUtils'
 
 const clients = ref([])
 const loading = ref(false)

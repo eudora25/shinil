@@ -275,7 +275,7 @@
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { supabase } from '@/supabase';
-import * as XLSX from 'xlsx';
+import { exportToExcel } from '@/utils/excelUtils';
 
 // 반응형 데이터
 const availableMonths = ref([]); // 선택 가능한 정산월 목록
