@@ -3,12 +3,19 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
     vueDevTools(),
+    visualizer({
+      filename: 'dist/stats.html',
+      open: true,
+      gzipSize: true,
+      brotliSize: true,
+    }),
   ],
   resolve: {
     alias: {
@@ -29,10 +36,10 @@ export default defineConfig({
           primevue: ['primevue'],
           editor: ['@ckeditor/ckeditor5-build-classic', 'quill'],
           utils: ['exceljs', 'jszip', 'file-saver', 'html2canvas', 'jspdf'],
-          supabase: ['@supabase/supabase-js']
-        }
-      }
-    }
+          supabase: ['@supabase/supabase-js'],
+        },
+      },
+    },
   },
   base: '/'
 })

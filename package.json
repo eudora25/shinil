@@ -5,9 +5,22 @@
   "scripts": {
     "build": "cd vue-project && npm install && npm run build",
     "dev": "cd vue-project && npm run dev",
-    "vercel-build": "cd vue-project && npm install && npm run build"
+    "vercel-build": "cd vue-project && npm install && npm run build",
+    "lint": "cd vue-project && npm run lint",
+    "format": "cd vue-project && npm run format",
+    "prepare": "husky install"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "lint-staged": {
+    "vue-project/src/**/*.{js,vue}": [
+      "cd vue-project && npm run lint --fix",
+      "cd vue-project && npm run format"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2"
   }
-} 
+}
