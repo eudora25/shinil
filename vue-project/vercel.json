@@ -1,7 +1,4 @@
 {
-  "buildCommand": "cd vue-project && npm install && npm run build",
-  "outputDirectory": "vue-project/dist",
-  "framework": "vite",
   "rewrites": [
     { "source": "/admin/:match*", "destination": "/index.html" },
     { "source": "/user/:match*", "destination": "/index.html" },
@@ -19,8 +16,8 @@
     }
   ],
   "functions": {
-    "vue-project/api/**/*.js": {
+    "api/**/*.js": {
       "runtime": "nodejs18.x"
     }
   }
-}
+} 

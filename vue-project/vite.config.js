@@ -18,4 +18,17 @@ export default defineConfig({
   optimizeDeps: {
     include: ['primevue/api', 'jszip'],
   },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['vue', 'vue-router'],
+          primevue: ['primevue', 'primeicons']
+        }
+      }
+    }
+  },
+  base: '/'
 })
