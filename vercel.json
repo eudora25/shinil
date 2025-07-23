@@ -1,0 +1,14 @@
+{
+  "buildCommand": "cd vue-project && npm install && npm run build",
+  "outputDirectory": "vue-project/dist",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "functions": {
+    "vue-project/api/**/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "installCommand": "cd vue-project && npm install"
+}

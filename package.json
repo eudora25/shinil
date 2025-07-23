@@ -1,0 +1,13 @@
+{
+  "name": "shinil-project",
+  "version": "1.0.0",
+  "description": "신일제약 실적관리프로그램",
+  "scripts": {
+    "build": "cd vue-project && npm install && npm run build",
+    "dev": "cd vue-project && npm run dev",
+    "vercel-build": "cd vue-project && npm install && npm run build"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+} 

@@ -120,3 +120,4 @@ docker-volumes/
 # Local configuration files
 config.local.js
 .env.local 
+.vercel
