@@ -1,21 +1,13 @@
-import jwt from 'jsonwebtoken'
-import { createClient } from '@supabase/supabase-js'
+const jwt = require('jsonwebtoken')
 
-// Supabase 클라이언트 설정 (하드코딩으로 테스트)
-const supabaseUrl = 'https://selklngerzfmuvagcvvf.supabase.co'
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlbGtsbmdlcnpmbXV2YWdjdnZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3MzQ5MDUsImV4cCI6MjA2ODMxMDkwNX0.cRe78UqA-HDdVClq0qrXlOXxwNpQWLB6ycFnoHzQI4U'
+// 간단한 JWT 시크릿 (실제로는 환경변수 사용)
+const JWT_SECRET = 'shinil-secret-key-2024'
 
-const supabase = createClient(supabaseUrl, supabaseKey)
-
-// JWT 설정 (하드코딩으로 테스트)
-const JWT_SECRET = 'shinil-pms-secret-key-2024'
-const JWT_EXPIRES_IN = '24h'
-
-export default async function handler(req, res) {
-  // CORS 설정
+export default function handler(req, res) {
+  // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
   // OPTIONS 요청 처리
   if (req.method === 'OPTIONS') {
@@ -35,6 +27,7 @@ export default async function handler(req, res) {
   try {
     const { email, password } = req.body
 
+    // 입력 검증
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -43,18 +36,18 @@ export default async function handler(req, res) {
       })
     }
 
-    // 간단한 테스트 응답 (Supabase 연결 없이)
+    // 간단한 테스트 로그인
     if (email === 'admin@shinil.com' && password === 'admin123') {
       // JWT 토큰 생성
       const token = jwt.sign(
         {
-          id: 'test-user-id',
+          id: 'admin-user-id',
           email: email,
           role: 'admin',
           name: '관리자'
         },
         JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN }
+        { expiresIn: '24h' }
       )
 
       return res.status(200).json({
@@ -62,7 +55,7 @@ export default async function handler(req, res) {
         data: {
           token,
           user: {
-            id: 'test-user-id',
+            id: 'admin-user-id',
             email: email,
             role: 'admin',
             name: '관리자'
@@ -79,8 +72,8 @@ export default async function handler(req, res) {
     }
 
   } catch (error) {
-    console.error('로그인 에러:', error)
-    res.status(500).json({
+    console.error('Login error:', error)
+    return res.status(500).json({
       success: false,
       error: 'server_error',
       message: '서버 오류가 발생했습니다: ' + error.message

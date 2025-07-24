@@ -139,7 +139,6 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { supabase } from '@/supabase'
 
 const companies = ref([])
 const products = ref([])
@@ -149,9 +148,8 @@ const error = ref(null)
 const token = ref(null)
 const user = ref(null)
 
-// Supabase Edge Functions URL
-const SUPABASE_URL = 'https://selklngerzfmuvagcvvf.supabase.co'
-const EDGE_FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`
+// Vercel API URL
+const API_BASE_URL = 'https://shinil.vercel.app/api'
 
 // 로그인 함수
 const login = async () => {
@@ -159,11 +157,10 @@ const login = async () => {
   error.value = null
   
   try {
-    const response = await fetch(`${EDGE_FUNCTIONS_URL}/auth-login`, {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${supabase.supabaseKey}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         email: 'admin@shinil.com',
@@ -200,7 +197,7 @@ const fetchCompanies = async () => {
   error.value = null
   
   try {
-    const response = await fetch(`${EDGE_FUNCTIONS_URL}/companies`, {
+    const response = await fetch(`${API_BASE_URL}/companies`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token.value}`,
@@ -236,7 +233,7 @@ const fetchProducts = async () => {
   error.value = null
   
   try {
-    const response = await fetch(`${EDGE_FUNCTIONS_URL}/products`, {
+    const response = await fetch(`${API_BASE_URL}/products`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token.value}`,
@@ -272,7 +269,7 @@ const fetchClients = async () => {
   error.value = null
   
   try {
-    const response = await fetch(`${EDGE_FUNCTIONS_URL}/clients`, {
+    const response = await fetch(`${API_BASE_URL}/clients`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token.value}`,

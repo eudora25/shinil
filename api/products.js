@@ -1,35 +1,56 @@
-import jwt from 'jsonwebtoken'
-import { createClient } from '@supabase/supabase-js'
+const jwt = require('jsonwebtoken')
 
-// Supabase 클라이언트 설정
-const supabaseUrl = process.env.VERCEL_SUPABASE_URL || 'https://selklngerzfmuvagcvvf.supabase.co'
-const supabaseKey = process.env.VERCEL_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlbGtsbmdlcnpmbXV2YWdjdnZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3MzQ5MDUsImV4cCI6MjA2ODMxMDkwNX0.cRe78UqA-HDdVClq0qrXlOXxwNpQWLB6ycFnoHzQI4U'
+// JWT 시크릿 (실제로는 환경변수 사용)
+const JWT_SECRET = 'shinil-secret-key-2024'
 
-const supabase = createClient(supabaseUrl, supabaseKey)
-
-// JWT 설정
-const JWT_SECRET = process.env.JWT_SECRET || 'shinil-pms-secret-key-2024'
-
-// JWT 토큰 검증 함수
-function verifyToken(req) {
-  const authHeader = req.headers.authorization
-  const token = authHeader && authHeader.split(' ')[1] // Bearer TOKEN
-
-  if (!token) {
-    throw new Error('액세스 토큰이 필요합니다')
+// 테스트 데이터
+const testProducts = [
+  {
+    id: 1,
+    product_name: '아스피린',
+    insurance_code: 'A001',
+    price: 1000,
+    company_name: '신일제약',
+    created_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: 2,
+    product_name: '타이레놀',
+    insurance_code: 'A002',
+    price: 1500,
+    company_name: '신일제약',
+    created_at: '2024-01-02T00:00:00Z'
+  },
+  {
+    id: 3,
+    product_name: '이부프로펜',
+    insurance_code: 'A003',
+    price: 1200,
+    company_name: '대한제약',
+    created_at: '2024-01-03T00:00:00Z'
+  },
+  {
+    id: 4,
+    product_name: '파라세타몰',
+    insurance_code: 'A004',
+    price: 800,
+    company_name: '대한제약',
+    created_at: '2024-01-04T00:00:00Z'
+  },
+  {
+    id: 5,
+    product_name: '디클로페낙',
+    insurance_code: 'A005',
+    price: 2000,
+    company_name: '한국제약',
+    created_at: '2024-01-05T00:00:00Z'
   }
+]
 
-  try {
-    return jwt.verify(token, JWT_SECRET)
-  } catch (error) {
-    throw new Error('유효하지 않은 토큰입니다')
-  }
-}
-
-export default async function handler(req, res) {
-  // CORS 설정
+export default function handler(req, res) {
+  // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
   // OPTIONS 요청 처리
@@ -49,47 +70,48 @@ export default async function handler(req, res) {
 
   try {
     // JWT 토큰 검증
-    const user = verifyToken(req)
-
-    // Supabase에서 제품 데이터 조회
-    const { data: products, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('id')
-      .limit(50)
-
-    if (error) {
-      throw error
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        error: 'access_token_required',
+        message: '액세스 토큰이 필요합니다'
+      })
     }
 
-    res.status(200).json({
+    const token = authHeader.substring(7) // 'Bearer ' 제거
+    
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET)
+      console.log('토큰 검증 성공:', decoded)
+    } catch (jwtError) {
+      return res.status(401).json({
+        success: false,
+        error: 'invalid_token',
+        message: '유효하지 않은 토큰입니다'
+      })
+    }
+
+    // 테스트 데이터 반환
+    return res.status(200).json({
       success: true,
-      data: products,
-      total_count: products.length,
+      data: testProducts,
+      total_count: testProducts.length,
       user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        name: user.name
+        id: 'admin-user-id',
+        email: 'admin@shinil.com',
+        role: 'admin',
+        name: '관리자'
       },
       timestamp: new Date().toISOString()
     })
 
   } catch (error) {
-    console.error('제품 데이터 조회 에러:', error)
-    
-    if (error.message.includes('토큰')) {
-      return res.status(401).json({
-        success: false,
-        error: 'authentication_error',
-        message: error.message
-      })
-    }
-
-    res.status(500).json({
+    console.error('Products API error:', error)
+    return res.status(500).json({
       success: false,
-      error: 'database_error',
-      message: error.message
+      error: 'server_error',
+      message: '서버 오류가 발생했습니다: ' + error.message
     })
   }
 } 
