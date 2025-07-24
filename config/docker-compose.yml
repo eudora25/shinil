@@ -4,15 +4,17 @@ services:
   # Vue.js 프론트엔드 앱
   vue-app:
     build:
-      context: ./vue-project
+      context: ../vue-project
       dockerfile: Dockerfile
     ports:
       - "3000:5173"
     volumes:
-      - ./vue-project:/app
+      - ../vue-project:/app
       - /app/node_modules
     environment:
       - NODE_ENV=development
+      - VITE_SUPABASE_URL=http://localhost:54321
+      - VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
     networks:
       - shinil-network
     depends_on:
@@ -21,7 +23,7 @@ services:
   # Express API 서버
   api-server:
     build:
-      context: ./vue-project
+      context: ../vue-project
       dockerfile: Dockerfile.api
     ports:
       - "3001:3001"
@@ -47,7 +49,7 @@ services:
       - POSTGRES_PASSWORD=postgres
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./postgres-init:/docker-entrypoint-initdb.d
+      - ../postgres-init:/docker-entrypoint-initdb.d
     networks:
       - shinil-network
     command: >

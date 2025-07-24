@@ -437,13 +437,33 @@ const router = createRouter({
   ]
 })
 
-// 임시로 라우터 가드 비활성화 - 테스트용
+// 라우터 가드
 router.beforeEach(async (to, from, next) => {
   console.log(`[Router Guard] Navigating from: ${from.fullPath} to: ${to.fullPath}`);
   
-  // 모든 경로 허용 (테스트용)
-  console.log('[Router Guard] Allowing all routes for testing');
-  return next();
+  // API 테스트 페이지는 항상 허용
+  if (to.path === '/api-test' || to.path === '/test') {
+    console.log('[Router Guard] API test page, allowing access');
+    return next();
+  }
+  
+  // 로그인/회원가입 페이지는 허용
+  if (to.path === '/login' || to.path === '/signup') {
+    console.log('[Router Guard] Login/Signup page, allowing access');
+    return next();
+  }
+  
+  // localStorage에서 사용자 정보 확인
+  const storedUser = localStorage.getItem('user');
+  const storedUserType = localStorage.getItem('userType');
+  
+  if (storedUser && storedUserType) {
+    console.log('[Router Guard] User authenticated, allowing access');
+    return next();
+  } else {
+    console.log('[Router Guard] No user data, redirecting to login');
+    return next('/login');
+  }
 });
 
 const files = ref([]); // 여러 파일 저장

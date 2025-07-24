@@ -97,12 +97,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const loading = ref(false)
 const error = ref('')
 const result = ref(null)
 const currentTable = ref('')
+
+onMounted(() => {
+  console.log('[ApiTestView] Component mounted successfully!');
+});
 
 // 실제 마이그레이션된 데이터 (Python 스크립트에서 가져온 실제 데이터)
 const realData = {

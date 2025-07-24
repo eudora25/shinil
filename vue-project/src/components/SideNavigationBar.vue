@@ -135,8 +135,9 @@ const breadcrumbSubMenu = computed(() => {
 });
 
 const handleLogout = async () => {
-  await supabase.auth.signOut();
-  router.push('/login');
+  console.log('[SideNavigationBar] handleLogout called');
+  // 부모 컴포넌트의 로그아웃 이벤트 발생
+  emit('logout');
 };
 
 const titleTemplate = (row) => {

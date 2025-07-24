@@ -152,27 +152,45 @@ async function handleDelete(id) {
 
 onMounted(async () => {
   loading.value = true;
-  const { data, error } = await supabase
-    .from('notices')
-    .select('id, title, content, created_at, is_pinned, view_count, file_url')
-    .order('is_pinned', { ascending: false })
-    .order('created_at', { ascending: false });
-  console.log('공지사항 데이터:', data);
-  if (!error && data) {
-    notices.value = data.map(n => {
-      let count = 0;
-      try {
-        const arr = JSON.parse(n.file_url || '[]');
-        count = Array.isArray(arr) ? arr.length : 0;
-      } catch {
-        count = 0;
-      }
-      return { ...n, file_count: count };
-    });
+  
+  try {
+    // Supabase에서 데이터 불러오기 시도
+    const { data, error } = await supabase
+      .from('notices')
+      .select('id, title, content, created_at, is_pinned, view_count, file_url')
+      .order('is_pinned', { ascending: false })
+      .order('created_at', { ascending: false });
+    
+    console.log('공지사항 데이터:', data);
+    console.log('Supabase 에러:', error);
+    
+    if (!error && data) {
+      notices.value = data.map(n => {
+        let count = 0;
+        try {
+          const arr = JSON.parse(n.file_url || '[]');
+          count = Array.isArray(arr) ? arr.length : 0;
+        } catch {
+          count = 0;
+        }
+        return { ...n, file_count: count };
+      });
+    } else {
+      // Supabase 연결 실패 시 빈 배열로 설정
+      console.log('Supabase 연결 실패, 빈 배열로 설정');
+      notices.value = [];
+    }
+  } catch (error) {
+    console.error('공지사항 데이터 로드 중 오류:', error);
+    // 오류 발생 시 빈 배열로 설정
+    notices.value = [];
   }
+  
   loading.value = false;
-  const { data: { session } } = await supabase.auth.getSession();
-  userType.value = session?.user?.user_metadata?.user_type || '';
+  
+  // 사용자 타입 설정 (localStorage에서 가져오기)
+  const storedUserType = localStorage.getItem('userType');
+  userType.value = storedUserType || '';
 });
 
 import { watch } from 'vue';

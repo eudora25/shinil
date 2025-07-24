@@ -8,15 +8,16 @@ export function initSentry(app, router) {
     return
   }
 
-  Sentry.init({
-    app,
-    dsn: import.meta.env.VITE_SENTRY_DSN || 'https://your-sentry-dsn@your-project.ingest.sentry.io/your-project-id',
-    integrations: [
-      browserTracingIntegration({
-        router,
-        tracingOrigins: ['localhost', 'shinil.vercel.app', /^\//],
-      }),
-    ],
+  try {
+    Sentry.init({
+      app,
+      dsn: import.meta.env.VITE_SENTRY_DSN || 'https://your-sentry-dsn@your-project.ingest.sentry.io/your-project-id',
+      integrations: [
+        browserTracingIntegration({
+          router,
+          tracingOrigins: ['localhost', 'shinil.vercel.app', /^\//],
+        }),
+      ],
     // 성능 모니터링 설정
     tracesSampleRate: 0.1, // 10%의 요청만 추적
     // 에러 샘플링 설정
@@ -62,6 +63,9 @@ export function initSentry(app, router) {
       return breadcrumb
     }
   })
+  } catch (error) {
+    console.error('Sentry initialization failed:', error)
+  }
 }
 
 // 커스텀 에러 핸들러

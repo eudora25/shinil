@@ -112,37 +112,64 @@ const handleLogin = async () => {
   if (!canLogin.value) return;
   loading.value = true;
   try {
-    const { data: companyRow } = await supabase
-      .from('companies')
-      .select('id, approval_status, user_type')
-      .eq('email', email.value.trim().toLowerCase())
-      .maybeSingle();
-    if (!companyRow) {
-      alert('아이디(이메일) 정보가 없습니다. 다시 확인해주세요.');
-      loading.value = false;
-      return;
-    }
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: email.value,
-      password: password.value,
-    });
-    if (authError) {
-      alert('비밀번호가 일치하지 않습니다. 다시 확인해주세요.');
-      loading.value = false;
-      return;
-    }
-    if (companyRow.approval_status !== 'approved') {
-      alert('미승인 회원입니다. 관리자에게 승인을 요청해주세요.');
-      await supabase.auth.signOut();
-      loading.value = false;
-      return;
-    }
-    if (companyRow.user_type === 'admin') {
-      router.push('/admin/notices');
+    // 간단한 로그인 로직 (Supabase 없이)
+    if (email.value === 'admin@admin.com' && password.value === 'asdf1234') {
+      // 관리자 로그인 성공 - 사용자 상태 설정
+      const mockUser = {
+        email: 'admin@admin.com',
+        user_metadata: { user_type: 'admin' }
+      };
+      
+      // 전역 상태에 사용자 정보 저장
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      localStorage.setItem('userType', 'admin');
+      
+      console.log('[LoginView] Admin login successful. localStorage set:', {
+        user: localStorage.getItem('user'),
+        userType: localStorage.getItem('userType')
+      });
+      
+      // 페이지 새로고침으로 App.vue의 onMounted가 다시 실행되도록 함
+      window.location.href = '/admin/notices';
+    } else if (email.value === 'user1@user.com' && password.value === 'asdf1234') {
+      // 일반 사용자 로그인 성공
+      const mockUser = {
+        email: 'user1@user.com',
+        user_metadata: { user_type: 'user' }
+      };
+      
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      localStorage.setItem('userType', 'user');
+      
+      console.log('[LoginView] User1 login successful. localStorage set:', {
+        user: localStorage.getItem('user'),
+        userType: localStorage.getItem('userType')
+      });
+      
+      // 페이지 새로고침으로 App.vue의 onMounted가 다시 실행되도록 함
+      window.location.href = '/notices';
+    } else if (email.value === 'user2@user.com' && password.value === 'asdf1234') {
+      // 일반 사용자 로그인 성공
+      const mockUser = {
+        email: 'user2@user.com',
+        user_metadata: { user_type: 'user' }
+      };
+      
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      localStorage.setItem('userType', 'user');
+      
+      console.log('[LoginView] User2 login successful. localStorage set:', {
+        user: localStorage.getItem('user'),
+        userType: localStorage.getItem('userType')
+      });
+      
+      // 페이지 새로고침으로 App.vue의 onMounted가 다시 실행되도록 함
+      window.location.href = '/notices';
     } else {
-      router.push('/notices');
+      alert('아이디(이메일) 또는 비밀번호가 일치하지 않습니다. 다시 확인해주세요.');
     }
   } catch (error) {
+    console.error('Login error:', error);
     alert('로그인 중 오류가 발생했습니다.');
   } finally {
     loading.value = false;
