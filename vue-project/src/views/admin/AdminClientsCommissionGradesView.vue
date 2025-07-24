@@ -71,7 +71,11 @@
           :headerStyle="{ width: columnWidths.client_name }"
           :style="{ fontWeight: '500 !important' }"  
           :sortable="true"
-        />
+        >
+          <template #body="slotProps">
+            <span class="ellipsis-cell" :title="slotProps.data.client_name" @mouseenter="checkOverflow" @mouseleave="removeOverflowClass">{{ slotProps.data.client_name }}</span>
+          </template>
+        </Column>
         <Column
           field="client_business_registration_number"
           header="사업자등록번호"
@@ -89,7 +93,11 @@
           header="주소"
           :headerStyle="{ width: columnWidths.address }"
           :sortable="true"
-        />
+        >
+          <template #body="slotProps">
+            <span class="ellipsis-cell" :title="slotProps.data.address" @mouseenter="checkOverflow" @mouseleave="removeOverflowClass">{{ slotProps.data.address }}</span>
+          </template>
+        </Column>
         <Column
           field="company_name"
           header="업체명"
@@ -136,7 +144,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import { supabase } from '@/supabase'
-import { exportToExcel } from '@/utils/excelUtils'
+import * as XLSX from 'xlsx'
 
 const assignments = ref([])
 const loading = ref(false)
@@ -168,7 +176,7 @@ const fetchAssignments = async () => {
         company_default_commission_grade,
         modified_commission_grade,
         client:clients(id, client_code, name, business_registration_number, owner_name, address),
-        company:companies(id, company_name, business_registration_number)
+        company:companies(id, company_name, business_registration_number, default_commission_grade)
       `)
     
     if (!error && assignmentsData) {
@@ -181,7 +189,7 @@ const fetchAssignments = async () => {
         address: assignment.client?.address || '',
         company_name: assignment.company?.company_name || '',
         company_business_registration_number: assignment.company?.business_registration_number || '',
-        company_default_commission_grade: assignment.company_default_commission_grade,
+        company_default_commission_grade: assignment.company?.default_commission_grade || assignment.company_default_commission_grade,
         modified_commission_grade: assignment.modified_commission_grade,
       }))
     }
@@ -415,6 +423,53 @@ async function deleteAllGrades() {
   })
   
   alert('모든 변경 수수료 등급이 삭제되었습니다.')
+}
+
+// 오버플로우 감지 및 툴팁 제어 함수들
+const checkOverflow = (event) => {
+  const element = event.target;
+  
+  // 실제 오버플로우 감지
+  const rect = element.getBoundingClientRect();
+  const computedStyle = window.getComputedStyle(element);
+  const fontSize = parseFloat(computedStyle.fontSize);
+  const fontFamily = computedStyle.fontFamily;
+  
+  // 임시 캔버스를 만들어서 텍스트의 실제 너비 측정
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  context.font = `${fontSize}px ${fontFamily}`;
+  const textWidth = context.measureText(element.textContent).width;
+  
+  // 패딩과 보더 고려
+  const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
+  const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
+  const borderLeft = parseFloat(computedStyle.borderLeftWidth) || 0;
+  const borderRight = parseFloat(computedStyle.borderRightWidth) || 0;
+  
+  const availableWidth = rect.width - paddingLeft - paddingRight - borderLeft - borderRight;
+  const isOverflowed = textWidth > availableWidth;
+  
+  console.log('병의원 수수료등급 오버플로우 체크:', {
+    text: element.textContent,
+    textWidth,
+    availableWidth,
+    isOverflowed
+  });
+  
+  if (isOverflowed) {
+    element.classList.add('overflowed');
+    console.log('병의원 수수료등급 오버플로우 클래스 추가됨');
+  } else {
+    element.classList.remove('overflowed'); // Ensure class is removed if not overflowed
+    console.log('병의원 수수료등급 오버플로우 아님 - 클래스 제거됨');
+  }
+}
+
+const removeOverflowClass = (event) => {
+  const element = event.target;
+  element.classList.remove('overflowed');
+  console.log('병의원 수수료등급 오버플로우 클래스 제거됨');
 }
 
 onMounted(() => {

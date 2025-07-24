@@ -321,16 +321,75 @@ async function saveShareStatus() {
   }
   loading.value = true;
   
-  const dataToUpsert = Object.entries(shareChanges.value).map(([companyId, change]) => ({
-    settlement_month: selectedMonth.value,
-    company_id: companyId,
-    share_enabled: change.is_shared,
-  }));
+  console.log('shareChanges.value:', shareChanges.value);
 
   try {
-    const { error } = await supabase
+    // 1단계: 기존 settlement_share 레코드가 있는지 확인
+    const companyIds = Object.keys(shareChanges.value);
+    const { data: existingShares, error: checkError } = await supabase
       .from('settlement_share')
-      .upsert(dataToUpsert, { onConflict: 'settlement_month, company_id' });
+      .select('id, company_id')
+      .eq('settlement_month', selectedMonth.value)
+      .in('company_id', companyIds);
+
+    if (checkError) throw checkError;
+
+    console.log('기존 레코드:', existingShares);
+
+    // 2단계: 기존 레코드가 있는 회사와 없는 회사 분리
+    const existingCompanyIds = new Set(existingShares?.map(share => share.company_id) || []);
+    const existingSharesMap = new Map(existingShares?.map(share => [share.company_id, share.id]) || []);
+
+    const dataToUpdate = []; // 기존 레코드 업데이트용
+    const dataToInsert = []; // 새 레코드 삽입용
+
+    Object.entries(shareChanges.value).forEach(([companyId, change]) => {
+      const data = {
+        settlement_month: selectedMonth.value,
+        company_id: companyId,
+        share_enabled: change.is_shared,
+      };
+
+      if (existingCompanyIds.has(companyId)) {
+        // 기존 레코드가 있는 경우: id 포함하여 UPDATE
+        data.id = existingSharesMap.get(companyId);
+        dataToUpdate.push(data);
+        console.log(`UPDATE용 데이터:`, data);
+      } else {
+        // 기존 레코드가 없는 경우: id 제외하여 INSERT
+        dataToInsert.push(data);
+        console.log(`INSERT용 데이터:`, data);
+      }
+    });
+
+    // 3단계: UPDATE와 INSERT 각각 실행
+    let error = null;
+
+    // UPDATE 실행 (기존 레코드가 있는 경우)
+    if (dataToUpdate.length > 0) {
+      console.log('UPDATE 실행:', dataToUpdate);
+      const { error: updateError } = await supabase
+        .from('settlement_share')
+        .upsert(dataToUpdate, { onConflict: 'id' });
+      
+      if (updateError) {
+        console.error('UPDATE 오류:', updateError);
+        error = updateError;
+      }
+    }
+
+    // INSERT 실행 (기존 레코드가 없는 경우)
+    if (dataToInsert.length > 0 && !error) {
+      console.log('INSERT 실행:', dataToInsert);
+      const { error: insertError } = await supabase
+        .from('settlement_share')
+        .insert(dataToInsert);
+      
+      if (insertError) {
+        console.error('INSERT 오류:', insertError);
+        error = insertError;
+      }
+    }
 
     if (error) throw error;
     

@@ -302,7 +302,7 @@ import Column from 'primevue/column'
 import ColumnGroup from 'primevue/columngroup';
 import Row from 'primevue/row';
 import { supabase } from '@/supabase'
-import { exportToExcel } from '@/utils/excelUtils'
+import * as XLSX from 'xlsx'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 

@@ -10,29 +10,16 @@ export default defineConfig({
     vue(),
     vueDevTools(),
   ],
+  server: {
+    port: 3000,
+    host: true
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
   optimizeDeps: {
-    include: ['primevue/api', 'jszip', 'exceljs'],
+    include: ['primevue/api', 'jszip'],
   },
-  build: {
-    outDir: 'dist',
-    assetsDir: 'assets',
-    chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['vue', 'vue-router'],
-          primevue: ['primevue'],
-          editor: ['@ckeditor/ckeditor5-build-classic', 'quill'],
-          utils: ['exceljs', 'jszip', 'file-saver', 'html2canvas', 'jspdf'],
-          supabase: ['@supabase/supabase-js'],
-        },
-      },
-    },
-  },
-  base: '/'
 })

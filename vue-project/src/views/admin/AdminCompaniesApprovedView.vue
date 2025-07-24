@@ -56,7 +56,11 @@
         </Column>
         <Column field="business_registration_number" header="사업자등록번호" :headerStyle="{ width: columnWidths.business_registration_number }" :sortable="true" :editor="getTextEditor"></Column>
         <Column field="representative_name" header="대표자" :headerStyle="{ width: columnWidths.representative_name }" :sortable="true" :editor="getTextEditor"></Column>
-        <Column field="business_address" header="사업장소재지" :headerStyle="{ width: columnWidths.business_address }" :sortable="true" :editor="getTextEditor"></Column>
+        <Column field="business_address" header="사업장소재지" :headerStyle="{ width: columnWidths.business_address }" :sortable="true" :editor="getTextEditor">
+          <template #body="slotProps">
+            <span class="ellipsis-cell" :title="slotProps.data.business_address" @mouseenter="checkOverflow" @mouseleave="removeOverflowClass">{{ slotProps.data.business_address }}</span>
+          </template>
+        </Column>
         <Column field="default_commission_grade" header="수수료 등급" :headerStyle="{ width: columnWidths.default_commission_grade }" :sortable="true" :editor="getDropdownEditor">
           <template #editor="{ data, field }">
             <Dropdown v-model="data[field]" :options="commissionGrades" optionLabel="name" optionValue="value" style="width: 100%" />
@@ -88,7 +92,7 @@ import { supabase } from '@/supabase'
 import Textarea from 'primevue/textarea'
 import Password from 'primevue/password'
 import { useRouter } from 'vue-router'
-import { exportToExcel } from '@/utils/excelUtils'
+import * as XLSX from 'xlsx'
 import TopNavigationBar from '@/components/TopNavigationBar.vue'
 
 // 컬럼 너비 관리
@@ -331,39 +335,66 @@ const downloadExcel = () => {
     수정일자: company.updated_at ? new Date(company.updated_at).toLocaleString('ko-KR') : '',
   }))
 
-  const headers = [
-    { key: 'ID', header: 'ID' },
-    { key: 'No', header: 'No' },
-    { key: '아이디(이메일)', header: '아이디(이메일)' },
-    { key: '구분', header: '구분' },
-    { key: '업체명', header: '업체명' },
-    { key: '사업자등록번호', header: '사업자등록번호' },
-    { key: '대표자', header: '대표자' },
-    { key: '사업장소재지', header: '사업장소재지' },
-    { key: '유선전화', header: '유선전화' },
-    { key: '담당자', header: '담당자' },
-    { key: '휴대폰 번호', header: '휴대폰 번호' },
-    { key: '휴대폰 번호 2', header: '휴대폰 번호 2' },
-    { key: '수신용 이메일', header: '수신용 이메일' },
-    { key: '승인여부', header: '승인여부' },
-    { key: '수수료 등급', header: '수수료 등급' },
-    { key: '관리자', header: '관리자' },
-    { key: '비고', header: '비고' },
-    { key: '등록일자', header: '등록일자' },
-    { key: '승인일자', header: '승인일자' },
-    { key: '수정일자', header: '수정일자' }
-  ]
+  const worksheet = XLSX.utils.json_to_sheet(dataToExport)
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(workbook, worksheet, '승인업체목록')
 
   const today = new Date().toISOString().split('T')[0]
-  const fileName = `승인업체목록_${today}`
-  
-  exportToExcel(dataToExport, fileName, headers, '승인업체목록')
+  const fileName = `승인업체목록_${today}.xlsx`
+  XLSX.writeFile(workbook, fileName)
 }
 
 function goList() {
   const from = route.query.from === 'pending' ? 'pending' : 'approved';
   router.push(`/admin/companies/${from}`);
 }
+
+// 오버플로우 감지 및 툴팁 제어 함수들
+const checkOverflow = (event) => {
+  const element = event.target;
+  
+  // 실제 오버플로우 감지
+  const rect = element.getBoundingClientRect();
+  const computedStyle = window.getComputedStyle(element);
+  const fontSize = parseFloat(computedStyle.fontSize);
+  const fontFamily = computedStyle.fontFamily;
+  
+  // 임시 캔버스를 만들어서 텍스트의 실제 너비 측정
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  context.font = `${fontSize}px ${fontFamily}`;
+  const textWidth = context.measureText(element.textContent).width;
+  
+  // 패딩과 보더 고려
+  const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
+  const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
+  const borderLeft = parseFloat(computedStyle.borderLeftWidth) || 0;
+  const borderRight = parseFloat(computedStyle.borderRightWidth) || 0;
+  
+  const availableWidth = rect.width - paddingLeft - paddingRight - borderLeft - borderRight;
+  const isOverflowed = textWidth > availableWidth;
+  
+  console.log('업체 오버플로우 체크:', {
+    text: element.textContent,
+    textWidth,
+    availableWidth,
+    isOverflowed
+  });
+  
+  if (isOverflowed) {
+    element.classList.add('overflowed');
+    console.log('업체 오버플로우 클래스 추가됨');
+  } else {
+    element.classList.remove('overflowed'); // Ensure class is removed if not overflowed
+    console.log('업체 오버플로우 아님 - 클래스 제거됨');
+  }
+}
+
+const removeOverflowClass = (event) => {
+  const element = event.target;
+  element.classList.remove('overflowed');
+}
+
 </script>
 
 <style scoped>

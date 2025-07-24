@@ -54,6 +54,7 @@
                     :tabindex="isRowEditable(row) ? 0 : -1"
                     :disabled="!isRowEditable(row)"
                     @keydown="onArrowKey($event, rowIdx, 'prescription_month')"
+                    @change="handlePrescriptionMonthChange(rowIdx)"
                     :class="['select_month', { 'disabled-area': !isRowEditable(row) }]"
                   >
                     <option v-for="opt in prescriptionOptions" :key="opt.value" :value="opt.month">{{ opt.month }}</option>
@@ -243,6 +244,7 @@ const inputRows = ref([{
   product_name_display: '', 
   product_id: null, 
   insurance_code: '', 
+  standard_code: '', // 표준코드 추가
   price: '', 
   prescription_qty: '', 
   prescription_amount: '', 
@@ -588,6 +590,7 @@ function applySelectedProduct(product, rowIndex) {
   inputRows.value[rowIndex].product_name_display = product.product_name;
   inputRows.value[rowIndex].product_id = product.id;
   inputRows.value[rowIndex].insurance_code = product.insurance_code;
+  inputRows.value[rowIndex].standard_code = product.standard_code; // 표준코드 추가
   inputRows.value[rowIndex].price = product.price ? Number(product.price).toLocaleString() : '';
   inputRows.value[rowIndex].commission_rate_a = product.commission_rate_a;
   inputRows.value[rowIndex].commission_rate_b = product.commission_rate_b;
@@ -865,7 +868,7 @@ function cellClass(rowIdx, col) {
 async function getCommissionGradeForClientCompany(companyId, clientId) {
   const { data, error } = await supabase
     .from('client_company_assignments')
-    .select('modified_commission_grade, company_default_commission_grade')
+    .select('modified_commission_grade, company:companies(default_commission_grade)')
     .eq('company_id', companyId)
     .eq('client_id', clientId)
     .single();
@@ -880,8 +883,8 @@ async function getCommissionGradeForClientCompany(companyId, clientId) {
     return company?.default_commission_grade || 'A';
   }
   
-  // modified_commission_grade가 있으면 우선 사용, 없으면 company_default_commission_grade 사용
-  return data.modified_commission_grade || data.company_default_commission_grade || 'A';
+  // modified_commission_grade가 있으면 우선 사용, 없으면 companies 테이블의 default_commission_grade 사용
+  return data.modified_commission_grade || data.company?.default_commission_grade || 'A';
 }
 
 // 실적 저장로직 - 기존 데이터를 삭제 후 새로 저장
@@ -993,7 +996,9 @@ async function savePerformanceData() {
           prescription_type: row.prescription_type,
           remarks: row.remarks,
           commission_rate: commissionRate,
-          review_status: reviewStatus
+          review_status: reviewStatus,
+          updated_by: currentUserUid,
+          updated_at: new Date().toISOString()
         })
         .eq('id', row.id)
     });
@@ -1450,6 +1455,87 @@ watch(
   },
   { deep: true }
 );
+
+// 처방월 변경 시 제품 정보 자동 업데이트 함수
+async function updateProductInfoForMonthChange(rowIdx) {
+  const row = inputRows.value[rowIdx];
+  if (!row.insurance_code || !row.prescription_month) return;
+
+  try {
+    // 보험코드로 새 처방월에서 해당 제품 정보 조회
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('insurance_code', row.insurance_code)
+      .eq('base_month', row.prescription_month)
+      .eq('status', 'active')
+      .limit(1);
+
+    if (error) {
+      console.error('제품 조회 오류:', error);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      // 새 처방월에 해당 제품이 없으면 제품 선택 해제
+      console.log(`보험코드 ${row.insurance_code} 제품이 ${row.prescription_month}에 존재하지 않습니다. 제품 선택을 해제합니다.`);
+      row.product_name_display = '';
+      row.product_id = null;
+      row.insurance_code = '';
+      row.price = '';
+      row.prescription_qty = '';
+      row.prescription_amount = '';
+      row.commission_rate_a = null;
+      row.commission_rate_b = null;
+      return;
+    }
+
+    const productData = data[0]; // 첫 번째 결과 사용
+
+    // 새 처방월에 해당 제품이 있으면 정보 업데이트
+    console.log(`보험코드 ${row.insurance_code} 제품의 ${row.prescription_month} 정보로 업데이트:`, {
+      product_id: productData.id,
+      product_name: productData.product_name,
+      price: productData.price,
+      commission_rate_a: productData.commission_rate_a,
+      commission_rate_b: productData.commission_rate_b
+    });
+
+    row.product_id = productData.id; // 새로운 product_id로 업데이트
+    row.product_name_display = productData.product_name;
+    row.insurance_code = productData.insurance_code;
+    row.price = productData.price ? Number(productData.price).toLocaleString() : '';
+    row.commission_rate_a = productData.commission_rate_a;
+    row.commission_rate_b = productData.commission_rate_b;
+
+    // 처방수량이 있으면 처방액 재계산
+    if (row.prescription_qty) {
+      const qty = Number(row.prescription_qty.toString().replace(/,/g, ''));
+      const price = Number(productData.price) || 0;
+      if (!isNaN(qty) && !isNaN(price) && price > 0) {
+        row.prescription_amount = (qty * price).toLocaleString();
+      }
+    }
+  } catch (err) {
+    console.error('제품 정보 업데이트 오류:', err);
+  }
+}
+
+// 처방월 변경 이벤트 핸들러
+async function handlePrescriptionMonthChange(rowIdx) {
+  const row = inputRows.value[rowIdx];
+  const oldMonth = row.prescription_month;
+  
+  // 처방월이 변경되었고 제품이 선택되어 있으면 정보 업데이트
+  if (row.product_id) {
+    await updateProductInfoForMonthChange(rowIdx);
+  }
+  
+  // 해당 월의 제품 목록이 로드되어 있지 않으면 로드
+  if (!productsByMonth.value[row.prescription_month]) {
+    await fetchProductsForMonth(row.prescription_month);
+  }
+}
 </script>
 
 <style scoped>

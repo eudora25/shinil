@@ -67,7 +67,11 @@
           :headerStyle="{ width: columnWidths.name }" 
           :style="{ fontWeight: '500 !important' }"  
           :sortable="true" 
-        />
+        >
+          <template #body="slotProps">
+            <span class="ellipsis-cell" :title="slotProps.data.name" @mouseenter="checkOverflow" @mouseleave="removeOverflowClass">{{ slotProps.data.name }}</span>
+          </template>
+        </Column>
         <Column
           field="business_registration_number"
           header="사업자등록번호"
@@ -80,7 +84,11 @@
           :headerStyle="{ width: columnWidths.owner_name }"
           :sortable="true"
         />
-        <Column field="address" header="주소" :headerStyle="{ width: columnWidths.address }" :sortable="true" />
+        <Column field="address" header="주소" :headerStyle="{ width: columnWidths.address }" :sortable="true">
+          <template #body="slotProps">
+            <span class="ellipsis-cell" :title="slotProps.data.address" @mouseenter="checkOverflow" @mouseleave="removeOverflowClass">{{ slotProps.data.address }}</span>
+          </template>
+        </Column>
         <Column header="약국명" :headerStyle="{ width: columnWidths.pharmacy_name }">
           <template #body="slotProps">
             <div v-if="slotProps.data.pharmacies && slotProps.data.pharmacies.length > 0">
@@ -186,7 +194,7 @@ import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import Dialog from 'primevue/dialog'
 import { supabase } from '@/supabase'
-import { exportToExcel } from '@/utils/excelUtils'
+import * as XLSX from 'xlsx'
 
 const clients = ref([])
 const loading = ref(false)
@@ -267,13 +275,43 @@ function closeAssignModal() {
 }
 async function assignPharmacies() {
   if (!selectedClient.value || selectedPharmacies.value.length === 0) return
-  const assignments = selectedPharmacies.value.map((pharmacy) => ({
-    client_id: selectedClient.value.id,
-    pharmacy_id: pharmacy.id,
-  }))
-  await supabase
-    .from('client_pharmacy_assignments')
-    .upsert(assignments, { onConflict: 'client_id,pharmacy_id' })
+  
+      const assignments = selectedPharmacies.value.map((pharmacy) => ({
+      // id는 자동 생성되도록 제거 (auto-increment)
+      client_id: selectedClient.value.id,
+      pharmacy_id: pharmacy.id,
+    }))
+  
+  console.log('=== 문전약국 지정 디버깅 정보 ===');
+  console.log('선택된 병의원:', selectedClient.value);
+  console.log('선택된 약국들:', selectedPharmacies.value);
+  console.log('요청 데이터:', assignments);
+  console.log('Supabase 클라이언트:', supabase);
+  
+  try {
+    // 상용서버와 동일한 방식으로 복원
+    const { data, error } = await supabase
+      .from('client_pharmacy_assignments')
+      .upsert(assignments, { onConflict: 'client_id,pharmacy_id' });
+    
+    if (error) {
+      console.error('=== 상세 오류 정보 ===');
+      console.error('오류 객체:', error);
+      console.error('오류 메시지:', error.message);
+      console.error('오류 코드:', error.code);
+      console.error('오류 상세:', error.details);
+      console.error('오류 힌트:', error.hint);
+      console.error('전체 오류:', JSON.stringify(error, null, 2));
+      throw error;
+    }
+    
+    console.log('성공 응답:', data);
+  } catch (error) {
+    console.error('문전약국 지정 실패:', error);
+    alert('문전약국 지정 중 오류가 발생했습니다: ' + error.message);
+    return;
+  }
+  
   closeAssignModal()
   await fetchClients()
 }
@@ -363,7 +401,11 @@ const handleFileUpload = async (event) => {
       }
 
       if (clientId && pharmacyId) {
-        assignmentsToUpload.push({ client_id: clientId, pharmacy_id: pharmacyId })
+        assignmentsToUpload.push({ 
+          // id는 자동 생성되도록 제거 (auto-increment)
+          client_id: clientId, 
+          pharmacy_id: pharmacyId 
+        })
       }
     }
 
@@ -373,14 +415,33 @@ const handleFileUpload = async (event) => {
     }
 
     if (assignmentsToUpload.length > 0) {
-      const { error } = await supabase
-        .from('client_pharmacy_assignments')
-        .upsert(assignmentsToUpload, { onConflict: 'client_id,pharmacy_id' })
-      if (error) {
-        alert('업로드 실패: ' + error.message)
-      } else {
-        alert(`${assignmentsToUpload.length}건의 문전약국 지정 정보가 업로드/갱신되었습니다.`)
-        await fetchClients()
+      console.log('=== 엑셀 업로드 디버깅 정보 ===');
+      console.log('업로드할 데이터:', assignmentsToUpload);
+      console.log('데이터 개수:', assignmentsToUpload.length);
+      
+      try {
+        // 상용서버와 동일한 방식으로 복원
+        const { data, error } = await supabase
+          .from('client_pharmacy_assignments')
+          .upsert(assignmentsToUpload, { onConflict: 'client_id,pharmacy_id' });
+        
+        if (error) {
+          console.error('=== 엑셀 업로드 상세 오류 정보 ===');
+          console.error('오류 객체:', error);
+          console.error('오류 메시지:', error.message);
+          console.error('오류 코드:', error.code);
+          console.error('오류 상세:', error.details);
+          console.error('오류 힌트:', error.hint);
+          console.error('전체 오류:', JSON.stringify(error, null, 2));
+          alert('업로드 실패: ' + error.message)
+        } else {
+          console.log('엑셀 업로드 성공 응답:', data);
+          alert(`${assignmentsToUpload.length}건의 문전약국 지정 정보가 업로드/갱신되었습니다.`)
+          await fetchClients()
+        }
+      } catch (error) {
+        console.error('엑셀 업로드 예외:', error);
+        alert('업로드 중 예외가 발생했습니다: ' + error.message);
       }
     }
   } catch (error) {
@@ -445,6 +506,53 @@ async function deleteAllAssignments() {
   }
   clients.value.forEach(c => c.pharmacies = []);
   alert('모든 문전약국 지정 데이터가 삭제되었습니다.');
+}
+
+// 오버플로우 감지 및 툴팁 제어 함수들
+const checkOverflow = (event) => {
+  const element = event.target;
+  
+  // 실제 오버플로우 감지
+  const rect = element.getBoundingClientRect();
+  const computedStyle = window.getComputedStyle(element);
+  const fontSize = parseFloat(computedStyle.fontSize);
+  const fontFamily = computedStyle.fontFamily;
+  
+  // 임시 캔버스를 만들어서 텍스트의 실제 너비 측정
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  context.font = `${fontSize}px ${fontFamily}`;
+  const textWidth = context.measureText(element.textContent).width;
+  
+  // 패딩과 보더 고려
+  const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
+  const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
+  const borderLeft = parseFloat(computedStyle.borderLeftWidth) || 0;
+  const borderRight = parseFloat(computedStyle.borderRightWidth) || 0;
+  
+  const availableWidth = rect.width - paddingLeft - paddingRight - borderLeft - borderRight;
+  const isOverflowed = textWidth > availableWidth;
+  
+  console.log('병의원 문전약국 오버플로우 체크:', {
+    text: element.textContent,
+    textWidth,
+    availableWidth,
+    isOverflowed
+  });
+  
+  if (isOverflowed) {
+    element.classList.add('overflowed');
+    console.log('병의원 문전약국 오버플로우 클래스 추가됨');
+  } else {
+    element.classList.remove('overflowed'); // Ensure class is removed if not overflowed
+    console.log('병의원 문전약국 오버플로우 아님 - 클래스 제거됨');
+  }
+}
+
+const removeOverflowClass = (event) => {
+  const element = event.target;
+  element.classList.remove('overflowed');
+  console.log('병의원 문전약국 오버플로우 클래스 제거됨');
 }
 
 onMounted(() => {

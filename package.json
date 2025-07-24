@@ -1,29 +1,10 @@
 {
-  "name": "shinil-project",
+  "name": "edi_sh_new-backend",
   "version": "1.0.0",
-  "description": "신일제약 실적관리프로그램",
-  "scripts": {
-    "build": "cd vue-project && npm install && npm run build",
-    "dev": "cd vue-project && npm run dev",
-    "vercel-build": "cd vue-project && npm install && npm run build",
-    "lint": "cd vue-project && npm run lint",
-    "format": "cd vue-project && npm run format",
-    "prepare": "husky install"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "lint-staged": {
-    "vue-project/src/**/*.{js,vue}": [
-      "cd vue-project && npm run lint --fix",
-      "cd vue-project && npm run format"
-    ]
-  },
-  "devDependencies": {
-    "husky": "^9.0.11",
-    "lint-staged": "^15.2.2"
-  },
+  "main": "index.js",
+  "license": "MIT",
   "dependencies": {
-    "bcrypt": "^6.0.0"
+    "@supabase/supabase-js": "^2.0.0",
+    "xlsx": "^0.18.5"
   }
 }

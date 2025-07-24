@@ -28,7 +28,7 @@
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
           <label>병의원</label>
-          <select v-model="selectedHospitalId" class="select_200px">
+          <select v-model="selectedHospitalId" class="select_240px">
             <option value="">- 전체 -</option>
             <option v-for="hospital in hospitals" :key="hospital.id" :value="hospital.id">{{ hospital.name }}</option>
           </select>
@@ -66,6 +66,7 @@
           :paginator="true"
           :rows="100"
           :rowsPerPageOptions="[100, 200, 500, 1000]"
+
           :pt="{
             wrapper: { style: 'min-width: 2200px;' },
             table: { style: 'min-width: 2200px;' }
@@ -146,23 +147,23 @@ import Column from 'primevue/column';
 import ColumnGroup from 'primevue/columngroup';
 import Row from 'primevue/row';
 import { supabase } from '@/supabase';
-import { exportToExcel } from '@/utils/excelUtils';
+import * as XLSX from 'xlsx';
 
 const columnWidths = {
   no: '3%',
   review_status: '4%',
-  company_group: '7%',
+  company_group: '6%',
   company_name: '9%',
-  client_name: '13%',
-  prescription_month: '6%',
+  client_name: '15%',
+  prescription_month: '5%',
   product_name_display: '13%',
   insurance_code: '6%',
   price: '5%',
   prescription_qty: '6%',
   prescription_amount: '6%',
-  prescription_type: '7%',
+  prescription_type: '6%',
   remarks: '11%',
-  created_date: '9%',
+  created_date: '7%',
   created_by: '8%',
   assigned_pharmacist_contact: '5%'
 };

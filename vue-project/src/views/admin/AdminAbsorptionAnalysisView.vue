@@ -31,7 +31,7 @@
         
         <div style="display: flex; align-items: center; gap: 8px;">
           <label>병의원</label>
-          <select v-model="selectedHospitalId" class="select_200px">
+          <select v-model="selectedHospitalId" class="select_240px">
             <option v-for="hospital in hospitalOptions" :key="hospital.id" :value="hospital.id">{{ hospital.name }}</option>
           </select>
         </div>
@@ -79,6 +79,7 @@
           scrollHeight="calc(100vh - 240px)"
           class="absorption-analysis-table"
           v-model:first="currentPageFirstIndex"
+
           :pt="{
             wrapper: { style: 'min-width: 2600px;' },
             table: { style: 'min-width: 2600px;' }
@@ -117,30 +118,58 @@
           
           <Column field="wholesale_revenue" header="도매매출" :headerStyle="{ width: columnWidths.wholesale_revenue }" :sortable="true">
             <template #body="slotProps">
-              {{ Math.floor(slotProps.data.wholesale_revenue || 0).toLocaleString() }}
+              <span :title="Math.floor(slotProps.data.wholesale_revenue || 0).toLocaleString()">
+                {{ Math.floor(slotProps.data.wholesale_revenue || 0).toLocaleString() }}
+              </span>
             </template>
           </Column>
           <Column field="direct_revenue" header="직거래매출" :headerStyle="{ width: columnWidths.direct_revenue }" :sortable="true">
              <template #body="slotProps">
-              {{ Math.floor(slotProps.data.direct_revenue || 0).toLocaleString() }}
+              <span :title="Math.floor(slotProps.data.direct_revenue || 0).toLocaleString()">
+                {{ Math.floor(slotProps.data.direct_revenue || 0).toLocaleString() }}
+              </span>
             </template>
           </Column>
           <Column field="total_revenue" header="합산액" :headerStyle="{ width: columnWidths.total_revenue }" :sortable="true">
              <template #body="slotProps">
-              {{ Math.floor(slotProps.data.total_revenue || 0).toLocaleString() }}
+              <span :title="Math.floor(slotProps.data.total_revenue || 0).toLocaleString()">
+                {{ Math.floor(slotProps.data.total_revenue || 0).toLocaleString() }}
+              </span>
             </template>
           </Column>
           <Column field="absorption_rate" header="흡수율" :headerStyle="{ width: columnWidths.absorption_rate }" :sortable="true">
              <template #body="slotProps">
-              {{ slotProps.data.absorption_rate }}%
+              <span :title="slotProps.data.absorption_rate + '%'">
+                {{ slotProps.data.absorption_rate }}%
+              </span>
             </template>
           </Column>
 
-          <Column field="commission_rate" header="수수료율" :headerStyle="{ width: columnWidths.commission_rate }" :sortable="true" />
-          <Column field="payment_amount" header="지급액" :headerStyle="{ width: columnWidths.payment_amount }" :sortable="true" />
-          <Column field="remarks" header="비고" :headerStyle="{ width: columnWidths.remarks }" :sortable="true" />
-          <Column field="created_date" header="등록일시" :headerStyle="{ width: columnWidths.created_date }" :sortable="true" />
-          <Column field="created_by" header="등록자" :headerStyle="{ width: columnWidths.created_by }" :sortable="true" />
+          <Column field="commission_rate" header="수수료율" :headerStyle="{ width: columnWidths.commission_rate }" :sortable="true">
+            <template #body="slotProps">
+              <span :title="slotProps.data.commission_rate">{{ slotProps.data.commission_rate }}</span>
+            </template>
+          </Column>
+          <Column field="payment_amount" header="지급액" :headerStyle="{ width: columnWidths.payment_amount }" :sortable="true">
+            <template #body="slotProps">
+              <span :title="slotProps.data.payment_amount">{{ slotProps.data.payment_amount }}</span>
+            </template>
+          </Column>
+          <Column field="remarks" header="비고" :headerStyle="{ width: columnWidths.remarks }" :sortable="true">
+            <template #body="slotProps">
+              <span :title="slotProps.data.remarks">{{ slotProps.data.remarks }}</span>
+            </template>
+          </Column>
+          <Column field="created_date" header="등록일시" :headerStyle="{ width: columnWidths.created_date }" :sortable="true">
+            <template #body="slotProps">
+              <span :title="slotProps.data.created_date">{{ slotProps.data.created_date }}</span>
+            </template>
+          </Column>
+          <Column field="created_by" header="등록자" :headerStyle="{ width: columnWidths.created_by }" :sortable="true">
+            <template #body="slotProps">
+              <span :title="slotProps.data.created_by">{{ slotProps.data.created_by }}</span>
+            </template>
+          </Column>
 
           <ColumnGroup type="footer">
             <Row>
@@ -179,17 +208,17 @@ import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import { supabase } from '@/supabase';
-import { exportToExcel } from '@/utils/excelUtils';
+import * as XLSX from 'xlsx';
 
 const columnWidths = {
-  no: '4%',
-  review_action: '4%',
+  no: '3.5%',
+  review_action: '3.5%',
   company_type: '7%',
-  company_name: '10%',
-  client_name: '14%',
+  company_name: '9%',
+  client_name: '16%',
   prescription_month: '6%',
-  product_name_display: '14%',
-  insurance_code: '7%',
+  product_name_display: '16%',
+  insurance_code: '6.5%',
   price: '6%',
   prescription_qty: '7%',
   prescription_amount: '7%',
@@ -202,7 +231,7 @@ const columnWidths = {
   payment_amount: '7%',
   remarks: '12%',
   created_date: '8%',
-  created_by: '10%'
+  created_by: '9%'
 };
 
 // --- 상태 변수 정의 ---
@@ -789,7 +818,7 @@ const calculateAbsorptionRates = async () => {
       
       const { error: insertError } = await supabase
         .from('performance_records_absorption')
-        .upsert(batchData.map(record => ({
+        .insert(batchData.map(record => ({
           id: record.id, // 원본 performance_records의 id 사용
           settlement_month: record.settlement_month,
           company_id: record.company_id,
@@ -801,9 +830,10 @@ const calculateAbsorptionRates = async () => {
           commission_rate: record.commission_rate,
           remarks: record.remarks,
           registered_by: record.registered_by,
+          review_action: record.review_action, // review_action 필드 추가
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        })), { onConflict: 'id' });
+        })));
 
       if (insertError) throw insertError;
       

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, nextTick, computed, watch } from 'vue';
+import { ref, onMounted, nextTick, computed } from 'vue';
 import { RouterView, useRoute } from 'vue-router';
 import { supabase } from '@/supabase';
 import router from './router';
@@ -70,9 +70,7 @@ const handleRedirect = async (currentSession) => {
     }
   } else {
     // 사용자가 로그인되지 않은 상태
-    // 테스트 페이지들은 로그인 없이 접근 허용
-    const publicPaths = ['/login', '/signup', '/test', '/api-test'];
-    if (!publicPaths.includes(actualPath)) {
+    if (actualPath !== '/login' && actualPath !== '/signup') {
       console.log(`[App.vue] handleRedirect: User not logged in. Redirecting from ${actualPath} to /login`);
       try {
         await router.push('/login');
@@ -80,7 +78,7 @@ const handleRedirect = async (currentSession) => {
         console.error('[App.vue] handleRedirect: Failed to push to /login (user not logged in)', e);
       }
     } else {
-        console.log(`[App.vue] handleRedirect: User not logged in. Public path ${actualPath}. No redirect needed.`);
+        console.log(`[App.vue] handleRedirect: User not logged in. Already at ${actualPath}. No redirect needed.`);
     }
   }
 };
@@ -154,49 +152,66 @@ const breadcrumbSubMenu = computed(() => {
 });
 
 onMounted(async () => {
-  console.log('[App.vue] Component mounted');
+  console.log('[App.vue] onMounted: Component mounted. Registering onAuthStateChange.');
   
-  // localStorage에서 사용자 정보 확인
-  const storedUser = localStorage.getItem('user');
-  const storedUserType = localStorage.getItem('userType');
-  
-  if (storedUser && storedUserType) {
-    try {
-      const userData = JSON.parse(storedUser);
-      user.value = userData;
-      userEmail.value = userData.email;
-      userType.value = storedUserType;
-      console.log('[App.vue] User data loaded from localStorage');
-    } catch (error) {
-      console.error('[App.vue] Error parsing stored user data', error);
-      localStorage.removeItem('user');
-      localStorage.removeItem('userType');
+  // 초기 세션 로드 및 상태 설정
+  // onAuthStateChange가 INITIAL_SESSION 이벤트를 통해 초기 상태를 처리하므로,
+  // onMounted에서는 getSession()을 호출하여 즉시 상태를 반영하려고 시도할 수 있지만,
+  // onAuthStateChange 리스너가 등록된 후 INITIAL_SESSION 이벤트가 발생하므로 중복될 수 있습니다.
+  // INITIAL_SESSION을 주로 사용하고, getSession은 보조적으로 사용하거나 로그 확인용으로만 남겨둘 수 있습니다.
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('[App.vue] onMounted: getSession() completed.', { session });
+    if (session && session.user) {
+        // 이미 INITIAL_SESSION에서 처리될 가능성이 높지만, 만약을 대비해 한번 더 사용자 상태 설정
+        // setUserState(session.user); 
+        // INITIAL_SESSION 이벤트에서 주도적으로 처리하도록 이 부분은 주석 처리하거나 제거 가능.
+    } else if (!session && router.currentRoute.value.path !== '/login' && router.currentRoute.value.path !== '/signup') {
+        // console.log('[App.vue] onMounted: No session from getSession(), redirecting to /login if not already there.');
+        // await router.push('/login'); // INITIAL_SESSION에서 처리.
     }
+  } catch (error) {
+      console.error('[App.vue] onMounted: Error in getSession()', error);
   }
+
+    
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    setUserState(session?.user); // 이벤트 발생 시마다 사용자 상태 업데이트
+
+    if (event === 'INITIAL_SESSION') {
+      console.log('[App.vue] Event: INITIAL_SESSION');
+      await handleRedirect(session);
+    } else if (event === 'SIGNED_IN') {
+      console.log('[App.vue] Event: SIGNED_IN');
+      await handleRedirect(session); // 로그인 시 리디렉션
+    } else if (event === 'SIGNED_OUT') {
+      console.log('[App.vue] Event: SIGNED_OUT');
+      await handleRedirect(null); // 로그아웃 시 리디렉션 (세션 없음)
+    } else if (event === 'USER_UPDATED') {
+      console.log('[App.vue] Event: USER_UPDATED. User metadata might have changed.');
+      // 필요하다면 handleRedirect(session) 호출
+    } else if (event === 'PASSWORD_RECOVERY') {
+      console.log('[App.vue] Event: PASSWORD_RECOVERY. User may need to be redirected to a password reset page.');
+      // 필요한 경우 비밀번호 재설정 페이지로 리디렉션
+    } else if (event === 'TOKEN_REFRESHED') {
+      console.log('[App.vue] Event: TOKEN_REFRESHED. Session token has been refreshed.');
+      // 특별한 조치 불필요
+    }
+  });
 });
 
 const handleLogout = async () => {
   console.log('[App.vue] handleLogout: Attempting logout');
   try {
-    // localStorage에서 사용자 정보 제거
-    localStorage.removeItem('user');
-    localStorage.removeItem('userType');
-    
-    // 사용자 상태 완전 초기화
-    user.value = null;
-    userEmail.value = '';
-    userType.value = '';
-    
-    console.log('[App.vue] handleLogout: User state cleared:', {
-      user: user.value,
-      userEmail: userEmail.value,
-      userType: userType.value
-    });
-    
-    // 페이지 새로고침으로 App.vue의 onMounted가 다시 실행되도록 함
-    window.location.href = '/login';
-    
-    console.log('[App.vue] handleLogout: Logout successful');
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+        console.error('[App.vue] handleLogout: Logout failed', error);
+        alert('로그아웃 실패: ' + error.message);
+    } else {
+        console.log('[App.vue] handleLogout: Logout successful. onAuthStateChange will handle redirect.');
+        // setUserState(null); // onAuthStateChange에서 처리
+        // router.push('/login'); // onAuthStateChange에서 처리
+    }
   } catch (error) {
     console.error('[App.vue] handleLogout: Exception during logout', error);
     alert('로그아웃 중 예외 발생: ' + error.message);
@@ -221,8 +236,8 @@ toast.add({ severity: 'error', summary: '실패', detail: '오류가 발생했�
     <router-view />
   </EmptyLayout>
   <DefaultLayout v-else>
-    <SideNavigationBar v-if="user && userType" :userRole="userType" :userEmail="userEmail" @logout="handleLogout" />
-    <TopNavigationBar v-if="user && userType" @logout="handleLogout" />
+    <SideNavigationBar v-if="user" :userRole="userType" :userEmail="userEmail" @logout="handleLogout" />
+    <TopNavigationBar v-if="user" @logout="handleLogout" />
     <div class="main-content">
       <RouterView />
     </div>

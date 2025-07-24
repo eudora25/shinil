@@ -15,19 +15,9 @@ import Aura from '@primevue/themes/aura';
 import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
 
-// Sentry 모니터링 초기화
-import { initSentry } from '@/utils/sentry';
-// 성능 모니터링
-import { startPerformanceMonitoring } from '@/utils/performance';
-
 const app = createApp(App);
 
-// Sentry 초기화 (router 등록 후)
 app.use(router);
-initSentry(app, router);
-
-// 성능 모니터링 시작
-startPerformanceMonitoring();
 app.use(PrimeVue, {
   theme: Aura,
   ripple: true,

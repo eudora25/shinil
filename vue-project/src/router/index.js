@@ -40,8 +40,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: () => import('@/views/ApiTestView.vue'),
-      meta: { requiresAuth: false }
+      component: HomeView
     },
     // {
     //   path: '/about',
@@ -421,48 +420,63 @@ const router = createRouter({
     {
       path: '/admin-manual',
       component: () => import('@/views/ManualView.vue')
-    },
-    {
-      path: '/api-test',
-      name: 'ApiTest',
-      component: () => import('@/views/ApiTestView.vue'),
-      meta: { requiresAuth: false }
-    },
-    {
-      path: '/test',
-      name: 'Test',
-      component: () => import('@/views/ApiTestView.vue'),
-      meta: { requiresAuth: false }
     }
   ]
 })
 
-// 라우터 가드
+// (선택 사항) 네비게이션 가드 추가: requiresAuth 메타 필드가 있는 라우트에 대해 인증 여부 확인
 router.beforeEach(async (to, from, next) => {
   console.log(`[Router Guard] Navigating from: ${from.fullPath} to: ${to.fullPath}`);
-  
-  // API 테스트 페이지는 항상 허용
-  if (to.path === '/api-test' || to.path === '/test') {
-    console.log('[Router Guard] API test page, allowing access');
+
+  // 로그인 및 회원가입 페이지는 항상 접근 허용
+  if (to.name === 'login' || to.name === 'signup') {
+    console.log('[Router Guard] Accessing login/signup page. Allowing.');
     return next();
   }
-  
-  // 로그인/회원가입 페이지는 허용
-  if (to.path === '/login' || to.path === '/signup') {
-    console.log('[Router Guard] Login/Signup page, allowing access');
-    return next();
+
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    console.error('[Router Guard] Error getting session:', sessionError.message);
+    // 세션 가져오기 실패 시 로그인 페이지로 (심각한 오류 상황)
+    return next({ name: 'login', query: { redirect: to.fullPath } });
   }
-  
-  // localStorage에서 사용자 정보 확인
-  const storedUser = localStorage.getItem('user');
-  const storedUserType = localStorage.getItem('userType');
-  
-  if (storedUser && storedUserType) {
-    console.log('[Router Guard] User authenticated, allowing access');
-    return next();
+  console.log('[Router Guard] Session:', session ? 'Exists' : 'Does not exist');
+
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  console.log(`[Router Guard] Route requiresAuth: ${requiresAuth}`);
+
+  if (requiresAuth) {
+    if (!session) {
+      console.log('[Router Guard] Auth required, but no session. Redirecting to login.');
+      return next({ name: 'login', query: { redirect: to.fullPath } }); // 로그인 후 원래 경로로 리디렉션하기 위한 query 추가
+    }
+
+    // 세션이 있는 경우, 역할 검사
+    const userRole = session.user?.user_metadata?.user_type;
+    console.log(`[Router Guard] User role from session: ${userRole}`);
+
+    const requiredRole = to.meta.role; // 가장 일치하는 라우트의 role을 직접 사용
+    console.log(`[Router Guard] Required role for route: ${requiredRole}`);
+
+    if (requiredRole) {
+      if (userRole === requiredRole) {
+        console.log('[Router Guard] Role matched. Proceeding.');
+        return next();
+      } else {
+        console.log(`[Router Guard] Role mismatch. User role: ${userRole}, Required: ${requiredRole}. Redirecting to home.`);
+        alert('접근 권한이 없습니다. (역할 불일치)');
+        return next({ name: 'home' }); // 또는 사용자의 기본 대시보드나 로그인 페이지
+      }
+    } else {
+      // requiresAuth는 true이지만, 특정 role이 명시되지 않은 경우 (예: 로그인한 모든 사용자 접근 가능)
+      console.log('[Router Guard] Auth required, no specific role. Session exists. Proceeding.');
+      return next();
+    }
   } else {
-    console.log('[Router Guard] No user data, redirecting to login');
-    return next('/login');
+    // 인증이 필요 없는 페이지
+    console.log('[Router Guard] No auth required for this route. Proceeding.');
+    return next();
   }
 });
 

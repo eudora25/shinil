@@ -7,7 +7,7 @@
       <div class="filter-row">
         <div style="display: flex; align-items: center; gap: 8px; margin-right: 24px;">
           <label style="white-space: nowrap;">기준월</label>
-          <select v-model="selectedMonth" class="select_month">
+          <select v-model="selectedMonth" @change="filterByMonth" class="select_month">
             <option v-for="month in availableMonths" :key="month" :value="month">
               {{ month }}
             </option>
@@ -79,7 +79,7 @@ import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import { useRouter } from 'vue-router';
 import { supabase } from '@/supabase';
-import { exportToExcel } from '@/utils/excelUtils';
+import * as XLSX from 'xlsx';
 
 const products = ref([]);
 const filters = ref({ 'global': { value: null, matchMode: 'contains' } });
@@ -88,6 +88,7 @@ const availableMonths = ref([]); // 기준월 목록
 const router = useRouter();
 const userCommissionGrade = ref('A');
 const currentPageFirstIndex = ref(0);
+const loading = ref(false); // 로딩 상태 추가
 
 // 컬럼 너비 한 곳에서 관리
 const columnWidths = {
@@ -139,25 +140,102 @@ function goToDetail(id) {
 }
 
 const fetchProducts = async () => {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('status', 'active')
-    .range(0, 2999);
-  if (!error && data) {
-    products.value = data;
-    // 중복 없이 기준월만 추출
+  loading.value = true;
+  try {
+    // 페이지네이션을 사용하여 모든 기준월 데이터 가져오기
+    let allMonthData = [];
+    let hasMore = true;
+    let offset = 0;
+    const limit = 1000;
+    
+    while (hasMore) {
+      const { data: monthData, error: monthError } = await supabase
+        .from('products')
+        .select('base_month')
+        .eq('status', 'active')
+        .not('base_month', 'is', null)
+        .order('base_month', { ascending: false })
+        .range(offset, offset + limit - 1);
+      
+      if (monthError) {
+        console.error('기준월 목록 로딩 오류:', monthError);
+        return;
+      }
+      
+      if (monthData && monthData.length > 0) {
+        allMonthData = allMonthData.concat(monthData);
+        offset += limit;
+        
+        // 더 이상 데이터가 없으면 중단
+        if (monthData.length < limit) {
+          hasMore = false;
+        }
+      } else {
+        hasMore = false;
+      }
+    }
+    
+    console.log('가져온 기준월 데이터 개수:', allMonthData.length);
+    
+    // 중복 제거하고 최신순으로 정렬
     const monthSet = new Set();
-    data.forEach((item) => {
-      if (item.base_month) monthSet.add(item.base_month);
+    allMonthData.forEach((item) => {
+      if (item.base_month) {
+        monthSet.add(item.base_month);
+      }
     });
-    availableMonths.value = Array.from(monthSet).sort((a, b) => b.localeCompare(a));
-    // 최신 연월을 기본값으로
+    
+    availableMonths.value = Array.from(monthSet).sort((a, b) => {
+      return b.localeCompare(a); // 최신순 정렬
+    });
+    
+    console.log('추출된 기준월 목록:', availableMonths.value);
+    
+    // 최신 연월을 기본값으로 설정하고 해당 월의 제품 불러오기
     if (availableMonths.value.length > 0) {
       selectedMonth.value = availableMonths.value[0];
+      await fetchProductsByMonth(selectedMonth.value);
     }
+  } catch (err) {
+    console.error('기준월 목록 로딩 오류:', err);
+  } finally {
+    loading.value = false;
   }
-};
+}
+
+// 선택된 기준월의 제품만 불러오는 함수
+const fetchProductsByMonth = async (month) => {
+  if (!month) return;
+  
+  loading.value = true;
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('status', 'active')
+      .eq('base_month', month)
+      .order('product_name', { ascending: true })
+      .limit(1000); // 한 달에 423개이므로 1000개 제한으로 충분
+    
+    if (error) {
+      console.error('제품 데이터 로딩 오류:', error);
+      return;
+    }
+    
+    products.value = data || [];
+  } catch (err) {
+    console.error('제품 데이터 로딩 오류:', err);
+  } finally {
+    loading.value = false;
+  }
+}
+
+// 기준월 변경 시 제품 다시 불러오기
+const filterByMonth = async () => {
+  if (selectedMonth.value) {
+    await fetchProductsByMonth(selectedMonth.value);
+  }
+}
 
 const fetchUserCommissionGrade = async () => {
   try {

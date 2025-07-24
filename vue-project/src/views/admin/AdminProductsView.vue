@@ -79,7 +79,7 @@
               v-model="slotProps.data.product_name"
               class="p-inputtext p-component p-inputtext-sm inline-edit-input"
             />
-            <a v-else href="#" class="text-link" @click.prevent="goToDetail(slotProps.data.id)">
+            <a v-else href="#" class="text-link ellipsis-cell" :title="slotProps.data.product_name" @click.prevent="goToDetail(slotProps.data.id)" @mouseenter="checkProductOverflow" @mouseleave="removeOverflowClass">
               {{ slotProps.data.product_name }}
             </a>
           </template>
@@ -246,7 +246,7 @@ import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/supabase'
-import { exportToExcel } from '@/utils/excelUtils'
+import * as XLSX from 'xlsx'
 
 // 컬럼 너비 한 곳에서 관리
 const columnWidths = {
@@ -312,12 +312,13 @@ const koLocale = {
 }
 
 const filteredProducts = computed(() => {
-  if (!selectedMonth.value) return products.value
-  return products.value.filter((p) => p.base_month === selectedMonth.value)
+  return products.value; // 이제 선택된 기준월의 제품만 불러오므로 추가 필터링 불필요
 })
 
-const filterByMonth = () => {
-  // computed에서 자동 처리
+const filterByMonth = async () => {
+  if (selectedMonth.value) {
+    await fetchProductsByMonth(selectedMonth.value);
+  }
 }
 
 function goCreate() {
@@ -330,24 +331,88 @@ function goToDetail(id) {
 const fetchProducts = async () => {
   loading.value = true;
   try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*', { count: 'exact' })
-      .range(0, 2999)
-      .order('base_month', { ascending: false });
-    if (!error && data) {
-      products.value = data;
-      // 중복 없이 기준월만 추출
-      const monthSet = new Set();
-      data.forEach((item) => {
-        if (item.base_month) monthSet.add(item.base_month);
-      });
-      availableMonths.value = Array.from(monthSet).sort((a, b) => b.localeCompare(a));
-      // 최신 연월을 기본값으로
-      if (availableMonths.value.length > 0) {
-        selectedMonth.value = availableMonths.value[0];
+    // 페이지네이션을 사용하여 모든 기준월 데이터 가져오기
+    let allMonthData = [];
+    let hasMore = true;
+    let offset = 0;
+    const limit = 1000;
+    
+    while (hasMore) {
+      const { data: monthData, error: monthError } = await supabase
+        .from('products')
+        .select('base_month')
+        .not('base_month', 'is', null)
+        .order('base_month', { ascending: false })
+        .range(offset, offset + limit - 1);
+      
+      if (monthError) {
+        console.error('기준월 목록 로딩 오류:', monthError);
+        return;
+      }
+      
+      if (monthData && monthData.length > 0) {
+        allMonthData = allMonthData.concat(monthData);
+        offset += limit;
+        
+        // 더 이상 데이터가 없으면 중단
+        if (monthData.length < limit) {
+          hasMore = false;
+        }
+      } else {
+        hasMore = false;
       }
     }
+    
+    console.log('가져온 기준월 데이터 개수:', allMonthData.length);
+    console.log('기준월 데이터 샘플:', allMonthData.slice(0, 10));
+    
+    // 중복 제거하고 최신순으로 정렬
+    const monthSet = new Set();
+    allMonthData.forEach((item) => {
+      if (item.base_month) {
+        monthSet.add(item.base_month);
+      }
+    });
+    
+    availableMonths.value = Array.from(monthSet).sort((a, b) => {
+      return b.localeCompare(a); // 최신순 정렬
+    });
+    
+    console.log('추출된 기준월 목록:', availableMonths.value);
+    
+    // 최신 연월을 기본값으로 설정하고 해당 월의 제품 불러오기
+    if (availableMonths.value.length > 0) {
+      selectedMonth.value = availableMonths.value[0];
+      await fetchProductsByMonth(selectedMonth.value);
+    }
+  } catch (err) {
+    console.error('기준월 목록 로딩 오류:', err);
+  } finally {
+    loading.value = false;
+  }
+}
+
+// 선택된 기준월의 제품만 불러오는 함수
+const fetchProductsByMonth = async (month) => {
+  if (!month) return;
+  
+  loading.value = true;
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('base_month', month)
+      .order('product_name', { ascending: true })
+      .limit(1000); // 한 달에 423개이므로 1000개 제한으로 충분
+    
+    if (error) {
+      console.error('제품 데이터 로딩 오류:', error);
+      return;
+    }
+    
+    products.value = data || [];
+  } catch (err) {
+    console.error('제품 데이터 로딩 오류:', err);
   } finally {
     loading.value = false;
   }
@@ -842,4 +907,52 @@ async function deleteAllProducts() {
   
   alert(`${selectedMonth.value} 기준월의 모든 제품이 삭제되었습니다.`);
 }
+
+// 제품명 오버플로우 감지 함수
+const checkProductOverflow = (event) => {
+  const element = event.target;
+  
+  // 실제 오버플로우 감지
+  const rect = element.getBoundingClientRect();
+  const computedStyle = window.getComputedStyle(element);
+  const fontSize = parseFloat(computedStyle.fontSize);
+  const fontFamily = computedStyle.fontFamily;
+  
+  // 임시 캔버스를 만들어서 텍스트의 실제 너비 측정
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  context.font = `${fontSize}px ${fontFamily}`;
+  const textWidth = context.measureText(element.textContent).width;
+  
+  // 패딩과 보더 고려
+  const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
+  const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
+  const borderLeft = parseFloat(computedStyle.borderLeftWidth) || 0;
+  const borderRight = parseFloat(computedStyle.borderRightWidth) || 0;
+  
+  const availableWidth = rect.width - paddingLeft - paddingRight - borderLeft - borderRight;
+  const isOverflowed = textWidth > availableWidth;
+  
+  console.log('오버플로우 체크:', {
+    text: element.textContent,
+    textWidth,
+    availableWidth,
+    isOverflowed
+  });
+  
+  if (isOverflowed) {
+    element.classList.add('overflowed');
+    console.log('오버플로우 클래스 추가됨');
+  } else {
+    element.classList.remove('overflowed'); // Ensure class is removed if not overflowed
+    console.log('오버플로우 아님 - 클래스 제거됨');
+  }
+}
+
+const removeOverflowClass = (event) => {
+  const element = event.target;
+  element.classList.remove('overflowed');
+  console.log('오버플로우 클래스 제거됨');
+}
+
 </script>

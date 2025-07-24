@@ -5,7 +5,19 @@
       <div class="manual-header">
         <div class="header-top">
           <h1>{{ isAdminManual ? '신일제약 CSO 실적 관리 시스템 - 관리자 메뉴얼' : '신일제약 CSO 실적 관리 시스템 - 이용자 메뉴얼' }}</h1>
-          <Button label="PDF 다운로드" icon="pi pi-download" iconPos="right" @click="downloadPDF" :loading="isPrinting" text severity="secondary" class="pdf-download-button" aria-label="PDF 다운로드" />
+          <!-- PDF 다운로드 버튼 : 일시 감추기 -->
+          <!--
+          <Button 
+            label="PDF 다운로드" 
+            icon="pi pi-download" 
+            iconPos="right"
+            @click="downloadPDF" 
+            :loading="isPrinting" 
+            text severity="secondary" 
+            class="pdf-download-button" 
+            aria-label="PDF 다운로드"
+          />
+          -->
         </div>
         
         <!-- 탭 메뉴 -->
@@ -350,29 +362,43 @@ const adminTabs = [
         <img src="/manual-images/admin_7_1_settlement_months.png" alt="정산월 관리" class="manual-image">
         <h4>주요 기능:</h4>
         <ul class="feature-list">
-          <li>신규 정산월 생성 (예: 2024년 7월)</li>
-          <li>정산월별 상태 관리 (예정, 진행중, 마감)</li>
-          <li>마감된 정산월 데이터 동결</li>
+          <li><strong>신규 정산월 생성</strong> - 정산월명, 시작일, 종료일, 공지사항 설정</li>
+          <li><strong>정산월별 상태 관리</strong> - 'active'(활성), 'inactive'(비활성) 상태 관리</li>
+          <li><strong>정산월 정보 수정</strong> - 기존 정산월의 정보 수정 및 비고 추가</li>
+          <li><strong>정산월 삭제</strong> - 더 이상 필요하지 않은 정산월 삭제</li>
         </ul>
 
-        <h3>7.2 업체별 등록 현황 <span class="path">/admin/performance/companies</span></h3>
+        <h3>7.2 실적 등록 <span class="path">/admin/performance/register</span></h3>
+        <p><strong>설명:</strong> 관리자가 CSO 업체 대신 실적 데이터를 직접 등록하거나, 기존 실적을 수정/추가/삭제할 수 있는 메뉴입니다. 주로 긴급 상황이나 데이터 오류 수정 시 사용됩니다.</p>
+        <img src="/manual-images/admin_7_2_performance_regist.png" alt="실적 등록" class="manual-image">
+        <h4>주요 기능:</h4>
+        <ul class="feature-list">
+          <li><strong>실적 데이터 직접 등록</strong> - 필요한 경우 관리자가 직접 실적 정보를 입력하고 저장</li>
+          <li><strong>기존 실적 수정/삭제</strong> - 이미 등록된 실적 데이터를 검색하여 내용을 수정하거나 삭제</li>
+          <li><strong>파일 업로드 지원</strong> - 증빙 자료 등의 파일을 첨부</li>
+          <li><strong>유효성 검사</strong> - 데이터 입력 시 필수 항목 및 형식 유효성을 자동으로 검사</li>
+        </ul>
+
+        <h3>7.3 업체별 등록 현황 <span class="path">/admin/performance/companies</span></h3>
         <p><strong>설명:</strong> 정산월을 기준으로 CSO 업체별 실적 등록 현황을 모니터링합니다. 어느 업체가 실적을 제출했고, 어떤 상태인지 한눈에 파악할 수 있습니다.</p>
-        <img src="/manual-images/admin_7_2_performance_company.png" alt="업체별 등록 현황" class="manual-image">
+        <img src="/manual-images/admin_7_3_performance_company.png" alt="업체별 등록 현황" class="manual-image">
         <h4>주요 기능:</h4>
         <ul class="feature-list">
-          <li>정산월 기준 업체별 실적 제출 상태 조회 (제출/미제출)</li>
-          <li>업체별 제출 건수 및 최종 제출일 확인</li>
-          <li>실적이 제출된 경우 '실적 검수' 메뉴로 바로 이동하여 검토 가능</li>
+          <li><strong>정산월별 업체 현황</strong> - 선택한 정산월에 실적을 등록한 업체 목록 조회</li>
+          <li><strong>실적 상태별 필터링</strong> - '대기', '검수중', '완료' 상태별로 업체 분류</li>
+          <li><strong>업체별 실적 건수</strong> - 각 업체가 등록한 총 실적 건수 표시</li>
+          <li><strong>실적 검수 바로가기</strong> - 업체명 클릭 시 해당 업체의 실적 검수 화면으로 이동</li>
         </ul>
 
-        <h3>7.3 전체 등록 현황 <span class="path">/admin/performance/all</span></h3>
+        <h3>7.4 전체 등록 현황 <span class="path">/admin/performance/all</span></h3>
         <p><strong>설명:</strong> 모든 업체가 등록한 전체 실적 현황을 통합하여 조회하고 관리합니다.</p>
-        <img src="/manual-images/admin_7_3_settlement_all.png" alt="전체 등록 현황" class="manual-image">
+        <img src="/manual-images/admin_7_4_settlement_all.png" alt="전체 등록 현황" class="manual-image">
         <h4>주요 기능:</h4>
         <ul class="feature-list">
-          <li>기간, 업체, 제품 등 다양한 조건으로 전체 실적 데이터 필터링 및 검색</li>
-          <li>등록된 모든 실적 데이터 목록 확인</li>
-          <li>개별 실적 건에 대한 상세 정보 조회</li>
+          <li><strong>다양한 필터링</strong> - 정산월, 처방월, 업체, 병의원, 검수상태별 필터링</li>
+          <li><strong>실적 데이터 조회</strong> - 등록된 모든 실적 데이터 목록 확인</li>
+          <li><strong>상세 정보 조회</strong> - 개별 실적 건에 대한 상세 정보 조회</li>
+          <li><strong>대용량 데이터 처리</strong> - 1,000건 이상의 데이터도 안정적으로 조회</li>
         </ul>
       </div>
     `
@@ -384,37 +410,112 @@ const adminTabs = [
         <h2>8. 정산 관리</h2>
 
         <h3>8.1 실적 검수 <span class="path">/admin/performance-review</span></h3>
-        <p><strong>설명:</strong> CSO 업체들이 등록한 실적 데이터를 건별로 상세히 검토하고 승인 또는 반려 처리를 합니다. 이 과정을 통해 데이터의 정합성을 확보하고 정산의 기초 자료를 마련합니다.</p>
+        <p><strong>설명:</strong> CSO 업체들이 등록한 실적 데이터를 건별로 상세히 검토하고 수정/추가/삭제 작업을 수행합니다. 이 과정을 통해 데이터의 정합성을 확보하고 정산의 기초 자료를 마련합니다.</p>
         <img src="/manual-images/admin_8_1_check.png" alt="실적 검수" class="manual-image">
         <h4>주요 기능:</h4>
         <ul class="feature-list">
-          <li>업체별/기간별 실적 제출 내역 상세 조회</li>
-          <li>실적 데이터 상세 검토 (증빙자료 확인 포함)</li>
-          <li>검토 상태(대기, 승인, 반려) 관리</li>
-          <li>실적 승인 또는 반려 처리 (반려 시 사유 입력 및 업체 통보)</li>
+          <li><strong>실적 데이터 불러오기</strong> - 정산월, 업체, 병의원 필터를 설정하여 '대기' 상태의 실적을 '검수중'으로 전환하고 조회</li>
+          <li><strong>인라인 수정</strong> - 처방수량, 제품, 처방월, 비고 등을 직접 수정하여 저장</li>
+          <li><strong>실적 추가</strong> - 기존 실적 아래에 새로운 실적을 추가하여 등록</li>
+          <li><strong>검수 상태 관리</strong> - 검수 완료된 실적을 '완료' 상태로 변경하여 정산 대상에 포함</li>
+          <li><strong>변경 이력 추적</strong> - 모든 수정/추가 작업이 별도 테이블에 이력으로 기록되어 추적 가능</li>
         </ul>
+        
+        <h4>검수 프로세스:</h4>
+        <div class="process-steps">
+          <div class="step">
+            <strong>1단계: 실적 데이터 불러오기</strong><br>
+            <em>필터 설정:</em> 정산월, 업체, 병의원 선택<br>
+            <em>상태 선택:</em> '신규'(대기→검수중), '전체', '검수중', '완료'<br>
+            <em>동작:</em> 선택된 조건의 실적 데이터를 화면에 로드
+          </div>
+          <div class="step">
+            <strong>2단계: 실적 데이터 검토 및 수정</strong><br>
+            <em>수정 방법:</em> 각 행의 '수정(✎)' 버튼 클릭 → 인라인 편집 모드<br>
+            <em>수정 항목:</em> 처방수량, 제품, 처방월, 처방유형, 비고<br>
+            <em>저장:</em> '저장(✓)' 버튼으로 변경사항 저장
+          </div>
+          <div class="step">
+            <strong>3단계: 실적 추가 (필요시)</strong><br>
+            <em>추가 방법:</em> 기존 행의 '+' 버튼 클릭 → 새 행 생성<br>
+            <em>입력 항목:</em> 병의원, 제품, 처방수량, 처방월, 비고<br>
+            <em>특징:</em> 추가된 실적은 관리자가 생성한 것으로 기록
+          </div>
+          <div class="step">
+            <strong>4단계: 검수 완료 처리</strong><br>
+            <em>선택:</em> 검수 완료된 실적들을 체크박스로 선택<br>
+            <em>상태 변경:</em> '검수 상태 변경' 버튼으로 '완료'로 변경<br>
+            <em>결과:</em> 완료된 실적은 흡수율 분석 및 정산 대상에 포함
+          </div>
+        </div>
 
         <h3>8.2 흡수율 분석 <span class="path">/admin/absorption-analysis</span></h3>
-        <p><strong>설명:</strong> 전체 매출 대비 CSO 업체들이 제출하여 '승인'된 실적의 흡수율을 분석하고 리포트를 생성합니다. 이를 통해 실적 목표 달성률과 효율성을 파악할 수 있습니다.</p>
+        <p><strong>설명:</strong> 검수가 '완료'된 실적 데이터를 기준으로, 제품별 처방액 대비 실제 매출(도매+직거래)의 비율을 분석합니다. 이를 통해 실적 목표 달성률과 효율성을 파악할 수 있습니다.</p>
         <img src="/manual-images/admin_8_2_absorption_analysis.png" alt="흡수율 분석" class="manual-image">
         <h4>주요 기능:</h4>
         <ul class="feature-list">
-          <li>기간별, 제품별, 업체별 흡수율 조회</li>
-          <li>매출 데이터와 실적 데이터 비교 분석</li>
-          <li>분석 결과 차트 및 표로 시각화</li>
-          <li>분석 리포트 엑셀 다운로드</li>
+          <li><strong>필터링 및 조회</strong> - 정산월, 업체, 병의원별로 '완료' 상태의 실적 데이터 조회</li>
+          <li><strong>흡수율 계산</strong> - '흡수율 분석' 버튼으로 도매/직거래 매출액 자동 계산 및 흡수율 산출</li>
+          <li><strong>매출 매칭</strong> - 병의원-약국 매핑을 통한 정확한 매출 데이터 연결</li>
+          <li><strong>분배 로직</strong> - 약국별 병원 수에 따른 매출 분배 계산</li>
+          <li><strong>결과 표시</strong> - 합산액, 흡수율을 실시간으로 테이블에 업데이트</li>
         </ul>
+        
+        <h4>흡수율 계산 프로세스:</h4>
+        <div class="process-steps">
+          <div class="step">
+            <strong>1단계: 완료된 실적 데이터 조회</strong><br>
+            <em>조건:</em> review_status = '완료'인 실적만 대상<br>
+            <em>필터:</em> 정산월, 업체, 병의원별 필터링<br>
+            <em>결과:</em> 검수 완료된 실적 목록 표시
+          </div>
+          <div class="step">
+            <strong>2단계: 매출 데이터 매칭</strong><br>
+            <em>매칭 기준:</em> 병의원-약국 매핑 → 제품 표준코드 → 처방월<br>
+            <em>매출 종류:</em> 도매매출(wholesale_sales) + 직거래매출(direct_sales)<br>
+            <em>분배 로직:</em> 약국별 연결된 병원 수에 따른 매출 분배
+          </div>
+          <div class="step">
+            <strong>3단계: 흡수율 계산</strong><br>
+            <em>계산 공식:</em> (총 매출액 / 처방액) × 100<br>
+            <em>결과:</em> 각 실적별 흡수율(%) 산출<br>
+            <em>표시:</em> 테이블의 '합산액', '흡수율' 컬럼에 실시간 업데이트
+          </div>
+        </div>
 
         <h3>8.3 정산내역서 공유 <span class="path">/admin/settlement-share</span></h3>
-        <p><strong>설명:</strong> 최종 확정된 실적을 바탕으로 CSO 업체별 정산내역서를 생성하고 시스템을 통해 공유합니다. 업체는 공유된 내역서를 확인하고 다운로드할 수 있습니다.</p>
+        <p><strong>설명:</strong> 검수가 '완료'된 실적을 바탕으로 CSO 업체별 정산내역서를 생성하고 시스템을 통해 공유합니다. 업체는 공유된 내역서를 확인하고 다운로드할 수 있습니다.</p>
         <img src="/manual-images/admin_8_3_settlement_share.png" alt="정산내역서 공유" class="manual-image">
         <h4>주요 기능:</h4>
         <ul class="feature-list">
-          <li>정산 대상월 선택 및 정산내역서 일괄 생성</li>
-          <li>업체별 정산내역서 상세 확인 및 수정 <span class="path">/admin/settlement-share/:id</span></li>
-          <li>생성된 내역서를 선택된 업체에 공유 및 알림</li>
-          <li>업체의 확인 여부 등 공유 상태 관리</li>
+          <li><strong>정산월별 업체 합산</strong> - '완료' 상태 실적을 업체별로 자동 합산하여 정산내역서 생성</li>
+          <li><strong>업체별 상세 조회</strong> - 각 업체의 정산내역서 상세 확인 <span class="path">/admin/settlement-share/:id</span></li>
+          <li><strong>공유 상태 관리</strong> - 업체별로 정산내역서 공유 여부를 체크박스로 설정</li>
+          <li><strong>실시간 업데이트</strong> - 공유 설정 변경 시 즉시 데이터베이스에 반영</li>
+          <li><strong>업체 접근 제어</strong> - 공유된 업체만 해당 정산내역서 조회 가능</li>
         </ul>
+        
+        <h4>정산내역서 생성 프로세스:</h4>
+        <div class="process-steps">
+          <div class="step">
+            <strong>1단계: 정산월 선택</strong><br>
+            <em>선택:</em> 정산 대상 월을 드롭다운에서 선택<br>
+            <em>조건:</em> 해당 월에 '완료' 상태 실적이 있는 업체만 표시<br>
+            <em>결과:</em> 업체별 합산 데이터 자동 계산
+          </div>
+          <div class="step">
+            <strong>2단계: 업체별 정산내역 확인</strong><br>
+            <em>표시 항목:</em> 업체명, 병의원 수, 총 실적 건수, 총 처방액, 총 지급액<br>
+            <em>공유 상태:</em> 각 업체별 공유 여부 체크박스<br>
+            <em>상세 조회:</em> 업체명 클릭 시 상세 정산내역 확인
+          </div>
+          <div class="step">
+            <strong>3단계: 공유 설정 및 저장</strong><br>
+            <em>공유 설정:</em> 원하는 업체의 체크박스 선택<br>
+            <em>저장:</em> '저장' 버튼으로 공유 상태 업데이트<br>
+            <em>결과:</em> 공유된 업체는 해당 정산내역서 조회 가능
+          </div>
+        </div>
       </div>
     `
   }
@@ -497,11 +598,11 @@ const userTabs = [
         
         <h4>주요 기능:</h4>
         <ul class="feature-list">
-          <li><strong>기본 정보 입력</strong> - 담당 병의원, 판매 제품, 처방 수량, 처방 금액 등 실적의 기본 정보를 입력할 수 있습니다.</li>
-          <li><strong>증빙 파일 업로드</strong> - 처방전, 영수증 등 실적을 증명하는 파일을 업로드하여 관리할 수 있습니다.</li>
-          <li><strong>입력값 유효성 검사</strong> - 필수 항목 누락, 숫자 형식 오류 등을 자동으로 체크하여 정확한 데이터 입력을 도와줍니다.</li>
-          <li><strong>저장 시 확인 메시지</strong> - 실적 데이터 저장 전 입력 내용을 최종 확인할 수 있는 메시지를 제공합니다.</li>
-          <li><strong>실적 데이터 수정</strong> - 이미 등록된 실적 데이터를 선택하여 내용을 수정할 수 있습니다.</li>
+          <li><strong>기본 정보 입력</strong> - 정산월, 처방월, 담당 병의원, 제품, 처방수량, 처방유형, 비고 등 실적의 기본 정보를 입력</li>
+          <li><strong>증빙 파일 업로드</strong> - 처방전, 영수증 등 실적을 증명하는 파일을 업로드하여 관리</li>
+          <li><strong>입력값 유효성 검사</strong> - 필수 항목 누락, 숫자 형식 오류 등을 자동으로 체크하여 정확한 데이터 입력</li>
+          <li><strong>저장 시 확인 메시지</strong> - 실적 데이터 저장 전 입력 내용을 최종 확인할 수 있는 메시지 제공</li>
+          <li><strong>실적 데이터 수정</strong> - 이미 등록된 실적 데이터를 선택하여 내용을 수정</li>
         </ul>
 
         <h3>4.2 등록 현황 <span class="path">/performance/list</span></h3>
@@ -511,10 +612,12 @@ const userTabs = [
         
         <h4>주요 기능:</h4>
         <ul class="feature-list">
-          <li><strong>전체 실적 조회</strong> - 월 제한 없이 등록된 모든 실적 데이터를 확인할 수 있습니다.</li>
-          <li><strong>처방월별 필터링</strong> - 특정 처방월을 기준으로 실적 데이터를 필터링하여 볼 수 있습니다.</li>
-          <li><strong>병의원별 필터링</strong> - 특정 병의원을 기준으로 실적 데이터를 필터링하여 볼 수 있습니다.</li>
-          <li><strong>실적 상세 조회</strong> - 각 실적 건의 상세 내용을 확인할 수 있습니다.</li>
+          <li><strong>전체 실적 조회</strong> - 월 제한 없이 등록된 모든 실적 데이터를 확인</li>
+          <li><strong>정산월별 필터링</strong> - 특정 정산월을 기준으로 실적 데이터를 필터링</li>
+          <li><strong>처방월별 필터링</strong> - 특정 처방월을 기준으로 실적 데이터를 필터링</li>
+          <li><strong>병의원별 필터링</strong> - 특정 병의원을 기준으로 실적 데이터를 필터링</li>
+          <li><strong>실적 상세 조회</strong> - 각 실적 건의 상세 내용을 확인</li>
+          <li><strong>실적 수정</strong> - 등록된 실적을 선택하여 내용 수정</li>
         </ul>
       </div>
     `

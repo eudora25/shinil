@@ -70,7 +70,7 @@
             :sortable="true"
           >
             <template #body="slotProps">
-              <span style="font-weight: 400">{{ slotProps.data.client_name }}</span>
+              <span class="ellipsis-cell" :title="slotProps.data.client_name" @mouseenter="checkOverflow" @mouseleave="removeOverflowClass" style="font-weight: 400">{{ slotProps.data.client_name }}</span>
             </template>
           </Column>
           <Column
@@ -86,16 +86,7 @@
             :sortable="true"
           >
             <template #body="slotProps">
-              <span
-                :title="slotProps.data.address"
-                style="
-                  display: block;
-                  overflow: hidden;
-                  text-overflow: ellipsis;
-                  white-space: nowrap;
-                  width: 100%;
-                "
-              >
+              <span class="ellipsis-cell" :title="slotProps.data.address" @mouseenter="checkOverflow" @mouseleave="removeOverflowClass">
                 {{ slotProps.data.address }}
               </span>
             </template>
@@ -111,7 +102,11 @@
             header="제품명"
             :headerStyle="{ width: columnWidths.product_name_display }"
             :sortable="true"
-          />
+          >
+            <template #body="slotProps">
+              <span class="ellipsis-cell" :title="slotProps.data.product_name_display" @mouseenter="checkOverflow" @mouseleave="removeOverflowClass">{{ slotProps.data.product_name_display }}</span>
+            </template>
+          </Column>
           <Column
             field="insurance_code"
             header="보험코드"
@@ -163,7 +158,11 @@
             header="비고"
             :headerStyle="{ width: columnWidths.remarks }"
             :sortable="true"
-          />
+          >
+            <template #body="slotProps">
+              <span class="ellipsis-cell" :title="slotProps.data.remarks" @mouseenter="checkOverflow" @mouseleave="removeOverflowClass">{{ slotProps.data.remarks }}</span>
+            </template>
+          </Column>
           <Column
             field="review_status"
             header="검수"
@@ -203,7 +202,7 @@ import Row from 'primevue/row';
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import { supabase } from '@/supabase'
-import { exportToExcel } from '@/utils/excelUtils'
+import * as XLSX from 'xlsx'
 
 const columnWidths = {
   no: '4%',
@@ -1696,6 +1695,53 @@ function addNewRow() {
   nextTick(() => {
     focusField(displayRows.value.length - 1, 'client_name')
   })
+}
+
+// 오버플로우 감지 및 툴팁 제어 함수들
+const checkOverflow = (event) => {
+  const element = event.target;
+  
+  // 실제 오버플로우 감지
+  const rect = element.getBoundingClientRect();
+  const computedStyle = window.getComputedStyle(element);
+  const fontSize = parseFloat(computedStyle.fontSize);
+  const fontFamily = computedStyle.fontFamily;
+  
+  // 임시 캔버스를 만들어서 텍스트의 실제 너비 측정
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  context.font = `${fontSize}px ${fontFamily}`;
+  const textWidth = context.measureText(element.textContent).width;
+  
+  // 패딩과 보더 고려
+  const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
+  const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
+  const borderLeft = parseFloat(computedStyle.borderLeftWidth) || 0;
+  const borderRight = parseFloat(computedStyle.borderRightWidth) || 0;
+  
+  const availableWidth = rect.width - paddingLeft - paddingRight - borderLeft - borderRight;
+  const isOverflowed = textWidth > availableWidth;
+  
+  console.log('이용자 실적등록 오버플로우 체크:', {
+    text: element.textContent,
+    textWidth,
+    availableWidth,
+    isOverflowed
+  });
+  
+  if (isOverflowed) {
+    element.classList.add('overflowed');
+    console.log('이용자 실적등록 오버플로우 클래스 추가됨');
+  } else {
+    element.classList.remove('overflowed'); // Ensure class is removed if not overflowed
+    console.log('이용자 실적등록 오버플로우 아님 - 클래스 제거됨');
+  }
+}
+
+const removeOverflowClass = (event) => {
+  const element = event.target;
+  element.classList.remove('overflowed');
+  console.log('이용자 실적등록 오버플로우 클래스 제거됨');
 }
 </script>
 

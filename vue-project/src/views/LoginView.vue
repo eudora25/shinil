@@ -112,61 +112,37 @@ const handleLogin = async () => {
   if (!canLogin.value) return;
   loading.value = true;
   try {
-    // Supabase Auth를 직접 사용한 로그인
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.value,
-      password: password.value
-    });
-
-    if (error) {
-      console.error('Supabase login error:', error);
-      alert('아이디(이메일) 또는 비밀번호가 일치하지 않습니다. 다시 확인해주세요.');
+    const { data: companyRow } = await supabase
+      .from('companies')
+      .select('id, approval_status, user_type')
+      .eq('email', email.value.trim().toLowerCase())
+      .maybeSingle();
+    if (!companyRow) {
+      alert('아이디(이메일) 정보가 없습니다. 다시 확인해주세요.');
+      loading.value = false;
       return;
     }
-
-    // 사용자 정보 조회 (companies 테이블에서)
-    const { data: companyData, error: companyError } = await supabase
-      .from('companies')
-      .select('*')
-      .eq('email', email.value)
-      .single();
-
-    if (companyError && companyError.code !== 'PGRST116') {
-      console.error('Company lookup error:', companyError);
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: email.value,
+      password: password.value,
+    });
+    if (authError) {
+      alert('비밀번호가 일치하지 않습니다. 다시 확인해주세요.');
+      loading.value = false;
+      return;
     }
-
-    // 사용자 역할 결정
-    let userRole = 'user';
-    let userName = email.value;
-
-    if (companyData) {
-      userRole = companyData.approval_status === 'approved' ? 'admin' : 'pending';
-      userName = companyData.representative_name || email.value;
+    if (companyRow.approval_status !== 'approved') {
+      alert('미승인 회원입니다. 관리자에게 승인을 요청해주세요.');
+      await supabase.auth.signOut();
+      loading.value = false;
+      return;
     }
-
-    // 전역 상태에 사용자 정보 저장
-    const userInfo = {
-      id: data.user.id,
-      email: data.user.email,
-      role: userRole,
-      name: userName
-    };
-
-    localStorage.setItem('user', JSON.stringify(userInfo));
-    localStorage.setItem('userType', userRole);
-    localStorage.setItem('supabaseToken', data.session.access_token);
-
-    console.log('[LoginView] Supabase login successful. User info:', userInfo);
-
-    // 페이지 새로고침으로 App.vue의 onMounted가 다시 실행되도록 함
-    if (userRole === 'admin') {
-      window.location.href = '/admin/notices';
+    if (companyRow.user_type === 'admin') {
+      router.push('/admin/notices');
     } else {
-      window.location.href = '/notices';
+      router.push('/notices');
     }
-
   } catch (error) {
-    console.error('Login error:', error);
     alert('로그인 중 오류가 발생했습니다.');
   } finally {
     loading.value = false;

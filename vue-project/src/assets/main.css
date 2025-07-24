@@ -384,6 +384,12 @@ select.input-editable {
   table-layout: fixed !important;
   width: 100% !important;
 }
+
+/* PrimeVue DataTable 모든 셀에 적용 */
+.p-datatable-table {
+  table-layout: fixed !important;
+  width: 100% !important;
+}
 .p-datatable-table td,
 .p-datatable-table th {
   overflow: hidden !important;
@@ -391,6 +397,368 @@ select.input-editable {
   white-space: nowrap !important;
 
 }
+
+/* 사업장 소재지 컬럼 오버플로우 및 툴팁 처리 */
+.ellipsis-cell {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  position: relative !important;
+}
+
+/* 제품목록 전용 툴팁 - 오버플로우 시에만 */
+.admin-products-table .ellipsis-cell.overflowed:hover::after {
+  content: attr(title) !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: -40px !important;
+  transform: translateX(-50%) !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+  padding: 8px 12px !important;
+  border-radius: 4px !important;
+  font-size: 14px !important;
+  white-space: nowrap !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+  max-width: 300px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.admin-products-table .ellipsis-cell.overflowed:hover::before {
+  content: '' !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: -8px !important;
+  transform: translateX(-50%) !important;
+  border: 4px solid transparent !important;
+  border-top-color: rgba(0, 0, 0, 0.8) !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+}
+
+/* 제품목록에서 오버플로우가 아닐 때는 툴팁 완전 숨기기 */
+.admin-products-table .ellipsis-cell:not(.overflowed):hover::after,
+.admin-products-table .ellipsis-cell:not(.overflowed):hover::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* 제품목록에서 브라우저 기본 툴팁 완전 비활성화 */
+.admin-products-table .ellipsis-cell[title] {
+  -webkit-tooltip: none !important;
+  tooltip: none !important;
+}
+
+/* 업체 관리 테이블 전용 툴팁 - 오버플로우 시에만 */
+.admin-companies-approved-table .ellipsis-cell.overflowed:hover::after,
+.admin-companies-pending-table .ellipsis-cell.overflowed:hover::after {
+  content: attr(title) !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: -40px !important;
+  transform: translateX(-50%) !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+  padding: 8px 12px !important;
+  border-radius: 4px !important;
+  font-size: 14px !important;
+  white-space: nowrap !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+  max-width: 300px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.admin-companies-approved-table .ellipsis-cell.overflowed:hover::before,
+.admin-companies-pending-table .ellipsis-cell.overflowed:hover::before {
+  content: '' !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: -8px !important;
+  transform: translateX(-50%) !important;
+  border: 4px solid transparent !important;
+  border-top-color: rgba(0, 0, 0, 0.8) !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+}
+
+/* 업체 관리 테이블에서 오버플로우가 아닐 때는 툴팁 완전 숨기기 */
+.admin-companies-approved-table .ellipsis-cell:not(.overflowed):hover::after,
+.admin-companies-approved-table .ellipsis-cell:not(.overflowed):hover::before,
+.admin-companies-pending-table .ellipsis-cell:not(.overflowed):hover::after,
+.admin-companies-pending-table .ellipsis-cell:not(.overflowed):hover::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* 업체 관리 테이블에서 브라우저 기본 툴팁 완전 비활성화 */
+.admin-companies-approved-table .ellipsis-cell[title],
+.admin-companies-pending-table .ellipsis-cell[title] {
+  -webkit-tooltip: none !important;
+  tooltip: none !important;
+}
+
+/* 병의원 관리 테이블 전용 툴팁 - 오버플로우 시에만 */
+.admin-clients-table .ellipsis-cell.overflowed:hover::after,
+.admin-assign-companies-table .ellipsis-cell.overflowed:hover::after,
+.admin-commission-grades-table .ellipsis-cell.overflowed:hover::after,
+.admin-assign-pharmacies-table .ellipsis-cell.overflowed:hover::after {
+  content: attr(title) !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: -40px !important;
+  transform: translateX(-50%) !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+  padding: 8px 12px !important;
+  border-radius: 4px !important;
+  font-size: 14px !important;
+  white-space: nowrap !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+  max-width: 300px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.admin-clients-table .ellipsis-cell.overflowed:hover::before,
+.admin-assign-companies-table .ellipsis-cell.overflowed:hover::before,
+.admin-commission-grades-table .ellipsis-cell.overflowed:hover::before,
+.admin-assign-pharmacies-table .ellipsis-cell.overflowed:hover::before {
+  content: '' !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: -8px !important;
+  transform: translateX(-50%) !important;
+  border: 4px solid transparent !important;
+  border-top-color: rgba(0, 0, 0, 0.8) !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+}
+
+/* 병의원 관리 테이블에서 오버플로우가 아닐 때는 툴팁 완전 숨기기 */
+.admin-clients-table .ellipsis-cell:not(.overflowed):hover::after,
+.admin-clients-table .ellipsis-cell:not(.overflowed):hover::before,
+.admin-assign-companies-table .ellipsis-cell:not(.overflowed):hover::after,
+.admin-assign-companies-table .ellipsis-cell:not(.overflowed):hover::before,
+.admin-commission-grades-table .ellipsis-cell:not(.overflowed):hover::after,
+.admin-commission-grades-table .ellipsis-cell:not(.overflowed):hover::before,
+.admin-assign-pharmacies-table .ellipsis-cell:not(.overflowed):hover::after,
+.admin-assign-pharmacies-table .ellipsis-cell:not(.overflowed):hover::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* 병의원 관리 테이블에서 브라우저 기본 툴팁 완전 비활성화 */
+.admin-clients-table .ellipsis-cell[title],
+.admin-assign-companies-table .ellipsis-cell[title],
+.admin-commission-grades-table .ellipsis-cell[title],
+.admin-assign-pharmacies-table .ellipsis-cell[title] {
+  -webkit-tooltip: none !important;
+  tooltip: none !important;
+}
+
+/* 문전약국 관리 테이블 전용 툴팁 - 오버플로우 시에만 */
+.admin-pharmacies-table .ellipsis-cell.overflowed:hover::after {
+  content: attr(title) !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: -40px !important;
+  transform: translateX(-50%) !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+  padding: 8px 12px !important;
+  border-radius: 4px !important;
+  font-size: 14px !important;
+  white-space: nowrap !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+  max-width: 300px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.admin-pharmacies-table .ellipsis-cell.overflowed:hover::before {
+  content: '' !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: -8px !important;
+  transform: translateX(-50%) !important;
+  border: 4px solid transparent !important;
+  border-top-color: rgba(0, 0, 0, 0.8) !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+}
+
+/* 문전약국 관리 테이블에서 오버플로우가 아닐 때는 툴팁 완전 숨기기 */
+.admin-pharmacies-table .ellipsis-cell:not(.overflowed):hover::after,
+.admin-pharmacies-table .ellipsis-cell:not(.overflowed):hover::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* 문전약국 관리 테이블에서 브라우저 기본 툴팁 완전 비활성화 */
+.admin-pharmacies-table .ellipsis-cell[title] {
+  -webkit-tooltip: none !important;
+  tooltip: none !important;
+}
+
+/* 매출 관리 테이블 전용 툴팁 - 오버플로우 시에만 */
+.admin-wholesale-revenue-table .ellipsis-cell.overflowed:hover::after,
+.admin-direct-revenue-table .ellipsis-cell.overflowed:hover::after {
+  content: attr(title) !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: -40px !important;
+  transform: translateX(-50%) !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+  padding: 8px 12px !important;
+  border-radius: 4px !important;
+  font-size: 14px !important;
+  white-space: nowrap !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+  max-width: 300px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.admin-wholesale-revenue-table .ellipsis-cell.overflowed:hover::before,
+.admin-direct-revenue-table .ellipsis-cell.overflowed:hover::before {
+  content: '' !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: -8px !important;
+  transform: translateX(-50%) !important;
+  border: 4px solid transparent !important;
+  border-top-color: rgba(0, 0, 0, 0.8) !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+}
+
+/* 매출 관리 테이블에서 오버플로우가 아닐 때는 툴팁 완전 숨기기 */
+.admin-wholesale-revenue-table .ellipsis-cell:not(.overflowed):hover::after,
+.admin-wholesale-revenue-table .ellipsis-cell:not(.overflowed):hover::before,
+.admin-direct-revenue-table .ellipsis-cell:not(.overflowed):hover::after,
+.admin-direct-revenue-table .ellipsis-cell:not(.overflowed):hover::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* 매출 관리 테이블에서 브라우저 기본 툴팁 완전 비활성화 */
+.admin-wholesale-revenue-table .ellipsis-cell[title],
+.admin-direct-revenue-table .ellipsis-cell[title] {
+  -webkit-tooltip: none !important;
+  tooltip: none !important;
+}
+
+/* 정산내역서 상세 테이블 전용 툴팁 - 오버플로우 시에만 */
+.admin-settlement-share-detail-table .ellipsis-cell.overflowed:hover::after {
+  content: attr(title) !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: -40px !important;
+  transform: translateX(-50%) !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+  padding: 8px 12px !important;
+  border-radius: 4px !important;
+  font-size: 14px !important;
+  white-space: nowrap !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+  max-width: 300px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.admin-settlement-share-detail-table .ellipsis-cell.overflowed:hover::before {
+  content: '' !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: -8px !important;
+  transform: translateX(-50%) !important;
+  border: 4px solid transparent !important;
+  border-top-color: rgba(0, 0, 0, 0.8) !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+}
+
+/* 정산내역서 상세 테이블에서 오버플로우가 아닐 때는 툴팁 완전 숨기기 */
+.admin-settlement-share-detail-table .ellipsis-cell:not(.overflowed):hover::after,
+.admin-settlement-share-detail-table .ellipsis-cell:not(.overflowed):hover::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* 정산내역서 상세 테이블에서 브라우저 기본 툴팁 완전 비활성화 */
+.admin-settlement-share-detail-table .ellipsis-cell[title] {
+  -webkit-tooltip: none !important;
+  tooltip: none !important;
+}
+
+/* 이용자 화면 테이블 전용 툴팁 - 오버플로우 시에만 */
+.user-clients-table .ellipsis-cell.overflowed:hover::after,
+.user-performance-register-table .ellipsis-cell.overflowed:hover::after,
+.user-settlement-detail-table .ellipsis-cell.overflowed:hover::after {
+  content: attr(title) !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: -40px !important;
+  transform: translateX(-50%) !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+  padding: 8px 12px !important;
+  border-radius: 4px !important;
+  font-size: 14px !important;
+  white-space: nowrap !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+  max-width: 300px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.user-clients-table .ellipsis-cell.overflowed:hover::before,
+.user-performance-register-table .ellipsis-cell.overflowed:hover::before,
+.user-settlement-detail-table .ellipsis-cell.overflowed:hover::before {
+  content: '' !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: -8px !important;
+  transform: translateX(-50%) !important;
+  border: 4px solid transparent !important;
+  border-top-color: rgba(0, 0, 0, 0.8) !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+}
+
+/* 이용자 화면 테이블에서 오버플로우가 아닐 때는 툴팁 완전 숨기기 */
+.user-clients-table .ellipsis-cell:not(.overflowed):hover::after,
+.user-clients-table .ellipsis-cell:not(.overflowed):hover::before,
+.user-performance-register-table .ellipsis-cell:not(.overflowed):hover::after,
+.user-performance-register-table .ellipsis-cell:not(.overflowed):hover::before,
+.user-settlement-detail-table .ellipsis-cell:not(.overflowed):hover::after,
+.user-settlement-detail-table .ellipsis-cell:not(.overflowed):hover::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* 이용자 화면 테이블에서 브라우저 기본 툴팁 완전 비활성화 */
+.user-clients-table .ellipsis-cell[title],
+.user-performance-register-table .ellipsis-cell[title],
+.user-settlement-detail-table .ellipsis-cell[title] {
+  -webkit-tooltip: none !important;
+  tooltip: none !important;
+}
+
+
+
+
 
 /* 테이블 헤더 */
 .p-datatable .p-datatable-thead > tr > th,
