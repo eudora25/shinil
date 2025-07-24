@@ -7,7 +7,7 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "functions": {
-    "vue-project/api/**/*.js": {
+    "api/**/*.js": {
       "runtime": "nodejs18.x"
     }
   }
