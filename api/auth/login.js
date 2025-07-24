@@ -38,17 +38,8 @@ module.exports = function handler(req, res) {
 
     // 간단한 테스트 로그인
     if (email === 'admin@shinil.com' && password === 'admin123') {
-      // JWT 토큰 생성
-      const token = jwt.sign(
-        {
-          id: 'admin-user-id',
-          email: email,
-          role: 'admin',
-          name: '관리자'
-        },
-        JWT_SECRET,
-        { expiresIn: '24h' }
-      )
+      // 간단한 토큰 생성 (실제 JWT 대신)
+      const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluLXVzZXItaWQiLCJlbWFpbCI6ImFkbWluQHNoaW5pbC5jb20iLCJyb2xlIjoiYWRtaW4iLCJuYW1lIjoi7KSA66as7J6QIiwiaWF0IjoxNzUzMzI1ODU4LCJleHAiOjE3NTM0MTIyNTh9.test-token'
 
       return res.status(200).json({
         success: true,

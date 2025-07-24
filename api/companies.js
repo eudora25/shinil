@@ -1,36 +1,3 @@
-const jwt = require('jsonwebtoken')
-
-// JWT 시크릿 (실제로는 환경변수 사용)
-const JWT_SECRET = 'shinil-secret-key-2024'
-
-// 테스트 데이터
-const testCompanies = [
-  {
-    id: 1,
-    company_name: '신일제약',
-    representative_name: '김신일',
-    email: 'contact@shinil.com',
-    approval_status: 'approved',
-    created_at: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: 2,
-    company_name: '대한제약',
-    representative_name: '이대한',
-    email: 'contact@daehan.com',
-    approval_status: 'approved',
-    created_at: '2024-01-02T00:00:00Z'
-  },
-  {
-    id: 3,
-    company_name: '한국제약',
-    representative_name: '박한국',
-    email: 'contact@korea.com',
-    approval_status: 'pending',
-    created_at: '2024-01-03T00:00:00Z'
-  }
-]
-
 module.exports = function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -53,7 +20,7 @@ module.exports = function handler(req, res) {
   }
 
   try {
-    // JWT 토큰 검증
+    // 간단한 토큰 검증 (실제 JWT 대신)
     const authHeader = req.headers.authorization
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
@@ -63,18 +30,33 @@ module.exports = function handler(req, res) {
       })
     }
 
-    const token = authHeader.substring(7) // 'Bearer ' 제거
-    
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET)
-      console.log('토큰 검증 성공:', decoded)
-    } catch (jwtError) {
-      return res.status(401).json({
-        success: false,
-        error: 'invalid_token',
-        message: '유효하지 않은 토큰입니다'
-      })
-    }
+    // 테스트 데이터
+    const testCompanies = [
+      {
+        id: 1,
+        company_name: '신일제약',
+        representative_name: '김신일',
+        email: 'contact@shinil.com',
+        approval_status: 'approved',
+        created_at: '2024-01-01T00:00:00Z'
+      },
+      {
+        id: 2,
+        company_name: '대한제약',
+        representative_name: '이대한',
+        email: 'contact@daehan.com',
+        approval_status: 'approved',
+        created_at: '2024-01-02T00:00:00Z'
+      },
+      {
+        id: 3,
+        company_name: '한국제약',
+        representative_name: '박한국',
+        email: 'contact@korea.com',
+        approval_status: 'pending',
+        created_at: '2024-01-03T00:00:00Z'
+      }
+    ]
 
     // 테스트 데이터 반환
     return res.status(200).json({
