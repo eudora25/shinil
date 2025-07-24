@@ -1,0 +1,21 @@
+{
+  "restore_timestamp": "2025-07-24T16:40:13.136940",
+  "total_tables": 9,
+  "successful_restores": 2,
+  "failed_restores": 7,
+  "restore_directory": "supabase_restore_20250724_164011",
+  "tables": [
+    "companies",
+    "products",
+    "clients",
+    "pharmacies",
+    "wholesale_sales",
+    "direct_sales",
+    "performance_records",
+    "settlement_months",
+    "notices"
+  ],
+  "source": "Local Docker PostgreSQL",
+  "target": "Supabase",
+  "supabase_url": "https://mctzuqctekhhdfwimxek.supabase.co"
+}

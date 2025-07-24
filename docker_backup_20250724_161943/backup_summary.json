@@ -1,0 +1,26 @@
+{
+  "backup_timestamp": "2025-07-24T16:19:43.876836",
+  "total_tables": 9,
+  "successful_backups": 9,
+  "failed_backups": 0,
+  "backup_directory": "docker_backup_20250724_161943",
+  "tables": [
+    "companies",
+    "products",
+    "clients",
+    "pharmacies",
+    "wholesale_sales",
+    "direct_sales",
+    "performance_records",
+    "settlement_months",
+    "notices"
+  ],
+  "source": "Docker PostgreSQL",
+  "connection_info": {
+    "host": "localhost",
+    "port": 5432,
+    "user": "postgres",
+    "password": "postgres",
+    "database": "postgres"
+  }
+}
