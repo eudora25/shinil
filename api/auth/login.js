@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken')
 // 간단한 JWT 시크릿 (실제로는 환경변수 사용)
 const JWT_SECRET = 'shinil-secret-key-2024'
 
-export default function handler(req, res) {
+module.exports = function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')

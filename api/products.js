@@ -8,46 +8,33 @@ const testProducts = [
   {
     id: 1,
     product_name: '아스피린',
-    insurance_code: 'A001',
-    price: 1000,
-    company_name: '신일제약',
+    product_code: 'ASP001',
+    manufacturer: '신일제약',
+    category: '진통제',
+    price: 5000,
     created_at: '2024-01-01T00:00:00Z'
   },
   {
     id: 2,
     product_name: '타이레놀',
-    insurance_code: 'A002',
-    price: 1500,
-    company_name: '신일제약',
+    product_code: 'TYL002',
+    manufacturer: '대한제약',
+    category: '해열제',
+    price: 3000,
     created_at: '2024-01-02T00:00:00Z'
   },
   {
     id: 3,
-    product_name: '이부프로펜',
-    insurance_code: 'A003',
-    price: 1200,
-    company_name: '대한제약',
+    product_name: '비타민C',
+    product_code: 'VIT003',
+    manufacturer: '한국제약',
+    category: '영양제',
+    price: 8000,
     created_at: '2024-01-03T00:00:00Z'
-  },
-  {
-    id: 4,
-    product_name: '파라세타몰',
-    insurance_code: 'A004',
-    price: 800,
-    company_name: '대한제약',
-    created_at: '2024-01-04T00:00:00Z'
-  },
-  {
-    id: 5,
-    product_name: '디클로페낙',
-    insurance_code: 'A005',
-    price: 2000,
-    company_name: '한국제약',
-    created_at: '2024-01-05T00:00:00Z'
   }
 ]
 
-export default function handler(req, res) {
+module.exports = function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')

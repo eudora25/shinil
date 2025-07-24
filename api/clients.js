@@ -8,46 +8,36 @@ const testClients = [
   {
     id: 1,
     client_name: '서울대병원',
-    hospital_number: 'H001',
-    contact_person_phone: '02-1234-5678',
-    address: '서울특별시 종로구',
+    client_code: 'SEOUL001',
+    contact_person: '김의사',
+    phone: '02-1234-5678',
+    email: 'contact@seoulhospital.com',
+    address: '서울시 종로구',
     created_at: '2024-01-01T00:00:00Z'
   },
   {
     id: 2,
     client_name: '연세대병원',
-    hospital_number: 'H002',
-    contact_person_phone: '02-2345-6789',
-    address: '서울특별시 서대문구',
+    client_code: 'YONSEI002',
+    contact_person: '이의사',
+    phone: '02-2345-6789',
+    email: 'contact@yonsei.com',
+    address: '서울시 서대문구',
     created_at: '2024-01-02T00:00:00Z'
   },
   {
     id: 3,
     client_name: '고려대병원',
-    hospital_number: 'H003',
-    contact_person_phone: '02-3456-7890',
-    address: '서울특별시 성북구',
+    client_code: 'KOREA003',
+    contact_person: '박의사',
+    phone: '02-3456-7890',
+    email: 'contact@korea.com',
+    address: '서울시 성북구',
     created_at: '2024-01-03T00:00:00Z'
-  },
-  {
-    id: 4,
-    client_name: '성균관대병원',
-    hospital_number: 'H004',
-    contact_person_phone: '02-4567-8901',
-    address: '서울특별시 종로구',
-    created_at: '2024-01-04T00:00:00Z'
-  },
-  {
-    id: 5,
-    client_name: '경희대병원',
-    hospital_number: 'H005',
-    contact_person_phone: '02-5678-9012',
-    address: '서울특별시 동대문구',
-    created_at: '2024-01-05T00:00:00Z'
   }
 ]
 
-export default function handler(req, res) {
+module.exports = function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
