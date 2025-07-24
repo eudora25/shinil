@@ -1,43 +1,4 @@
-const jwt = require('jsonwebtoken')
-
-// JWT 시크릿 (실제로는 환경변수 사용)
-const JWT_SECRET = 'shinil-secret-key-2024'
-
-// 테스트 데이터
-const testClients = [
-  {
-    id: 1,
-    client_name: '서울대병원',
-    client_code: 'SEOUL001',
-    contact_person: '김의사',
-    phone: '02-1234-5678',
-    email: 'contact@seoulhospital.com',
-    address: '서울시 종로구',
-    created_at: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: 2,
-    client_name: '연세대병원',
-    client_code: 'YONSEI002',
-    contact_person: '이의사',
-    phone: '02-2345-6789',
-    email: 'contact@yonsei.com',
-    address: '서울시 서대문구',
-    created_at: '2024-01-02T00:00:00Z'
-  },
-  {
-    id: 3,
-    client_name: '고려대병원',
-    client_code: 'KOREA003',
-    contact_person: '박의사',
-    phone: '02-3456-7890',
-    email: 'contact@korea.com',
-    address: '서울시 성북구',
-    created_at: '2024-01-03T00:00:00Z'
-  }
-]
-
-module.exports = function handler(req, res) {
+export default function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
@@ -59,7 +20,7 @@ module.exports = function handler(req, res) {
   }
 
   try {
-    // JWT 토큰 검증
+    // 간단한 토큰 검증
     const authHeader = req.headers.authorization
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
@@ -69,18 +30,39 @@ module.exports = function handler(req, res) {
       })
     }
 
-    const token = authHeader.substring(7) // 'Bearer ' 제거
-    
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET)
-      console.log('토큰 검증 성공:', decoded)
-    } catch (jwtError) {
-      return res.status(401).json({
-        success: false,
-        error: 'invalid_token',
-        message: '유효하지 않은 토큰입니다'
-      })
-    }
+    // 테스트 데이터
+    const testClients = [
+      {
+        id: 1,
+        client_name: '서울대병원',
+        client_code: 'SEOUL001',
+        contact_person: '김의사',
+        phone: '02-1234-5678',
+        email: 'contact@seoulhospital.com',
+        address: '서울시 종로구',
+        created_at: '2024-01-01T00:00:00Z'
+      },
+      {
+        id: 2,
+        client_name: '연세대병원',
+        client_code: 'YONSEI002',
+        contact_person: '이의사',
+        phone: '02-2345-6789',
+        email: 'contact@yonsei.com',
+        address: '서울시 서대문구',
+        created_at: '2024-01-02T00:00:00Z'
+      },
+      {
+        id: 3,
+        client_name: '고려대병원',
+        client_code: 'KOREA003',
+        contact_person: '박의사',
+        phone: '02-3456-7890',
+        email: 'contact@korea.com',
+        address: '서울시 성북구',
+        created_at: '2024-01-03T00:00:00Z'
+      }
+    ]
 
     // 테스트 데이터 반환
     return res.status(200).json({

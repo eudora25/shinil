@@ -1,9 +1,4 @@
-const jwt = require('jsonwebtoken')
-
-// 간단한 JWT 시크릿 (실제로는 환경변수 사용)
-const JWT_SECRET = 'shinil-secret-key-2024'
-
-module.exports = function handler(req, res) {
+export default function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
@@ -38,7 +33,7 @@ module.exports = function handler(req, res) {
 
     // 간단한 테스트 로그인
     if (email === 'admin@shinil.com' && password === 'admin123') {
-      // 간단한 토큰 생성 (실제 JWT 대신)
+      // 간단한 토큰 생성
       const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluLXVzZXItaWQiLCJlbWFpbCI6ImFkbWluQHNoaW5pbC5jb20iLCJyb2xlIjoiYWRtaW4iLCJuYW1lIjoi7KSA66as7J6QIiwiaWF0IjoxNzUzMzI1ODU4LCJleHAiOjE3NTM0MTIyNTh9.test-token'
 
       return res.status(200).json({

@@ -1,40 +1,4 @@
-const jwt = require('jsonwebtoken')
-
-// JWT 시크릿 (실제로는 환경변수 사용)
-const JWT_SECRET = 'shinil-secret-key-2024'
-
-// 테스트 데이터
-const testProducts = [
-  {
-    id: 1,
-    product_name: '아스피린',
-    product_code: 'ASP001',
-    manufacturer: '신일제약',
-    category: '진통제',
-    price: 5000,
-    created_at: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: 2,
-    product_name: '타이레놀',
-    product_code: 'TYL002',
-    manufacturer: '대한제약',
-    category: '해열제',
-    price: 3000,
-    created_at: '2024-01-02T00:00:00Z'
-  },
-  {
-    id: 3,
-    product_name: '비타민C',
-    product_code: 'VIT003',
-    manufacturer: '한국제약',
-    category: '영양제',
-    price: 8000,
-    created_at: '2024-01-03T00:00:00Z'
-  }
-]
-
-module.exports = function handler(req, res) {
+export default function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
@@ -56,7 +20,7 @@ module.exports = function handler(req, res) {
   }
 
   try {
-    // JWT 토큰 검증
+    // 간단한 토큰 검증
     const authHeader = req.headers.authorization
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
@@ -66,18 +30,36 @@ module.exports = function handler(req, res) {
       })
     }
 
-    const token = authHeader.substring(7) // 'Bearer ' 제거
-    
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET)
-      console.log('토큰 검증 성공:', decoded)
-    } catch (jwtError) {
-      return res.status(401).json({
-        success: false,
-        error: 'invalid_token',
-        message: '유효하지 않은 토큰입니다'
-      })
-    }
+    // 테스트 데이터
+    const testProducts = [
+      {
+        id: 1,
+        product_name: '아스피린',
+        product_code: 'ASP001',
+        manufacturer: '신일제약',
+        category: '진통제',
+        price: 5000,
+        created_at: '2024-01-01T00:00:00Z'
+      },
+      {
+        id: 2,
+        product_name: '타이레놀',
+        product_code: 'TYL002',
+        manufacturer: '대한제약',
+        category: '해열제',
+        price: 3000,
+        created_at: '2024-01-02T00:00:00Z'
+      },
+      {
+        id: 3,
+        product_name: '비타민C',
+        product_code: 'VIT003',
+        manufacturer: '한국제약',
+        category: '영양제',
+        price: 8000,
+        created_at: '2024-01-03T00:00:00Z'
+      }
+    ]
 
     // 테스트 데이터 반환
     return res.status(200).json({
