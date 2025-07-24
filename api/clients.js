@@ -1,4 +1,12 @@
-export default function handler(req, res) {
+import { createClient } from '@supabase/supabase-js'
+
+// Supabase 클라이언트 생성
+const supabaseUrl = 'https://selklngerzfmuvagcvvf.supabase.co'
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlbGtsbmdlcnpmbXV2YWdjdnZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3MzQ5MDUsImV4cCI6MjA2ODMxMDkwNX0.cRe78UqA-HDdVClq0qrXlOXxwNpQWLB6ycFnoHzQI4U'
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+export default async function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
@@ -20,61 +28,26 @@ export default function handler(req, res) {
   }
 
   try {
-    // 간단한 토큰 검증
-    const authHeader = req.headers.authorization
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
+    // Supabase에서 고객 데이터 조회
+    const { data: clients, error } = await supabase
+      .from('clients')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Supabase clients error:', error)
+      return res.status(500).json({
         success: false,
-        error: 'access_token_required',
-        message: '액세스 토큰이 필요합니다'
+        error: 'database_error',
+        message: '데이터베이스 오류가 발생했습니다'
       })
     }
 
-    // 테스트 데이터
-    const testClients = [
-      {
-        id: 1,
-        client_name: '서울대병원',
-        client_code: 'SEOUL001',
-        contact_person: '김의사',
-        phone: '02-1234-5678',
-        email: 'contact@seoulhospital.com',
-        address: '서울시 종로구',
-        created_at: '2024-01-01T00:00:00Z'
-      },
-      {
-        id: 2,
-        client_name: '연세대병원',
-        client_code: 'YONSEI002',
-        contact_person: '이의사',
-        phone: '02-2345-6789',
-        email: 'contact@yonsei.com',
-        address: '서울시 서대문구',
-        created_at: '2024-01-02T00:00:00Z'
-      },
-      {
-        id: 3,
-        client_name: '고려대병원',
-        client_code: 'KOREA003',
-        contact_person: '박의사',
-        phone: '02-3456-7890',
-        email: 'contact@korea.com',
-        address: '서울시 성북구',
-        created_at: '2024-01-03T00:00:00Z'
-      }
-    ]
-
-    // 테스트 데이터 반환
+    // 데이터 반환
     return res.status(200).json({
       success: true,
-      data: testClients,
-      total_count: testClients.length,
-      user: {
-        id: 'admin-user-id',
-        email: 'admin@shinil.com',
-        role: 'admin',
-        name: '관리자'
-      },
+      data: clients || [],
+      total_count: clients ? clients.length : 0,
       timestamp: new Date().toISOString()
     })
 

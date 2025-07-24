@@ -1,4 +1,12 @@
-export default function handler(req, res) {
+import { createClient } from '@supabase/supabase-js'
+
+// Supabase 클라이언트 생성
+const supabaseUrl = 'https://selklngerzfmuvagcvvf.supabase.co'
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlbGtsbmdlcnpmbXV2YWdjdnZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3MzQ5MDUsImV4cCI6MjA2ODMxMDkwNX0.cRe78UqA-HDdVClq0qrXlOXxwNpQWLB6ycFnoHzQI4U'
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+export default async function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
@@ -20,58 +28,29 @@ export default function handler(req, res) {
   }
 
   try {
-    // 간단한 토큰 검증
-    const authHeader = req.headers.authorization
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
+    // Supabase에서 제품 데이터 조회 (companies 테이블과 조인)
+    const { data: products, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        companies!inner(company_name)
+      `)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Supabase products error:', error)
+      return res.status(500).json({
         success: false,
-        error: 'access_token_required',
-        message: '액세스 토큰이 필요합니다'
+        error: 'database_error',
+        message: '데이터베이스 오류가 발생했습니다'
       })
     }
 
-    // 테스트 데이터
-    const testProducts = [
-      {
-        id: 1,
-        product_name: '아스피린',
-        product_code: 'ASP001',
-        manufacturer: '신일제약',
-        category: '진통제',
-        price: 5000,
-        created_at: '2024-01-01T00:00:00Z'
-      },
-      {
-        id: 2,
-        product_name: '타이레놀',
-        product_code: 'TYL002',
-        manufacturer: '대한제약',
-        category: '해열제',
-        price: 3000,
-        created_at: '2024-01-02T00:00:00Z'
-      },
-      {
-        id: 3,
-        product_name: '비타민C',
-        product_code: 'VIT003',
-        manufacturer: '한국제약',
-        category: '영양제',
-        price: 8000,
-        created_at: '2024-01-03T00:00:00Z'
-      }
-    ]
-
-    // 테스트 데이터 반환
+    // 데이터 반환
     return res.status(200).json({
       success: true,
-      data: testProducts,
-      total_count: testProducts.length,
-      user: {
-        id: 'admin-user-id',
-        email: 'admin@shinil.com',
-        role: 'admin',
-        name: '관리자'
-      },
+      data: products || [],
+      total_count: products ? products.length : 0,
       timestamp: new Date().toISOString()
     })
 

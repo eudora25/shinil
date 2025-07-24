@@ -1,4 +1,12 @@
-export default function handler(req, res) {
+import { createClient } from '@supabase/supabase-js'
+
+// Supabase 클라이언트 생성
+const supabaseUrl = 'https://selklngerzfmuvagcvvf.supabase.co'
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlbGtsbmdlcnpmbXV2YWdjdnZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3MzQ5MDUsImV4cCI6MjA2ODMxMDkwNX0.cRe78UqA-HDdVClq0qrXlOXxwNpQWLB6ycFnoHzQI4U'
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+export default async function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
@@ -20,55 +28,26 @@ export default function handler(req, res) {
   }
 
   try {
-    // 간단한 토큰 검증
-    const authHeader = req.headers.authorization
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
+    // Supabase에서 회사 데이터 조회
+    const { data: companies, error } = await supabase
+      .from('companies')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Supabase companies error:', error)
+      return res.status(500).json({
         success: false,
-        error: 'access_token_required',
-        message: '액세스 토큰이 필요합니다'
+        error: 'database_error',
+        message: '데이터베이스 오류가 발생했습니다'
       })
     }
 
-    // 테스트 데이터
-    const testCompanies = [
-      {
-        id: 1,
-        company_name: '신일제약',
-        representative_name: '김신일',
-        email: 'contact@shinil.com',
-        approval_status: 'approved',
-        created_at: '2024-01-01T00:00:00Z'
-      },
-      {
-        id: 2,
-        company_name: '대한제약',
-        representative_name: '이대한',
-        email: 'contact@daehan.com',
-        approval_status: 'approved',
-        created_at: '2024-01-02T00:00:00Z'
-      },
-      {
-        id: 3,
-        company_name: '한국제약',
-        representative_name: '박한국',
-        email: 'contact@korea.com',
-        approval_status: 'pending',
-        created_at: '2024-01-03T00:00:00Z'
-      }
-    ]
-
-    // 테스트 데이터 반환
+    // 데이터 반환
     return res.status(200).json({
       success: true,
-      data: testCompanies,
-      total_count: testCompanies.length,
-      user: {
-        id: 'admin-user-id',
-        email: 'admin@shinil.com',
-        role: 'admin',
-        name: '관리자'
-      },
+      data: companies || [],
+      total_count: companies ? companies.length : 0,
       timestamp: new Date().toISOString()
     })
 

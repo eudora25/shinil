@@ -112,62 +112,59 @@ const handleLogin = async () => {
   if (!canLogin.value) return;
   loading.value = true;
   try {
-    // 간단한 로그인 로직 (Supabase 없이)
-    if (email.value === 'admin@admin.com' && password.value === 'asdf1234') {
-      // 관리자 로그인 성공 - 사용자 상태 설정
-      const mockUser = {
-        email: 'admin@admin.com',
-        user_metadata: { user_type: 'admin' }
-      };
-      
-      // 전역 상태에 사용자 정보 저장
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      localStorage.setItem('userType', 'admin');
-      
-      console.log('[LoginView] Admin login successful. localStorage set:', {
-        user: localStorage.getItem('user'),
-        userType: localStorage.getItem('userType')
-      });
-      
-      // 페이지 새로고침으로 App.vue의 onMounted가 다시 실행되도록 함
-      window.location.href = '/admin/notices';
-    } else if (email.value === 'user1@user.com' && password.value === 'asdf1234') {
-      // 일반 사용자 로그인 성공
-      const mockUser = {
-        email: 'user1@user.com',
-        user_metadata: { user_type: 'user' }
-      };
-      
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      localStorage.setItem('userType', 'user');
-      
-      console.log('[LoginView] User1 login successful. localStorage set:', {
-        user: localStorage.getItem('user'),
-        userType: localStorage.getItem('userType')
-      });
-      
-      // 페이지 새로고침으로 App.vue의 onMounted가 다시 실행되도록 함
-      window.location.href = '/notices';
-    } else if (email.value === 'user2@user.com' && password.value === 'asdf1234') {
-      // 일반 사용자 로그인 성공
-      const mockUser = {
-        email: 'user2@user.com',
-        user_metadata: { user_type: 'user' }
-      };
-      
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      localStorage.setItem('userType', 'user');
-      
-      console.log('[LoginView] User2 login successful. localStorage set:', {
-        user: localStorage.getItem('user'),
-        userType: localStorage.getItem('userType')
-      });
-      
-      // 페이지 새로고침으로 App.vue의 onMounted가 다시 실행되도록 함
-      window.location.href = '/notices';
-    } else {
+    // Supabase Auth를 사용한 로그인
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.value,
+      password: password.value
+    });
+
+    if (error) {
+      console.error('Supabase login error:', error);
       alert('아이디(이메일) 또는 비밀번호가 일치하지 않습니다. 다시 확인해주세요.');
+      return;
     }
+
+    // 사용자 정보 조회 (companies 테이블에서)
+    const { data: companyData, error: companyError } = await supabase
+      .from('companies')
+      .select('*')
+      .eq('email', email.value)
+      .single();
+
+    if (companyError && companyError.code !== 'PGRST116') {
+      console.error('Company lookup error:', companyError);
+    }
+
+    // 사용자 역할 결정
+    let userRole = 'user';
+    let userName = email.value;
+
+    if (companyData) {
+      userRole = companyData.approval_status === 'approved' ? 'admin' : 'pending';
+      userName = companyData.representative_name || email.value;
+    }
+
+    // 전역 상태에 사용자 정보 저장
+    const userInfo = {
+      id: data.user.id,
+      email: data.user.email,
+      role: userRole,
+      name: userName
+    };
+
+    localStorage.setItem('user', JSON.stringify(userInfo));
+    localStorage.setItem('userType', userRole);
+    localStorage.setItem('supabaseToken', data.session.access_token);
+
+    console.log('[LoginView] Supabase login successful. User info:', userInfo);
+
+    // 페이지 새로고침으로 App.vue의 onMounted가 다시 실행되도록 함
+    if (userRole === 'admin') {
+      window.location.href = '/admin/notices';
+    } else {
+      window.location.href = '/notices';
+    }
+
   } catch (error) {
     console.error('Login error:', error);
     alert('로그인 중 오류가 발생했습니다.');
