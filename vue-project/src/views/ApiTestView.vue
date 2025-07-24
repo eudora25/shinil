@@ -139,45 +139,34 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { supabase } from '@/supabase'
 
 const companies = ref([])
 const products = ref([])
 const clients = ref([])
 const loading = ref(false)
 const error = ref(null)
-const token = ref(null)
 const user = ref(null)
-
-// Vercel API URL
-const API_BASE_URL = 'https://shinil.vercel.app/api'
 
 // 로그인 함수
 const login = async () => {
   loading.value = true
   error.value = null
-  
+
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: 'admin@shinil.com',
-        password: 'admin123'
-      })
+    const { data, error: loginError } = await supabase.auth.signInWithPassword({
+      email: 'admin@shinil.com',
+      password: 'admin123'
     })
 
-    const data = await response.json()
-    
-    if (data.success) {
-      token.value = data.data.token
-      user.value = data.data.user
-      console.log('로그인 성공:', data)
-    } else {
-      error.value = data.message
-      console.error('로그인 실패:', data)
+    if (loginError) {
+      error.value = loginError.message
+      console.error('로그인 실패:', loginError)
+      return
     }
+
+    user.value = data.user
+    console.log('로그인 성공:', data)
   } catch (err) {
     error.value = err.message
     console.error('로그인 오류:', err)
@@ -188,32 +177,28 @@ const login = async () => {
 
 // 회사 데이터 조회
 const fetchCompanies = async () => {
-  if (!token.value) {
+  if (!user.value) {
     error.value = '먼저 로그인해주세요'
     return
   }
 
   loading.value = true
   error.value = null
-  
-  try {
-    const response = await fetch(`${API_BASE_URL}/companies`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token.value}`,
-        'Content-Type': 'application/json'
-      }
-    })
 
-    const data = await response.json()
-    
-    if (data.success) {
-      companies.value = data.data
-      console.log('회사 데이터 조회 성공:', data)
-    } else {
-      error.value = data.message
-      console.error('회사 데이터 조회 실패:', data)
+  try {
+    const { data, error: fetchError } = await supabase
+      .from('companies')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (fetchError) {
+      error.value = fetchError.message
+      console.error('회사 데이터 조회 실패:', fetchError)
+      return
     }
+
+    companies.value = data || []
+    console.log('회사 데이터 조회 성공:', data)
   } catch (err) {
     error.value = err.message
     console.error('회사 데이터 조회 오류:', err)
@@ -224,32 +209,28 @@ const fetchCompanies = async () => {
 
 // 제품 데이터 조회
 const fetchProducts = async () => {
-  if (!token.value) {
+  if (!user.value) {
     error.value = '먼저 로그인해주세요'
     return
   }
 
   loading.value = true
   error.value = null
-  
-  try {
-    const response = await fetch(`${API_BASE_URL}/products`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token.value}`,
-        'Content-Type': 'application/json'
-      }
-    })
 
-    const data = await response.json()
-    
-    if (data.success) {
-      products.value = data.data
-      console.log('제품 데이터 조회 성공:', data)
-    } else {
-      error.value = data.message
-      console.error('제품 데이터 조회 실패:', data)
+  try {
+    const { data, error: fetchError } = await supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (fetchError) {
+      error.value = fetchError.message
+      console.error('제품 데이터 조회 실패:', fetchError)
+      return
     }
+
+    products.value = data || []
+    console.log('제품 데이터 조회 성공:', data)
   } catch (err) {
     error.value = err.message
     console.error('제품 데이터 조회 오류:', err)
@@ -260,32 +241,28 @@ const fetchProducts = async () => {
 
 // 고객 데이터 조회
 const fetchClients = async () => {
-  if (!token.value) {
+  if (!user.value) {
     error.value = '먼저 로그인해주세요'
     return
   }
 
   loading.value = true
   error.value = null
-  
-  try {
-    const response = await fetch(`${API_BASE_URL}/clients`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token.value}`,
-        'Content-Type': 'application/json'
-      }
-    })
 
-    const data = await response.json()
-    
-    if (data.success) {
-      clients.value = data.data
-      console.log('고객 데이터 조회 성공:', data)
-    } else {
-      error.value = data.message
-      console.error('고객 데이터 조회 실패:', data)
+  try {
+    const { data, error: fetchError } = await supabase
+      .from('clients')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (fetchError) {
+      error.value = fetchError.message
+      console.error('고객 데이터 조회 실패:', fetchError)
+      return
     }
+
+    clients.value = data || []
+    console.log('고객 데이터 조회 성공:', data)
   } catch (err) {
     error.value = err.message
     console.error('고객 데이터 조회 오류:', err)

@@ -112,7 +112,7 @@ const handleLogin = async () => {
   if (!canLogin.value) return;
   loading.value = true;
   try {
-    // Supabase Auth를 사용한 로그인
+    // Supabase Auth를 직접 사용한 로그인
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.value,
       password: password.value
