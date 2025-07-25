@@ -29,6 +29,12 @@ import AdminSettlementMonthsEditView from '../views/admin/AdminSettlementMonthsE
 import { supabase } from '@/supabase'; // <<< Supabase 클라이언트 임포트
 import { ref, onMounted } from 'vue'
 
+// API 뷰 컴포넌트들
+import ApiProductsView from '../views/api/ApiProductsView.vue'
+import ApiClientsView from '../views/api/ApiClientsView.vue'
+import ApiNoticesView from '../views/api/ApiNoticesView.vue'
+import ApiHealthView from '../views/api/ApiHealthView.vue'
+
 function sanitizeFileName(name) {
   // 한글, 공백, 특수문자 제거 → 영문, 숫자, 언더스코어, 점만 남김
   return name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -71,6 +77,33 @@ const router = createRouter({
     //   name: 'about',
     //   component: () => import('../views/AboutView.vue')
     // },
+    
+    // API 라우트들 (인증 불필요)
+    {
+      path: '/api/health',
+      name: 'ApiHealth',
+      component: ApiHealthView,
+      meta: { requiresAuth: false, isApi: true }
+    },
+    {
+      path: '/api/products',
+      name: 'ApiProducts',
+      component: ApiProductsView,
+      meta: { requiresAuth: false, isApi: true }
+    },
+    {
+      path: '/api/clients',
+      name: 'ApiClients',
+      component: ApiClientsView,
+      meta: { requiresAuth: false, isApi: true }
+    },
+    {
+      path: '/api/notices',
+      name: 'ApiNotices',
+      component: ApiNoticesView,
+      meta: { requiresAuth: false, isApi: true }
+    },
+    
     { // <<< 여기에 새로운 Companies 라우트 추가
       path: '/admin/companies/approved',
       name: 'AdminCompaniesApproved',
@@ -146,9 +179,9 @@ const router = createRouter({
     },
     {
       path: '/admin/clients/:id/edit',
-      name: 'admin-clients-edit',
-      component: () => import('../views/admin/AdminClientsEditView.vue'),
-      meta: { requiresAuth: true, role: 'admin' }
+      name: 'AdminClientEdit',
+      component: () => import('@/views/admin/AdminClientsEditView.vue'),
+      meta: { menu: '병의원 관리', submenu: '병의원 수정', requiresAuth: true, isAdmin: true },
     },
     {
       path: '/admin/clients/assign-companies',
@@ -157,16 +190,16 @@ const router = createRouter({
       meta: { menu: '병의원 관리', submenu: '담당업체 지정', requiresAuth: true, isAdmin: true },
     },
     {
-      path: '/admin/clients/commission-grades',
-      name: 'AdminClientsCommissionGrades',
-      component: () => import('@/views/admin/AdminClientsCommissionGradesView.vue'),
-      meta: { menu: '병의원 관리', submenu: '수수료 등급 설정', requiresAuth: true, isAdmin: true },
-    },
-    {
       path: '/admin/clients/assign-pharmacies',
       name: 'AdminClientsAssignPharmacies',
       component: () => import('@/views/admin/AdminClientsAssignPharmaciesView.vue'),
       meta: { menu: '병의원 관리', submenu: '문전약국 지정', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/clients/commission-grades',
+      name: 'AdminClientsCommissionGrades',
+      component: () => import('@/views/admin/AdminClientsCommissionGradesView.vue'),
+      meta: { menu: '병의원 관리', submenu: '수수료 등급', requiresAuth: true, isAdmin: true },
     },
     {
       path: '/admin/pharmacies',
@@ -176,21 +209,21 @@ const router = createRouter({
     },
     {
       path: '/admin/pharmacies/create',
-      name: 'admin-pharmacies-create',
-      component: AdminPharmaciesCreateView,
-      meta: { requiresAuth: true, role: 'admin' }
+      name: 'AdminPharmacyCreate',
+      component: () => import('@/views/admin/AdminPharmaciesCreateView.vue'),
+      meta: { menu: '문전약국 관리', submenu: '문전약국 등록', requiresAuth: true, isAdmin: true },
     },
     {
       path: '/admin/pharmacies/:id',
-      name: 'admin-pharmacies-detail',
-      component: () => import('../views/admin/AdminPharmaciesDetailView.vue'),
-      meta: { requiresAuth: true, role: 'admin' }
+      name: 'AdminPharmacyDetail',
+      component: () => import('@/views/admin/AdminPharmaciesDetailView.vue'),
+      meta: { menu: '문전약국 관리', submenu: '문전약국 상세', requiresAuth: true, isAdmin: true },
     },
     {
       path: '/admin/pharmacies/:id/edit',
-      name: 'admin-pharmacies-edit',
-      component: () => import('../views/admin/AdminPharmaciesEditView.vue'),
-      meta: { requiresAuth: true, role: 'admin' }
+      name: 'AdminPharmacyEdit',
+      component: () => import('@/views/admin/AdminPharmaciesEditView.vue'),
+      meta: { menu: '문전약국 관리', submenu: '문전약국 수정', requiresAuth: true, isAdmin: true },
     },
     {
       path: '/admin/wholesale-revenue',
@@ -200,9 +233,9 @@ const router = createRouter({
     },
     {
       path: '/admin/wholesale-revenue/create',
-      name: 'admin-wholesale-revenue-create',
-      component: AdminWholesaleRevenueCreateView,
-      meta: { requiresAuth: true, role: 'admin' }
+      name: 'AdminWholesaleRevenueCreate',
+      component: () => import('@/views/admin/AdminWholesaleRevenueCreateView.vue'),
+      meta: { menu: '매출 관리', submenu: '도매매출 등록', requiresAuth: true, isAdmin: true },
     },
     {
       path: '/admin/direct-revenue',
@@ -212,52 +245,9 @@ const router = createRouter({
     },
     {
       path: '/admin/direct-revenue/create',
-      name: 'admin-direct-revenue-create',
-      component: AdminDirectRevenueCreateView,
-      meta: { requiresAuth: true, role: 'admin' }
-    },
-    {
-      path: '/admin/settlement-month',
-      name: 'admin-settlement-month',
-      component: AdminSettlementMonthsView,
-      meta: { requiresAuth: true, role: 'admin' }
-    },
-    {
-      path: '/admin/performance/register',
-      name: 'AdminPerformanceRegister',
-      component: () => import('@/views/admin/AdminPerformanceRegisterView.vue'),
-      meta: { menu: '실적 관리', submenu: '실적 등록', requiresAuth: true, isAdmin: true },
-    },
-    {
-      path: '/admin/performance/companies',
-      name: 'AdminPerformanceCompanies',
-      component: () => import('@/views/admin/AdminPerformanceCompaniesView.vue'),
-      meta: { menu: '실적 관리', submenu: '업체별 등록 현황', requiresAuth: true, isAdmin: true },
-    },
-    {
-      path: '/admin/performance/whole',
-      name: 'AdminPerformanceWhole',
-      component: () => import('@/views/admin/AdminPerformanceWholeView.vue'),
-      meta: { menu: '실적 관리', submenu: '전체 등록 현황', requiresAuth: true, isAdmin: true },
-    },
-    {
-      path: '/admin/performance-list',
-      name: 'AdminPerformanceRegisterList',
-      component: () => import('../views/admin/AdminPerformanceRegisterList.vue'),
-      meta: { requiresAuth: true, role: 'admin' },
-      redirect: '/admin/performance/whole'
-    },
-    {
-      path: '/admin/performance/review',
-      name: 'AdminPerformanceReview',
-      component: () => import('@/views/admin/AdminPerformanceReviewView.vue'),
-      meta: { menu: '정산 관리', submenu: '실적 검수', requiresAuth: true, isAdmin: true },
-    },
-    {
-      path: '/admin/absorption-analysis',
-      name: 'AdminAbsorptionAnalysis',
-      component: () => import('@/views/admin/AdminAbsorptionAnalysisView.vue'),
-      meta: { menu: '정산 관리', submenu: '흡수율 분석', requiresAuth: true, isAdmin: true },
+      name: 'AdminDirectRevenueCreate',
+      component: () => import('@/views/admin/AdminDirectRevenueCreateView.vue'),
+      meta: { menu: '매출 관리', submenu: '직거래매출 등록', requiresAuth: true, isAdmin: true },
     },
     {
       path: '/admin/settlement-months',
@@ -273,9 +263,9 @@ const router = createRouter({
     },
     {
       path: '/admin/settlement-months/:id',
-      name: 'admin-settlement-months-detail',
-      component: AdminSettlementMonthsDetailView,
-      meta: { requiresAuth: true, role: 'admin' }
+      name: 'AdminSettlementMonthsDetail',
+      component: () => import('@/views/admin/AdminSettlementMonthsDetailView.vue'),
+      meta: { menu: '실적 관리', submenu: '정산월 상세', requiresAuth: true, isAdmin: true },
     },
     {
       path: '/admin/settlement-months/:id/edit',
@@ -284,40 +274,68 @@ const router = createRouter({
       meta: { menu: '실적 관리', submenu: '정산월 수정', requiresAuth: true, isAdmin: true },
     },
     {
-      path: '/notices',
-      name: 'Notices',
-      component: () => import('@/views/user/NoticesView.vue'),
-      meta: { menu: '공지사항 조회', submenu: '공지사항 목록', requiresAuth: true },
+      path: '/admin/performance/register',
+      name: 'AdminPerformanceRegister',
+      component: () => import('@/views/admin/AdminPerformanceRegisterView.vue'),
+      meta: { menu: '실적 관리', submenu: '실적 등록', requiresAuth: true, isAdmin: true },
     },
     {
-      path: '/notices/:id',
-      name: 'NoticeDetail',
-      component: () => import('@/views/user/NoticeDetailView.vue'),
-      meta: { menu: '공지사항 조회', submenu: '공지사항 상세', requiresAuth: true },
+      path: '/admin/performance/register/list',
+      name: 'AdminPerformanceRegisterList',
+      component: () => import('@/views/admin/AdminPerformanceRegisterList.vue'),
+      meta: { menu: '실적 관리', submenu: '등록 현황', requiresAuth: true, isAdmin: true },
     },
     {
-      path: '/admin/notices/:id',
-      name: 'AdminNoticeDetail',
-      component: () => import('../views/admin/AdminNoticeDetailView.vue'),
-      meta: { requiresAuth: true, role: 'admin' }
+      path: '/admin/performance/companies',
+      name: 'AdminPerformanceCompanies',
+      component: () => import('@/views/admin/AdminPerformanceCompaniesView.vue'),
+      meta: { menu: '실적 관리', submenu: '업체별 등록 현황', requiresAuth: true, isAdmin: true },
     },
     {
-      path: '/admin/notices/:id/edit',
-      name: 'AdminNoticeEdit',
-      component: () => import('@/views/admin/AdminNoticeEditView.vue'),
-      meta: { menu: '공지사항 관리', submenu: '공지사항 수정', requiresAuth: true, isAdmin: true },
+      path: '/admin/performance/whole',
+      name: 'AdminPerformanceWhole',
+      component: () => import('@/views/admin/AdminPerformanceWholeView.vue'),
+      meta: { menu: '실적 관리', submenu: '전체 등록 현황', requiresAuth: true, isAdmin: true },
     },
     {
-      path: '/admin/companies/create',
-      name: 'admin-company-create',
-      component: AdminCompanyCreateView,
-      meta: { requiresAuth: true, role: 'admin' }
+      path: '/admin/performance/review',
+      name: 'AdminPerformanceReview',
+      component: () => import('@/views/admin/AdminPerformanceReviewView.vue'),
+      meta: { menu: '실적 관리', submenu: '실적 검수', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/absorption-analysis',
+      name: 'AdminAbsorptionAnalysis',
+      component: () => import('@/views/admin/AdminAbsorptionAnalysisView.vue'),
+      meta: { menu: '정산 관리', submenu: '흡수율 분석', requiresAuth: true, isAdmin: true },
+    },
+    {
+      path: '/admin/settlement-share',
+      name: 'AdminSettlementShare',
+      component: () => import('@/views/admin/AdminSettlementShareView.vue'),
+      meta: {
+        menu: '정산 관리',
+        submenu: '정산내역서 공유',
+        requiresAuth: true,
+        isAdmin: true,
+      },
+    },
+    {
+      path: '/admin/settlement-share/detail',
+      name: 'AdminSettlementShareDetail',
+      component: () => import('@/views/admin/AdminSettlementShareDetailView.vue'),
+      meta: {
+        menu: '정산 관리',
+        submenu: '정산내역서 상세',
+        requiresAuth: true,
+        isAdmin: true,
+      },
     },
     {
       path: '/admin/companies/:id',
-      name: 'AdminCompanyDetail',
-      component: () => import('@/views/admin/AdminCompanyDetailView.vue'),
-      meta: { menu: '업체 관리', submenu: '업체 상세', requiresAuth: true, isAdmin: true },
+      name: 'admin-company-detail',
+      component: AdminCompanyDetailView,
+      meta: { requiresAuth: true, role: 'admin' }
     },
     {
       path: '/admin/companies/:id/edit',
@@ -386,28 +404,6 @@ const router = createRouter({
       meta: { menu: '내 정보', submenu: '비밀번호 변경', requiresAuth: true },
     },
     {
-      path: '/admin/settlement-share',
-      name: 'AdminSettlementShare',
-      component: () => import('@/views/admin/AdminSettlementShareView.vue'),
-      meta: {
-        menu: '정산 관리',
-        submenu: '정산내역서 공유',
-        requiresAuth: true,
-        isAdmin: true,
-      },
-    },
-    {
-      path: '/admin/settlement-share/detail',
-      name: 'AdminSettlementShareDetail',
-      component: () => import('@/views/admin/AdminSettlementShareDetailView.vue'),
-      meta: {
-        menu: '정산 관리',
-        submenu: '정산내역서 상세',
-        requiresAuth: true,
-        isAdmin: true,
-      },
-    },
-    {
       path: '/settlements',
       name: 'Settlements',
       component: () => import('@/views/user/SettlementShareDetailView.vue'),
@@ -427,6 +423,12 @@ const router = createRouter({
 // (선택 사항) 네비게이션 가드 추가: requiresAuth 메타 필드가 있는 라우트에 대해 인증 여부 확인
 router.beforeEach(async (to, from, next) => {
   console.log(`[Router Guard] Navigating from: ${from.fullPath} to: ${to.fullPath}`);
+
+  // API 라우트는 인증 불필요
+  if (to.meta.isApi) {
+    console.log('[Router Guard] API route detected. Allowing access without authentication.');
+    return next();
+  }
 
   // 로그인 및 회원가입 페이지는 항상 접근 허용
   if (to.name === 'login' || to.name === 'signup') {
