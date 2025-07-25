@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # Vue.js 애플리케이션
+  vue-app:
+    build:
+      context: ./vue-project
+      dockerfile: Dockerfile
+    container_name: shinil_project-vue-app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./vue-project:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    networks:
+      - shinil-network
+    depends_on:
+      - supabase
+    restart: unless-stopped
+
+  # Supabase 개발 환경
+  supabase:
+    image: supabase/supabase-dev
+    container_name: shinil_project-supabase
+    ports:
+      - "54321-54327:54321-54327"
+      - "8000-8001:8000-8001"
+      - "8443-8444:8443-8444"
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ShinilSecurePass2024!}
+      - JWT_SECRET=${JWT_SECRET:-shinil-jwt-secret-2024-very-long-and-secure-token-for-production}
+      - DASHBOARD_USERNAME=${DASHBOARD_USERNAME:-shinil_admin}
+      - DASHBOARD_PASSWORD=${DASHBOARD_PASSWORD:-ShinilDashboardPass2024!}
+      - API_EXTERNAL_URL=http://127.0.0.1:54321
+      - PGRST_DB_URI=postgres://postgres:${POSTGRES_PASSWORD:-ShinilSecurePass2024!}@docker.for.mac.localhost:5432/postgres
+      - KONG_DATABASE=off
+      - KONG_PLUGINS=request-transformer,cors,key-auth
+      - KONG_DECLARATIVE_CONFIG=/var/lib/kong/kong.yml
+    volumes:
+      - supabase-data:/var/lib/postgresql/data
+      - ./supabase:/supabase
+    networks:
+      - shinil-network
+    restart: unless-stopped
+
+  # PostgreSQL (Supabase용) - 개발환경에서만 외부 접근 허용
+  postgres:
+    image: postgres:15
+    container_name: shinil_project-postgres
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ShinilSecurePass2024!}
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+    # 개발환경에서만 포트 노출, 프로덕션에서는 제거
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - shinil-network
+    restart: unless-stopped
+    # 보안 강화
+    command: postgres -c ssl=on -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+
+  # pgAdmin (개발환경에서만 사용)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: shinil_project-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@shinil.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-ShinilPgAdminPass2024!}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+    # 개발환경에서만 포트 노출, 프로덕션에서는 제거
+    ports:
+      - "127.0.0.1:5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - shinil-network
+    restart: unless-stopped
+
+volumes:
+  supabase-data:
+    driver: local
+  postgres-data:
+    driver: local
+
+networks:
+  shinil-network:
+    driver: bridge
+    # 네트워크 보안 강화
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16 
