@@ -1,10 +1,3 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://mctzuqctekhhdfwimxek.supabase.co'
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'your-service-role-key'
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
 export default async function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
