@@ -1,16 +1,7 @@
 {
   "buildCommand": "cd vue-project && npm run build",
   "outputDirectory": "vue-project/dist",
-  "functions": {
-    "vue-project/api/*.js": {
-      "runtime": "@vercel/node@3.0.0"
-    }
-  },
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
