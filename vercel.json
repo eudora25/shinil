@@ -3,7 +3,7 @@
   "outputDirectory": "vue-project/dist",
   "functions": {
     "vue-project/api/*.js": {
-      "runtime": "nodejs18.x"
+      "runtime": "@vercel/node@3.0.0"
     }
   },
   "rewrites": [
