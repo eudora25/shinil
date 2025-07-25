@@ -1,3 +1,10 @@
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
 export default async function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -30,40 +37,37 @@ export default async function handler(req, res) {
       })
     }
     
-    try {
-      // Base64 디코딩
-      const decodedToken = JSON.parse(Buffer.from(token, 'base64').toString())
-      
-      // 토큰 만료 확인
-      const currentTime = Math.floor(Date.now() / 1000)
-      if (decodedToken.exp && decodedToken.exp < currentTime) {
-        return res.status(401).json({
-          success: false,
-          message: 'Token has expired'
-        })
-      }
-      
-      // 토큰 검증 성공
-      return res.status(200).json({
-        success: true,
-        message: 'Token is valid',
-        data: {
-          user: {
-            email: decodedToken.email,
-            role: decodedToken.role,
-            userId: decodedToken.userId
-          },
-          valid: true,
-          expiresAt: new Date(decodedToken.exp * 1000).toISOString()
-        }
-      })
-      
-    } catch (decodeError) {
+    // Supabase를 사용한 토큰 검증
+    const { data, error } = await supabase.auth.getUser(token)
+    
+    if (error) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid token format'
+        message: 'Invalid or expired token',
+        error: error.message
       })
     }
+    
+    // 사용자 메타데이터에서 역할 정보 가져오기
+    const userRole = data.user.user_metadata?.user_type || 'user'
+    const approvalStatus = data.user.user_metadata?.approval_status || 'pending'
+    
+    // 토큰 검증 성공
+    return res.status(200).json({
+      success: true,
+      message: 'Token is valid',
+      data: {
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          role: userRole,
+          approvalStatus: approvalStatus,
+          createdAt: data.user.created_at,
+          lastSignIn: data.user.last_sign_in_at
+        },
+        valid: true
+      }
+    })
     
   } catch (error) {
     console.error('Token verification error:', error)
