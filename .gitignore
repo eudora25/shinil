@@ -121,3 +121,28 @@ docker-volumes/
 config.local.js
 .env.local 
 .vercel
+
+# Python virtual environment
+.venv/
+venv/
+env/
+ENV/
+
+# Test files
+test-*.js
+test-*.html
+*-test.js
+*-test.html
+
+# Temporary test files
+temp-*.js
+temp-*.html
+tmp-*.js
+tmp-*.html
+
+# Git hooks (if not using)
+.husky/
+
+# Local development files
+local-*.js
+dev-*.js
