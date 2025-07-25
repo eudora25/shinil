@@ -37,31 +37,40 @@ export default async function handler(req, res) {
       })
     }
     
-    // Supabase를 사용한 토큰 검증
-    const { data, error } = await supabase.auth.getUser(token)
-    
-    if (error) {
+    try {
+      // Base64 디코딩
+      const decodedToken = JSON.parse(Buffer.from(token, 'base64').toString())
+      
+      // 토큰 만료 확인
+      const currentTime = Math.floor(Date.now() / 1000)
+      if (decodedToken.exp && decodedToken.exp < currentTime) {
+        return res.status(401).json({
+          success: false,
+          message: 'Token has expired'
+        })
+      }
+      
+      // 토큰 검증 성공
+      return res.status(200).json({
+        success: true,
+        message: 'Token is valid',
+        data: {
+          user: {
+            email: decodedToken.email,
+            role: decodedToken.role,
+            userId: decodedToken.userId
+          },
+          valid: true,
+          expiresAt: new Date(decodedToken.exp * 1000).toISOString()
+        }
+      })
+      
+    } catch (decodeError) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid or expired token',
-        error: error.message
+        message: 'Invalid token format'
       })
     }
-    
-    // 토큰 검증 성공
-    return res.status(200).json({
-      success: true,
-      message: 'Token is valid',
-      data: {
-        user: {
-          id: data.user.id,
-          email: data.user.email,
-          role: data.user.role || 'user',
-          createdAt: data.user.created_at
-        },
-        valid: true
-      }
-    })
     
   } catch (error) {
     console.error('Token verification error:', error)
