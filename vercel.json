@@ -1,4 +1,6 @@
 {
+  "buildCommand": "cd vue-project && npm run build",
+  "outputDirectory": "vue-project/dist",
   "rewrites": [
     {
       "source": "/(.*)",
