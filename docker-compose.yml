@@ -1,6 +1,26 @@
 version: '3.8'
 
 services:
+  # API 서버
+  api-server:
+    build:
+      context: ./vue-project
+      dockerfile: Dockerfile.api
+    container_name: shinil_project-api-server
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./vue-project:/app
+      - ./vue-project/node_modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+    networks:
+      - shinil-network
+    depends_on:
+      - supabase
+    restart: unless-stopped
+
   # Vue.js 애플리케이션
   vue-app:
     build:
@@ -17,6 +37,7 @@ services:
     networks:
       - shinil-network
     depends_on:
+      - api-server
       - supabase
 
   # Supabase 개발 환경
@@ -71,6 +92,8 @@ services:
       - postgres
     networks:
       - shinil-network
+
+
 
 volumes:
   supabase-data:

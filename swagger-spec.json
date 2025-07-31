@@ -1,0 +1,824 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "신일 프로젝트 API",
+    "description": "신일 프로젝트의 REST API 문서입니다. 사용자 인증, 제품 관리, 고객 관리, 공지사항 등의 기능을 제공합니다.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "신일 프로젝트 개발팀",
+      "email": "dev@shinil.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001",
+      "description": "로컬 API 서버 (실제 테스트 가능)"
+    },
+    {
+      "url": "https://your-domain.vercel.app/api",
+      "description": "프로덕션 서버"
+    },
+    {
+      "url": "http://localhost:3003/api",
+      "description": "로컬 테스트 API 서버"
+    },
+    {
+      "url": "http://localhost:8080",
+      "description": "로컬 정적 파일 서버 (문서만)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "인증",
+      "description": "사용자 인증 관련 API"
+    },
+    {
+      "name": "사용자 관리",
+      "description": "사용자 생성 및 관리 API"
+    },
+    {
+      "name": "제품",
+      "description": "제품 관련 API"
+    },
+    {
+      "name": "고객",
+      "description": "고객 관련 API"
+    },
+    {
+      "name": "공지사항",
+      "description": "공지사항 관련 API"
+    },
+    {
+      "name": "시스템",
+      "description": "시스템 상태 확인 API"
+    }
+  ],
+  "paths": {
+    "/api": {
+      "get": {
+        "tags": ["시스템"],
+        "summary": "API 상태 확인",
+        "description": "API 서버의 기본 상태를 확인합니다.",
+        "responses": {
+          "200": {
+            "description": "성공적으로 API 상태를 반환",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "test": {
+                      "type": "string",
+                      "example": "001"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-01T00:00:00.000Z"
+                    },
+                    "version": {
+                      "type": "string",
+                      "example": "1.0.0"
+                    },
+                    "environment": {
+                      "type": "string",
+                      "example": "production"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Vercel API Routes working correctly"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth": {
+      "post": {
+        "tags": ["인증"],
+        "summary": "사용자 로그인",
+        "description": "이메일과 비밀번호를 사용하여 사용자 인증을 수행합니다.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "사용자 이메일 주소",
+                    "example": "user@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "사용자 비밀번호",
+                    "example": "password123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "인증 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Authentication successful"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "token": {
+                          "type": "string",
+                          "description": "액세스 토큰"
+                        },
+                        "refreshToken": {
+                          "type": "string",
+                          "description": "리프레시 토큰"
+                        },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "description": "사용자 ID"
+                            },
+                            "email": {
+                              "type": "string",
+                              "description": "사용자 이메일"
+                            },
+                            "role": {
+                              "type": "string",
+                              "description": "사용자 역할",
+                              "enum": ["admin", "user"]
+                            },
+                            "approvalStatus": {
+                              "type": "string",
+                              "description": "승인 상태",
+                              "enum": ["pending", "approved", "rejected"]
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "lastSignIn": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          }
+                        },
+                        "expiresIn": {
+                          "type": "string",
+                          "example": "24h"
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Email and password are required"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 실패",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Invalid email or password"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "승인 대기 중",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Account is pending approval. Please contact administrator."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "허용되지 않는 메서드",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Method not allowed. Use POST."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/verify-token": {
+      "post": {
+        "tags": ["인증"],
+        "summary": "토큰 검증",
+        "description": "액세스 토큰의 유효성을 검증합니다.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token"],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "검증할 액세스 토큰",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "토큰 검증 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Token is valid"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "description": "사용자 ID"
+                            },
+                            "email": {
+                              "type": "string",
+                              "description": "사용자 이메일"
+                            },
+                            "role": {
+                              "type": "string",
+                              "description": "사용자 역할"
+                            },
+                            "approvalStatus": {
+                              "type": "string",
+                              "description": "승인 상태"
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "lastSignIn": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          }
+                        },
+                        "valid": {
+                          "type": "boolean",
+                          "example": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "토큰 누락",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Token is required"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "토큰 무효",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Invalid or expired token"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/create-user": {
+      "post": {
+        "tags": ["사용자 관리"],
+        "summary": "새 사용자 생성",
+        "description": "관리자 권한으로 새 사용자를 생성합니다.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "사용자 이메일 주소",
+                    "example": "newuser@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "사용자 비밀번호",
+                    "example": "password123"
+                  },
+                  "company_name": {
+                    "type": "string",
+                    "description": "회사명 (선택사항)",
+                    "example": "신일제약"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "사용자 생성 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "생성된 사용자 ID"
+                        },
+                        "email": {
+                          "type": "string",
+                          "description": "사용자 이메일"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Email and password are required"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "허용되지 않는 메서드",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Method not allowed"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products": {
+      "get": {
+        "tags": ["제품"],
+        "summary": "제품 목록 조회",
+        "description": "제품 목록을 조회합니다.",
+        "responses": {
+          "200": {
+            "description": "제품 목록 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "test": {
+                      "type": "string",
+                      "example": "002"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Products API endpoint"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-01T00:00:00.000Z"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clients": {
+      "get": {
+        "tags": ["고객"],
+        "summary": "고객 목록 조회",
+        "description": "고객 목록을 조회합니다.",
+        "responses": {
+          "200": {
+            "description": "고객 목록 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "test": {
+                      "type": "string",
+                      "example": "003"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Clients API endpoint"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-01T00:00:00.000Z"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notices": {
+      "get": {
+        "tags": ["공지사항"],
+        "summary": "공지사항 목록 조회",
+        "description": "공지사항 목록을 조회합니다.",
+        "responses": {
+          "200": {
+            "description": "공지사항 목록 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "test": {
+                      "type": "string",
+                      "example": "004"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Notices API endpoint"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-01T00:00:00.000Z"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": ["시스템"],
+        "summary": "헬스 체크",
+        "description": "API 서버의 상태를 확인합니다.",
+        "responses": {
+          "200": {
+            "description": "서버 상태 정상",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "test": {
+                      "type": "string",
+                      "example": "001"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-01T00:00:00.000Z"
+                    },
+                    "version": {
+                      "type": "string",
+                      "example": "1.0.0"
+                    },
+                    "environment": {
+                      "type": "string",
+                      "example": "production"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Health check API working correctly"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "description": "오류 메시지"
+          },
+          "error": {
+            "type": "string",
+            "description": "상세 오류 정보"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "사용자 ID"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "사용자 이메일"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["admin", "user"],
+            "description": "사용자 역할"
+          },
+          "approvalStatus": {
+            "type": "string",
+            "enum": ["pending", "approved", "rejected"],
+            "description": "승인 상태"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "생성일시"
+          },
+          "lastSignIn": {
+            "type": "string",
+            "format": "date-time",
+            "description": "마지막 로그인 일시"
+          }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Authentication successful"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "액세스 토큰"
+              },
+              "refreshToken": {
+                "type": "string",
+                "description": "리프레시 토큰"
+              },
+              "user": {
+                "$ref": "#/components/schemas/User"
+              },
+              "expiresIn": {
+                "type": "string",
+                "example": "24h"
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT 토큰을 사용한 인증"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ]
+} 

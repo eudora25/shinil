@@ -128,6 +128,12 @@ const router = createRouter({
       component: () => import('@/views/admin/AdminNoticeCreateView.vue'),
       meta: { menu: '공지사항 관리', submenu: '공지사항 등록', requiresAuth: true, isAdmin: true },
     },
+    {
+      path: '/admin/api-logs',
+      name: 'AdminApiLogs',
+      component: () => import('@/views/admin/AdminApiLogsView.vue'),
+      meta: { menu: '시스템 관리', submenu: 'API 로그', requiresAuth: true, isAdmin: true },
+    },
     // 추가된 관리자 라우트
     // {
     //   path: '/admin/approval-requests',

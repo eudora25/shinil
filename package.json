@@ -1,0 +1,24 @@
+{
+  "name": "shinil-project",
+  "version": "1.0.0",
+  "description": "Shinil Project API Server",
+  "scripts": {
+    "api": "cd vue-project && node server.js",
+    "api:dev": "cd vue-project && npm run dev:api",
+    "api:pm2": "pm2 start ecosystem.config.js",
+    "api:pm2:stop": "pm2 stop shinil-api-server",
+    "api:pm2:restart": "pm2 restart shinil-api-server",
+    "api:pm2:logs": "pm2 logs shinil-api-server",
+    "api:pm2:status": "pm2 status",
+    "start": "cd vue-project && node server.js",
+    "dev": "cd vue-project && npm run dev",
+    "build": "cd vue-project && npm run build"
+  },
+  "keywords": [
+    "api",
+    "server",
+    "supabase"
+  ],
+  "author": "Shinil Project",
+  "license": "MIT"
+}

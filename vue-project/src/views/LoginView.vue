@@ -112,37 +112,27 @@ const handleLogin = async () => {
   if (!canLogin.value) return;
   loading.value = true;
   try {
-    const { data: companyRow } = await supabase
-      .from('companies')
-      .select('id, approval_status, user_type')
-      .eq('email', email.value.trim().toLowerCase())
-      .maybeSingle();
-    if (!companyRow) {
-      alert('아이디(이메일) 정보가 없습니다. 다시 확인해주세요.');
-      loading.value = false;
-      return;
-    }
+    // API 서버와 동일한 로직으로 변경
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email: email.value,
       password: password.value,
     });
+    
     if (authError) {
-      alert('비밀번호가 일치하지 않습니다. 다시 확인해주세요.');
+      alert('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
       loading.value = false;
       return;
     }
-    if (companyRow.approval_status !== 'approved') {
-      alert('미승인 회원입니다. 관리자에게 승인을 요청해주세요.');
-      await supabase.auth.signOut();
-      loading.value = false;
-      return;
-    }
-    if (companyRow.user_type === 'admin') {
+
+    // 사용자 타입에 따라 리다이렉트
+    const userType = authData.user.user_metadata?.user_type || 'user';
+    if (userType === 'admin') {
       router.push('/admin/notices');
     } else {
       router.push('/notices');
     }
   } catch (error) {
+    console.error('Login error:', error);
     alert('로그인 중 오류가 발생했습니다.');
   } finally {
     loading.value = false;
