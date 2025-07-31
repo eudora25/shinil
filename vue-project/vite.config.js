@@ -64,7 +64,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     optimizeDeps: {
-      include: ['primevue/api', 'jszip'],
+      include: ['primevue/api', 'jszip', 'xlsx'],
     },
     // 환경 변수 설정 - .env.production 파일을 강제로 사용
     envDir: '.',
