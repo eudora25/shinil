@@ -66,6 +66,11 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       include: ['primevue/api', 'jszip', 'xlsx'],
     },
+    build: {
+      rollupOptions: {
+        external: ['xlsx'],
+      },
+    },
     // 환경 변수 설정 - .env.production 파일을 강제로 사용
     envDir: '.',
     envPrefix: 'VITE_',
