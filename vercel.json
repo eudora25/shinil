@@ -3,8 +3,40 @@
   "outputDirectory": "vue-project/dist",
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/swagger-ui.html",
+      "destination": "/swagger-ui.html"
+    },
+    {
+      "source": "/swagger-spec.json",
+      "destination": "/swagger-spec.json"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/swagger-ui.html",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/html"
+        }
+      ]
+    },
+    {
+      "source": "/swagger-spec.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ]
     }
   ]
 }
