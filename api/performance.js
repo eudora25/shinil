@@ -21,44 +21,53 @@ export default async function handler(req, res) {
   try {
     switch (req.method) {
       case 'GET':
-        // 공지사항 목록 조회
-        const { data: notices, error: getError } = await supabase
-          .from('notices')
-          .select('*')
+        // 실적 목록 조회
+        const { data: performances, error: getError } = await supabase
+          .from('performance_records')
+          .select(`
+            *,
+            companies (company_name),
+            hospitals (hospital_name),
+            products (product_name, insurance_code)
+          `)
           .order('created_at', { ascending: false })
 
         if (getError) throw getError
 
         return res.status(200).json({
           success: true,
-          message: '공지사항 목록 조회 성공',
-          data: notices
+          message: '실적 목록 조회 성공',
+          data: performances
         })
 
       case 'POST':
-        // 새 공지사항 등록
+        // 새 실적 등록
         const { 
-          title, 
-          content, 
-          is_important,
-          author_id 
+          company_id, 
+          hospital_id, 
+          product_id, 
+          prescription_count,
+          settlement_month,
+          notes 
         } = req.body
 
-        if (!title || !content) {
+        if (!company_id || !hospital_id || !product_id || !settlement_month) {
           return res.status(400).json({
             success: false,
-            message: '제목과 내용은 필수입니다.'
+            message: '회원 ID, 병원 ID, 제품 ID, 정산월은 필수입니다.'
           })
         }
 
-        const { data: newNotice, error: postError } = await supabase
-          .from('notices')
+        const { data: newPerformance, error: postError } = await supabase
+          .from('performance_records')
           .insert([{
-            title,
-            content,
-            is_important: is_important || false,
-            author_id,
-            is_active: true
+            company_id,
+            hospital_id,
+            product_id,
+            prescription_count: prescription_count ? parseInt(prescription_count) : 0,
+            settlement_month,
+            notes,
+            status: 'pending'
           }])
           .select()
 
@@ -66,8 +75,8 @@ export default async function handler(req, res) {
 
         return res.status(201).json({
           success: true,
-          message: '공지사항 등록 성공',
-          data: newNotice[0]
+          message: '실적 등록 성공',
+          data: newPerformance[0]
         })
 
       default:
@@ -77,7 +86,7 @@ export default async function handler(req, res) {
         })
     }
   } catch (error) {
-    console.error('Notices API error:', error)
+    console.error('Performance API error:', error)
     return res.status(500).json({
       success: false,
       message: '서버 오류가 발생했습니다.',

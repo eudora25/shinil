@@ -21,9 +21,9 @@ export default async function handler(req, res) {
   try {
     switch (req.method) {
       case 'GET':
-        // 공지사항 목록 조회
-        const { data: notices, error: getError } = await supabase
-          .from('notices')
+        // 회원 목록 조회
+        const { data: members, error: getError } = await supabase
+          .from('companies')
           .select('*')
           .order('created_at', { ascending: false })
 
@@ -31,34 +31,31 @@ export default async function handler(req, res) {
 
         return res.status(200).json({
           success: true,
-          message: '공지사항 목록 조회 성공',
-          data: notices
+          message: '회원 목록 조회 성공',
+          data: members
         })
 
       case 'POST':
-        // 새 공지사항 등록
-        const { 
-          title, 
-          content, 
-          is_important,
-          author_id 
-        } = req.body
+        // 새 회원 등록
+        const { company_name, business_number, representative, address, phone, email } = req.body
 
-        if (!title || !content) {
+        if (!company_name || !business_number || !representative) {
           return res.status(400).json({
             success: false,
-            message: '제목과 내용은 필수입니다.'
+            message: '회사명, 사업자등록번호, 대표자는 필수입니다.'
           })
         }
 
-        const { data: newNotice, error: postError } = await supabase
-          .from('notices')
+        const { data: newMember, error: postError } = await supabase
+          .from('companies')
           .insert([{
-            title,
-            content,
-            is_important: is_important || false,
-            author_id,
-            is_active: true
+            company_name,
+            business_number,
+            representative,
+            address,
+            phone,
+            email,
+            approval_status: 'pending'
           }])
           .select()
 
@@ -66,8 +63,8 @@ export default async function handler(req, res) {
 
         return res.status(201).json({
           success: true,
-          message: '공지사항 등록 성공',
-          data: newNotice[0]
+          message: '회원 등록 성공',
+          data: newMember[0]
         })
 
       default:
@@ -77,7 +74,7 @@ export default async function handler(req, res) {
         })
     }
   } catch (error) {
-    console.error('Notices API error:', error)
+    console.error('Members API error:', error)
     return res.status(500).json({
       success: false,
       message: '서버 오류가 발생했습니다.',

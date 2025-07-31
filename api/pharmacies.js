@@ -21,9 +21,9 @@ export default async function handler(req, res) {
   try {
     switch (req.method) {
       case 'GET':
-        // 공지사항 목록 조회
-        const { data: notices, error: getError } = await supabase
-          .from('notices')
+        // 약국 목록 조회
+        const { data: pharmacies, error: getError } = await supabase
+          .from('pharmacies')
           .select('*')
           .order('created_at', { ascending: false })
 
@@ -31,33 +31,37 @@ export default async function handler(req, res) {
 
         return res.status(200).json({
           success: true,
-          message: '공지사항 목록 조회 성공',
-          data: notices
+          message: '약국 목록 조회 성공',
+          data: pharmacies
         })
 
       case 'POST':
-        // 새 공지사항 등록
+        // 새 약국 등록
         const { 
-          title, 
-          content, 
-          is_important,
-          author_id 
+          pharmacy_name, 
+          business_number, 
+          address, 
+          phone, 
+          contact_person,
+          email 
         } = req.body
 
-        if (!title || !content) {
+        if (!pharmacy_name || !business_number) {
           return res.status(400).json({
             success: false,
-            message: '제목과 내용은 필수입니다.'
+            message: '약국명과 사업자등록번호는 필수입니다.'
           })
         }
 
-        const { data: newNotice, error: postError } = await supabase
-          .from('notices')
+        const { data: newPharmacy, error: postError } = await supabase
+          .from('pharmacies')
           .insert([{
-            title,
-            content,
-            is_important: is_important || false,
-            author_id,
+            pharmacy_name,
+            business_number,
+            address,
+            phone,
+            contact_person,
+            email,
             is_active: true
           }])
           .select()
@@ -66,8 +70,8 @@ export default async function handler(req, res) {
 
         return res.status(201).json({
           success: true,
-          message: '공지사항 등록 성공',
-          data: newNotice[0]
+          message: '약국 등록 성공',
+          data: newPharmacy[0]
         })
 
       default:
@@ -77,7 +81,7 @@ export default async function handler(req, res) {
         })
     }
   } catch (error) {
-    console.error('Notices API error:', error)
+    console.error('Pharmacies API error:', error)
     return res.status(500).json({
       success: false,
       message: '서버 오류가 발생했습니다.',

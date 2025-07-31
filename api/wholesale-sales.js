@@ -21,9 +21,9 @@ export default async function handler(req, res) {
   try {
     switch (req.method) {
       case 'GET':
-        // 공지사항 목록 조회
-        const { data: notices, error: getError } = await supabase
-          .from('notices')
+        // 도매매출 목록 조회
+        const { data: wholesaleSales, error: getError } = await supabase
+          .from('wholesale_sales')
           .select('*')
           .order('created_at', { ascending: false })
 
@@ -31,34 +31,37 @@ export default async function handler(req, res) {
 
         return res.status(200).json({
           success: true,
-          message: '공지사항 목록 조회 성공',
-          data: notices
+          message: '도매매출 목록 조회 성공',
+          data: wholesaleSales
         })
 
       case 'POST':
-        // 새 공지사항 등록
+        // 새 도매매출 등록
         const { 
-          title, 
-          content, 
-          is_important,
-          author_id 
+          pharmacy_name, 
+          business_number, 
+          address, 
+          sales_amount,
+          sales_date,
+          product_id 
         } = req.body
 
-        if (!title || !content) {
+        if (!pharmacy_name || !business_number || !sales_amount) {
           return res.status(400).json({
             success: false,
-            message: '제목과 내용은 필수입니다.'
+            message: '약국명, 사업자등록번호, 매출액은 필수입니다.'
           })
         }
 
-        const { data: newNotice, error: postError } = await supabase
-          .from('notices')
+        const { data: newWholesaleSale, error: postError } = await supabase
+          .from('wholesale_sales')
           .insert([{
-            title,
-            content,
-            is_important: is_important || false,
-            author_id,
-            is_active: true
+            pharmacy_name,
+            business_number,
+            address,
+            sales_amount: parseFloat(sales_amount),
+            sales_date,
+            product_id
           }])
           .select()
 
@@ -66,8 +69,8 @@ export default async function handler(req, res) {
 
         return res.status(201).json({
           success: true,
-          message: '공지사항 등록 성공',
-          data: newNotice[0]
+          message: '도매매출 등록 성공',
+          data: newWholesaleSale[0]
         })
 
       default:
@@ -77,7 +80,7 @@ export default async function handler(req, res) {
         })
     }
   } catch (error) {
-    console.error('Notices API error:', error)
+    console.error('Wholesale sales API error:', error)
     return res.status(500).json({
       success: false,
       message: '서버 오류가 발생했습니다.',

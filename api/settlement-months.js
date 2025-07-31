@@ -21,44 +21,45 @@ export default async function handler(req, res) {
   try {
     switch (req.method) {
       case 'GET':
-        // 공지사항 목록 조회
-        const { data: notices, error: getError } = await supabase
-          .from('notices')
+        // 정산월 목록 조회
+        const { data: settlementMonths, error: getError } = await supabase
+          .from('settlement_months')
           .select('*')
-          .order('created_at', { ascending: false })
+          .order('settlement_month', { ascending: false })
 
         if (getError) throw getError
 
         return res.status(200).json({
           success: true,
-          message: '공지사항 목록 조회 성공',
-          data: notices
+          message: '정산월 목록 조회 성공',
+          data: settlementMonths
         })
 
       case 'POST':
-        // 새 공지사항 등록
+        // 새 정산월 등록
         const { 
-          title, 
-          content, 
-          is_important,
-          author_id 
+          settlement_month, 
+          registration_start_date, 
+          registration_end_date,
+          settlement_date,
+          status 
         } = req.body
 
-        if (!title || !content) {
+        if (!settlement_month || !registration_start_date || !registration_end_date) {
           return res.status(400).json({
             success: false,
-            message: '제목과 내용은 필수입니다.'
+            message: '정산월, 등록 시작일, 등록 종료일은 필수입니다.'
           })
         }
 
-        const { data: newNotice, error: postError } = await supabase
-          .from('notices')
+        const { data: newSettlementMonth, error: postError } = await supabase
+          .from('settlement_months')
           .insert([{
-            title,
-            content,
-            is_important: is_important || false,
-            author_id,
-            is_active: true
+            settlement_month,
+            registration_start_date,
+            registration_end_date,
+            settlement_date,
+            status: status || 'open'
           }])
           .select()
 
@@ -66,8 +67,8 @@ export default async function handler(req, res) {
 
         return res.status(201).json({
           success: true,
-          message: '공지사항 등록 성공',
-          data: newNotice[0]
+          message: '정산월 등록 성공',
+          data: newSettlementMonth[0]
         })
 
       default:
@@ -77,7 +78,7 @@ export default async function handler(req, res) {
         })
     }
   } catch (error) {
-    console.error('Notices API error:', error)
+    console.error('Settlement months API error:', error)
     return res.status(500).json({
       success: false,
       message: '서버 오류가 발생했습니다.',
