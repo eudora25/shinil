@@ -1038,9 +1038,21 @@ async function createServer() {
     }
   })
 
-  // Swagger UI 서빙
-  app.get('/swagger-ui.html', (req, res) => {
+  // IP 접근 제어 설정 로드
+  const IP_ACCESS_CONFIG = require('./config/ip-access.js')
+  IP_ACCESS_CONFIG.loadFromEnv()
+  
+  // IP 접근 미들웨어
+  const checkIPAccess = IP_ACCESS_CONFIG.createMiddleware()
+
+  // Swagger UI 서빙 (IP 제한 적용)
+  app.get('/swagger-ui.html', checkIPAccess, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'swagger-ui.html'))
+  })
+
+  // Swagger spec 파일도 IP 제한 적용
+  app.get('/swagger-spec.json', checkIPAccess, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'swagger-spec.json'))
   })
 
   // 정적 파일 서빙 (Vue 앱)
