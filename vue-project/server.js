@@ -1039,12 +1039,17 @@ async function createServer() {
   })
 
   // IP 접근 제어 설정 로드
-  const IP_ACCESS_CONFIG = require('./config/ip-access.js')
-  IP_ACCESS_CONFIG.loadFromEnv()
+  const IP_ACCESS_CONFIG = await import('./config/ip-access.js')
+  IP_ACCESS_CONFIG.default.loadFromEnv()
   
   // IP 접근 미들웨어
-  const checkIPAccess = IP_ACCESS_CONFIG.createMiddleware()
+  const checkIPAccess = IP_ACCESS_CONFIG.default.createMiddleware()
 
+  // 정적 파일 서빙 (Vue 앱) - Swagger 경로 제외
+  app.use(express.static(path.join(__dirname, 'dist'), {
+    index: false // 기본 index.html 자동 서빙 비활성화
+  }))
+  
   // Swagger UI 서빙 (IP 제한 적용)
   app.get('/swagger-ui.html', checkIPAccess, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'swagger-ui.html'))
@@ -1054,9 +1059,6 @@ async function createServer() {
   app.get('/swagger-spec.json', checkIPAccess, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'swagger-spec.json'))
   })
-
-  // 정적 파일 서빙 (Vue 앱)
-  app.use(express.static(path.join(__dirname, 'dist')))
   
   // SPA 라우팅을 위한 catch-all 핸들러
   app.get('*', (req, res) => {

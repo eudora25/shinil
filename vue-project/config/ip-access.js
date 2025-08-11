@@ -5,7 +5,8 @@ const IP_ACCESS_CONFIG = {
     '127.0.0.1',        // localhost
     '::1',              // localhost IPv6
     '192.168.1.100',    // 예시: 허용할 IP 주소
-    '203.241.xxx.xxx'   // 예시: 허용할 IP 주소 (실제 IP로 변경 필요)
+    '203.241.xxx.xxx',  // 예시: 허용할 IP 주소 (실제 IP로 변경 필요)
+    '1.214.163.196'     // 현재 사용자 IP
   ],
 
   // 환경 변수에서 IP 목록 로드
@@ -51,6 +52,7 @@ const IP_ACCESS_CONFIG = {
       const realIP = forwardedIP || clientIP
       
       console.log(`🔒 IP 접근 시도: ${realIP}`)
+      console.log(`🔒 허용된 IP 목록:`, this.allowedIPs)
       
       if (!this.isIPAllowed(realIP)) {
         console.log(`❌ 접근 거부: ${realIP}`)
@@ -58,7 +60,8 @@ const IP_ACCESS_CONFIG = {
           success: false,
           message: '접근이 거부되었습니다. 허용된 IP에서만 접근 가능합니다.',
           error: 'IP_ACCESS_DENIED',
-          clientIP: realIP
+          clientIP: realIP,
+          allowedIPs: this.allowedIPs
         })
       }
       
@@ -68,4 +71,4 @@ const IP_ACCESS_CONFIG = {
   }
 }
 
-module.exports = IP_ACCESS_CONFIG
+export default IP_ACCESS_CONFIG
