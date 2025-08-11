@@ -4,9 +4,11 @@ const IP_ACCESS_CONFIG = {
   allowedIPs: [
     '127.0.0.1',        // localhost
     '::1',              // localhost IPv6
-    '192.168.1.100',    // 예시: 허용할 IP 주소
+    '192.168.1.119',    // 예시: 허용할 IP 주소
     '203.241.xxx.xxx',  // 예시: 허용할 IP 주소 (실제 IP로 변경 필요)
-    '1.214.163.196'     // 현재 사용자 IP
+    '1.214.163.196',    // 현재 사용자 IP
+    '192.168.65.1',     // Docker/개발 환경 IP
+    '::ffff:192.168.65.1'  // IPv4-mapped IPv6 형식
   ],
 
   // 환경 변수에서 IP 목록 로드
@@ -28,6 +30,18 @@ const IP_ACCESS_CONFIG = {
     return this.allowedIPs.some(allowedIP => {
       // 정확한 IP 매칭
       if (allowedIP === clientIP) return true
+      
+      // IPv4-mapped IPv6 주소 처리 (::ffff:192.168.65.1 -> 192.168.65.1)
+      if (clientIP.startsWith('::ffff:')) {
+        const ipv4Part = clientIP.substring(7) // ::ffff: 제거
+        if (allowedIP === ipv4Part) return true
+      }
+      
+      // IPv4 주소를 IPv4-mapped IPv6로 변환해서 매칭
+      if (allowedIP.includes('.') && !allowedIP.includes(':')) {
+        const mappedIPv6 = `::ffff:${allowedIP}`
+        if (clientIP === mappedIPv6) return true
+      }
       
       // CIDR 표기법 지원 (예: 192.168.1.0/24)
       if (allowedIP.includes('/')) {
