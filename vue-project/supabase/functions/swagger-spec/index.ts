@@ -101,7 +101,7 @@ serve(async (req) => {
           "description": "현재 도메인 API 서버 (프로덕션)"
         },
         {
-          "url": "https://shinil-project.vercel.app/api",
+          "url": "https://shinil.vercel.app/api",
           "description": "Vercel 프로덕션 서버"
         }
       ],
