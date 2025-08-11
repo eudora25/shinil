@@ -8,7 +8,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey)
 export default async function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   res.setHeader('Content-Type', 'application/json')
   
@@ -19,67 +19,27 @@ export default async function handler(req, res) {
   }
 
   try {
-    switch (req.method) {
-      case 'GET':
-        // 고객 목록 조회
-        const { data: clients, error: getError } = await supabase
-          .from('clients')
-          .select('*')
-          .order('created_at', { ascending: false })
-
-        if (getError) throw getError
-
-        return res.status(200).json({
-          success: true,
-          message: '고객 목록 조회 성공',
-          data: clients
-        })
-
-      case 'POST':
-        // 새 고객 등록
-        const { 
-          client_name, 
-          business_number, 
-          address, 
-          phone, 
-          email,
-          contact_person 
-        } = req.body
-
-        if (!client_name || !business_number) {
-          return res.status(400).json({
-            success: false,
-            message: '고객명과 사업자등록번호는 필수입니다.'
-          })
-        }
-
-        const { data: newClient, error: postError } = await supabase
-          .from('clients')
-          .insert([{
-            client_name,
-            business_number,
-            address,
-            phone,
-            email,
-            contact_person,
-            is_active: true
-          }])
-          .select()
-
-        if (postError) throw postError
-
-        return res.status(201).json({
-          success: true,
-          message: '고객 등록 성공',
-          data: newClient[0]
-        })
-
-      default:
-        return res.status(405).json({
-          success: false,
-          message: 'Method not allowed'
-        })
+    if (req.method !== 'GET') {
+      return res.status(405).json({
+        success: false,
+        message: 'Method not allowed. Only GET is supported.'
+      })
     }
+
+    // 고객 목록 조회
+    const { data: clients, error: getError } = await supabase
+      .from('clients')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (getError) throw getError
+
+    return res.status(200).json({
+      success: true,
+      message: '고객 목록 조회 성공',
+      data: clients
+    })
+
   } catch (error) {
     console.error('Clients API error:', error)
     return res.status(500).json({
