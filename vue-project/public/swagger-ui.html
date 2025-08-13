@@ -26,9 +26,18 @@
     <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
     <script>
         window.onload = function() {
-            const ui = SwaggerUIBundle({
-                url: './swagger-spec.json',
-                dom_id: '#swagger-ui',
+            // swagger-spec.json 파일을 직접 로드
+            fetch('/swagger-spec.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to load swagger spec');
+                    }
+                    return response.json();
+                })
+                .then(spec => {
+                    const ui = SwaggerUIBundle({
+                        spec: spec,
+                        dom_id: '#swagger-ui',
                 deepLinking: true,
                 presets: [
                     SwaggerUIBundle.presets.apis,
@@ -44,8 +53,25 @@
                 showRequestHeaders: true,
                 showCommonExtensions: true,
                 supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
-                tryItOutEnabled: true
+                tryItOutEnabled: true,
+                defaultModelsExpandDepth: 1,
+                defaultModelExpandDepth: 1,
+                defaultModelRendering: 'example',
+                displayRequestDuration: true,
+                requestInterceptor: function(request) {
+                    // 현재 도메인 API 서버로 고정
+                    request.url = request.url.replace(/^https?:\/\/[^\/]+/, '');
+                    if (!request.url.startsWith('/api')) {
+                        request.url = '/api' + request.url;
+                    }
+                    return request;
+                }
             });
+                })
+                .catch(error => {
+                    console.error('Error loading swagger spec:', error);
+                    document.getElementById('swagger-ui').innerHTML = '<div style="padding: 20px; color: red;">Error loading API documentation: ' + error.message + '</div>';
+                });
         };
     </script>
 </body>

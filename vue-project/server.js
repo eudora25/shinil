@@ -194,8 +194,15 @@ async function createServer() {
     }
   }
 
+  // IP 접근 제어 설정 로드
+  const IP_ACCESS_CONFIG = await import('./config/ip-access.js')
+  IP_ACCESS_CONFIG.default.loadFromEnv()
+  
+  // IP 접근 미들웨어
+  const checkIPAccess = IP_ACCESS_CONFIG.default.createMiddleware()
+
   // API 루트 엔드포인트
-  app.get('/api', logApiCall, (req, res) => {
+  app.get('/api', checkIPAccess, logApiCall, (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.json({
       name: "Shinil PMS API",
@@ -207,7 +214,7 @@ async function createServer() {
   })
 
   // 헬스 체크 엔드포인트
-  app.get('/api/health', requireAuth, logApiCall, (req, res) => {
+  app.get('/api/health', checkIPAccess, requireAuth, logApiCall, (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.json({
       status: 'healthy',
@@ -218,7 +225,7 @@ async function createServer() {
   })
 
   // 제품 목록 엔드포인트 (products_standard_code와 join)
-  app.get('/api/products', requireAuth, logApiCall, async (req, res) => {
+  app.get('/api/products', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Access-Control-Allow-Origin', '*')
     
@@ -278,7 +285,7 @@ async function createServer() {
   })
 
   // 클라이언트 목록 엔드포인트
-  app.get('/api/clients', requireAuth, logApiCall, async (req, res) => {
+  app.get('/api/clients', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Access-Control-Allow-Origin', '*')
     
@@ -312,7 +319,7 @@ async function createServer() {
   })
 
   // 공지사항 목록 엔드포인트 (조회수 포함)
-  app.get('/api/notices', requireAuth, logApiCall, async (req, res) => {
+  app.get('/api/notices', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Access-Control-Allow-Origin', '*')
     
@@ -371,7 +378,7 @@ async function createServer() {
   })
 
   // 약국정보 목록 엔드포인트
-  app.get('/api/pharmacies', requireAuth, logApiCall, async (req, res) => {
+  app.get('/api/pharmacies', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Access-Control-Allow-Origin', '*')
     
@@ -405,7 +412,7 @@ async function createServer() {
   })
 
     // 회사정보 목록 엔드포인트
-  app.get('/api/companies', requireAuth, logApiCall, async (req, res) => {
+  app.get('/api/companies', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Access-Control-Allow-Origin', '*')
 
@@ -439,7 +446,7 @@ async function createServer() {
   })
 
   // 정산월 목록 엔드포인트
-  app.get('/api/settlement-months', requireAuth, logApiCall, async (req, res) => {
+  app.get('/api/settlement-months', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Access-Control-Allow-Origin', '*')
 
@@ -473,7 +480,7 @@ async function createServer() {
   })
 
   // 실적정보 목록 엔드포인트
-  app.get('/api/performance-records', requireAuth, logApiCall, async (req, res) => {
+  app.get('/api/performance-records', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Access-Control-Allow-Origin', '*')
 
@@ -507,7 +514,7 @@ async function createServer() {
   })
 
   // 실적-흡수율 정보 목록 엔드포인트
-  app.get('/api/performance-records-absorption', requireAuth, logApiCall, async (req, res) => {
+  app.get('/api/performance-records-absorption', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Access-Control-Allow-Origin', '*')
 
@@ -564,7 +571,7 @@ async function createServer() {
   })
 
   // 실적 증빙 파일 목록 엔드포인트
-  app.get('/api/performance-evidence-files', requireAuth, logApiCall, async (req, res) => {
+  app.get('/api/performance-evidence-files', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Access-Control-Allow-Origin', '*')
 
@@ -615,7 +622,7 @@ async function createServer() {
   })
 
   // 정산내역서 목록 엔드포인트
-  app.get('/api/settlement-share', requireAuth, logApiCall, async (req, res) => {
+  app.get('/api/settlement-share', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Access-Control-Allow-Origin', '*')
 
@@ -660,7 +667,7 @@ async function createServer() {
   })
 
   // 도매매출정보 목록 엔드포인트
-  app.get('/api/wholesale-sales', requireAuth, logApiCall, async (req, res) => {
+  app.get('/api/wholesale-sales', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Access-Control-Allow-Origin', '*')
 
@@ -694,7 +701,7 @@ async function createServer() {
   })
 
   // 직거래매출정보 목록 엔드포인트
-  app.get('/api/direct-sales', requireAuth, logApiCall, async (req, res) => {
+  app.get('/api/direct-sales', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Access-Control-Allow-Origin', '*')
 
@@ -728,7 +735,7 @@ async function createServer() {
   })
 
   // 병원-회사 매핑정보 목록 엔드포인트
-  app.get('/api/client-company-assignments', requireAuth, logApiCall, async (req, res) => {
+  app.get('/api/client-company-assignments', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Access-Control-Allow-Origin', '*')
 
@@ -782,7 +789,7 @@ async function createServer() {
   })
 
   // 제품-업체 미배정 매핑 정보 목록 엔드포인트
-  app.get('/api/product-company-not-assignments', requireAuth, logApiCall, async (req, res) => {
+  app.get('/api/product-company-not-assignments', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Access-Control-Allow-Origin', '*')
 
@@ -873,7 +880,7 @@ async function createServer() {
   })
 
   // 병원-약국 매핑정보 목록 엔드포인트
-  app.get('/api/client-pharmacy-assignments', requireAuth, logApiCall, async (req, res) => {
+  app.get('/api/client-pharmacy-assignments', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Access-Control-Allow-Origin', '*')
 
@@ -926,7 +933,7 @@ async function createServer() {
 
 
 
-  app.post('/api/auth', logApiCall, async (req, res) => {
+  app.post('/api/auth', checkIPAccess, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     // credentials 허용 CORS
     const origin = req.headers.origin || '*'
@@ -990,7 +997,7 @@ async function createServer() {
   })
 
   // 토큰 검증 엔드포인트
-  app.post('/api/verify-token', logApiCall, async (req, res) => {
+  app.post('/api/verify-token', checkIPAccess, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Access-Control-Allow-Origin', '*')
     
@@ -1038,13 +1045,6 @@ async function createServer() {
     }
   })
 
-  // IP 접근 제어 설정 로드
-  const IP_ACCESS_CONFIG = await import('./config/ip-access.js')
-  IP_ACCESS_CONFIG.default.loadFromEnv()
-  
-  // IP 접근 미들웨어
-  const checkIPAccess = IP_ACCESS_CONFIG.default.createMiddleware()
-
   // 정적 파일 서빙 (Vue 앱) - Swagger 경로 제외
   app.use(express.static(path.join(__dirname, 'dist'), {
     index: false // 기본 index.html 자동 서빙 비활성화
@@ -1052,12 +1052,17 @@ async function createServer() {
   
   // Swagger UI 서빙 (IP 제한 적용)
   app.get('/swagger-ui.html', checkIPAccess, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'swagger-ui.html'))
+    const filePath = path.resolve(__dirname, 'swagger-ui.html')
+    console.log('🔍 Swagger UI 파일 경로:', filePath)
+    console.log('🔍 현재 작업 디렉토리:', process.cwd())
+    res.sendFile(filePath)
   })
 
   // Swagger spec 파일도 IP 제한 적용
   app.get('/swagger-spec.json', checkIPAccess, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'swagger-spec.json'))
+    const filePath = path.resolve(__dirname, 'swagger-spec.json')
+    console.log('🔍 Swagger spec 파일 경로:', filePath)
+    res.sendFile(filePath)
   })
   
   // SPA 라우팅을 위한 catch-all 핸들러
