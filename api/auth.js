@@ -86,23 +86,55 @@ export default async function handler(req, res) {
       })
     }
     
-    // Supabase 인증
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password
-    })
+    // Supabase 인증 (상세한 에러 로깅 포함)
+    let authData, authError
+    try {
+      const authResult = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+      })
+      authData = authResult.data
+      authError = authResult.error
+      
+      // 상세한 로깅
+      console.log('Auth attempt details:', {
+        email: email,
+        hasData: !!authData,
+        hasError: !!authError,
+        errorType: authError?.name,
+        errorCode: authError?.status,
+        timestamp: new Date().toISOString()
+      })
+      
+    } catch (networkError) {
+      console.error('Network error during auth:', {
+        errorName: networkError.name,
+        errorMessage: networkError.message,
+        errorStack: networkError.stack,
+        timestamp: new Date().toISOString()
+      })
+      
+      return res.status(500).json({
+        success: false,
+        message: 'Network connection failed',
+        error: networkError.message,
+        errorType: networkError.name,
+        details: 'Unable to connect to authentication service'
+      })
+    }
     
-    if (error) {
+    if (authError) {
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password',
-        error: error.message
+        error: authError.message,
+        errorCode: authError.status
       })
     }
     
     // 사용자 메타데이터 확인
-    const userRole = data.user.user_metadata?.user_type || 'user'
-    const approvalStatus = data.user.user_metadata?.approval_status || 'pending'
+    const userRole = authData.user.user_metadata?.user_type || 'user'
+    const approvalStatus = authData.user.user_metadata?.approval_status || 'pending'
     
     // 승인되지 않은 사용자 차단
     if (approvalStatus === 'pending' && userRole !== 'admin') {
@@ -117,18 +149,18 @@ export default async function handler(req, res) {
       success: true,
       message: 'Authentication successful',
       data: {
-        token: data.session.access_token,
-        refreshToken: data.session.refresh_token,
+        token: authData.session.access_token,
+        refreshToken: authData.session.refresh_token,
         user: {
-          id: data.user.id,
-          email: data.user.email,
+          id: authData.user.id,
+          email: authData.user.email,
           role: userRole,
           approvalStatus: approvalStatus,
-          createdAt: data.user.created_at,
-          lastSignIn: data.user.last_sign_in_at
+          createdAt: authData.user.created_at,
+          lastSignIn: authData.user.last_sign_in_at
         },
         expiresIn: '24h',
-        expiresAt: new Date(data.session.expires_at * 1000).toISOString()
+        expiresAt: new Date(authData.session.expires_at * 1000).toISOString()
       }
     })
     
