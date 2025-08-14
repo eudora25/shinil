@@ -2,6 +2,7 @@
   "name": "shinil-project",
   "version": "1.0.0",
   "description": "Shinil Project API Server",
+  "type": "module",
   "scripts": {
     "api": "cd vue-project && node server.js",
     "api:dev": "cd vue-project && npm run dev:api",
@@ -13,6 +14,9 @@
     "start": "cd vue-project && node server.js",
     "dev": "cd vue-project && npm run dev",
     "build": "cd vue-project && npm run build"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4"
   },
   "keywords": [
     "api",
