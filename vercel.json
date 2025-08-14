@@ -1,52 +1,39 @@
 {
-  "buildCommand": "cd vue-project && npm run build",
-  "outputDirectory": "vue-project/dist",
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "vue-project/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/swagger-ui.html",
+      "dest": "/swagger-ui.html"
+    },
+    {
+      "src": "/swagger-spec.json",
+      "dest": "/swagger-spec.json"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
   "functions": {
     "api/**/*.js": {
       "runtime": "nodejs18.x"
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/swagger-ui.html",
-      "destination": "/swagger-ui.html"
-    },
-    {
-      "source": "/swagger-spec.json",
-      "destination": "/swagger-spec.json"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/swagger-ui.html",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "text/html"
-        }
-      ]
-    },
-    {
-      "source": "/swagger-spec.json",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/json"
-        }
-      ]
-    }
-  ],
-  "build": {
-    "env": {
-      "NODE_ENV": "production"
     }
   }
 }
