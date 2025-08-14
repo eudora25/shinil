@@ -1,30 +1,23 @@
+// ES 모듈 import (Vercel 호환)
 import { createClient } from '@supabase/supabase-js'
 
-// Vercel 환경에서 환경 변수 확인
+// 환경 변수 확인
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
 
-// 환경 변수 검증
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables:', {
-    supabaseUrl: !!supabaseUrl,
-    supabaseAnonKey: !!supabaseAnonKey,
-    envKeys: Object.keys(process.env).filter(key => key.includes('SUPABASE'))
-  })
-}
-
-// Supabase 클라이언트 생성 (안전하게)
+// Supabase 클라이언트 생성
 let supabase = null
-try {
-  if (supabaseUrl && supabaseAnonKey) {
+if (supabaseUrl && supabaseAnonKey) {
+  try {
     supabase = createClient(supabaseUrl, supabaseAnonKey)
+  } catch (error) {
+    console.error('Failed to create Supabase client:', error)
   }
-} catch (error) {
-  console.error('Failed to create Supabase client:', error)
 }
 
+// Vercel 서버리스 함수
 export default async function handler(req, res) {
-  // CORS 헤더 설정
+  // CORS 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
@@ -32,8 +25,7 @@ export default async function handler(req, res) {
   
   // OPTIONS 요청 처리
   if (req.method === 'OPTIONS') {
-    res.status(200).end()
-    return
+    return res.status(200).end()
   }
   
   // POST 메서드만 허용
@@ -47,7 +39,6 @@ export default async function handler(req, res) {
   try {
     // 환경 변수 검증
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('Supabase configuration missing')
       return res.status(500).json({
         success: false,
         message: 'Server configuration error',
@@ -57,7 +48,6 @@ export default async function handler(req, res) {
 
     // Supabase 클라이언트 검증
     if (!supabase) {
-      console.error('Supabase client not initialized')
       return res.status(500).json({
         success: false,
         message: 'Server configuration error',
@@ -84,16 +74,13 @@ export default async function handler(req, res) {
       })
     }
     
-    console.log('Attempting authentication for:', email)
-    
-    // Supabase를 사용한 실제 인증
+    // Supabase 인증
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email,
       password: password
     })
     
     if (error) {
-      console.error('Supabase auth error:', error)
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password',
@@ -101,11 +88,11 @@ export default async function handler(req, res) {
       })
     }
     
-    // 사용자 메타데이터에서 역할 정보 가져오기
+    // 사용자 메타데이터 확인
     const userRole = data.user.user_metadata?.user_type || 'user'
     const approvalStatus = data.user.user_metadata?.approval_status || 'pending'
     
-    // 승인되지 않은 사용자는 로그인 차단
+    // 승인되지 않은 사용자 차단
     if (approvalStatus === 'pending' && userRole !== 'admin') {
       return res.status(403).json({
         success: false,
@@ -113,9 +100,7 @@ export default async function handler(req, res) {
       })
     }
     
-    console.log('Authentication successful for user:', data.user.id)
-    
-    // 인증 성공 시 토큰 반환
+    // 성공 응답
     return res.status(200).json({
       success: true,
       message: 'Authentication successful',
