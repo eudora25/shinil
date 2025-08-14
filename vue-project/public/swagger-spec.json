@@ -389,8 +389,8 @@
     "/companies": {
       "get": {
         "tags": ["기본 정보"],
-        "summary": "업체정보 조회",
-        "description": "등록된 업체들의 정보를 조회합니다.",
+        "summary": "회사정보 조회 (페이지네이션)",
+        "description": "등록된 회사들의 정보를 조회합니다. clients 테이블에서 데이터를 가져와 페이지네이션을 지원합니다.",
         "parameters": [
           {
             "name": "page",
@@ -408,24 +408,41 @@
             "name": "limit",
             "in": "query",
             "required": false,
-            "description": "페이지당 항목 수 (기본값: 100)",
+            "description": "페이지당 항목 수 (기본값: 10, 최대: 1000)",
             "schema": {
               "type": "integer",
               "minimum": 1,
               "maximum": 1000,
-              "default": 100
+              "default": 10
             },
             "example": 100
-          }
-        ],
-        "security": [
+          },
           {
-            "bearerAuth": []
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "검색어 (회사명, 사업자등록번호, 대표자명)",
+            "schema": {
+              "type": "string"
+            },
+            "example": "삼성"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "상태 필터 (기본값: active)",
+            "schema": {
+              "type": "string",
+              "enum": ["active", "inactive", "all"],
+              "default": "active"
+            },
+            "example": "active"
           }
         ],
         "responses": {
           "200": {
-            "description": "업체정보 조회 성공",
+            "description": "회사정보 조회 성공",
             "content": {
               "application/json": {
                 "schema": {
@@ -435,34 +452,42 @@
                       "type": "boolean",
                       "example": true
                     },
+                    "message": {
+                      "type": "string",
+                      "example": "회사 목록 조회 성공"
+                    },
                     "data": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "properties": {
                           "id": {
-                            "type": "string",
-                            "description": "업체 ID"
+                            "type": "integer",
+                            "description": "회사 ID"
                           },
-                          "company_name": {
+                          "client_code": {
                             "type": "string",
-                            "description": "업체명"
+                            "description": "클라이언트 코드"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "회사명"
                           },
                           "business_registration_number": {
                             "type": "string",
                             "description": "사업자등록번호"
                           },
-                          "representative_name": {
+                          "owner_name": {
                             "type": "string",
                             "description": "대표자명"
                           },
-                          "email": {
+                          "address": {
                             "type": "string",
-                            "description": "이메일"
+                            "description": "주소"
                           },
-                          "mobile_phone": {
+                          "remarks": {
                             "type": "string",
-                            "description": "휴대폰번호"
+                            "description": "비고"
                           },
                           "status": {
                             "type": "string",
@@ -472,7 +497,41 @@
                             "type": "string",
                             "format": "date-time",
                             "description": "생성일시"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "수정일시"
                           }
+                        }
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "currentPage": {
+                          "type": "integer",
+                          "description": "현재 페이지"
+                        },
+                        "limit": {
+                          "type": "integer",
+                          "description": "페이지당 항목 수"
+                        },
+                        "totalCount": {
+                          "type": "integer",
+                          "description": "전체 항목 수"
+                        },
+                        "totalPages": {
+                          "type": "integer",
+                          "description": "전체 페이지 수"
+                        },
+                        "hasNextPage": {
+                          "type": "boolean",
+                          "description": "다음 페이지 존재 여부"
+                        },
+                        "hasPrevPage": {
+                          "type": "boolean",
+                          "description": "이전 페이지 존재 여부"
                         }
                       }
                     }
@@ -481,8 +540,8 @@
               }
             }
           },
-          "401": {
-            "description": "인증 실패",
+          "400": {
+            "description": "잘못된 요청 (페이지네이션 파라미터 오류)",
             "content": {
               "application/json": {
                 "schema": {
@@ -739,8 +798,8 @@
     "/pharmacies": {
       "get": {
         "tags": ["기본 정보"],
-        "summary": "약국정보 조회",
-        "description": "등록된 약국들의 정보를 조회합니다.",
+        "summary": "약국정보 조회 (페이지네이션)",
+        "description": "등록된 약국들의 정보를 조회합니다. clients 테이블에서 약국 키워드로 필터링하여 데이터를 가져와 페이지네이션을 지원합니다.",
         "parameters": [
           {
             "name": "page",
@@ -758,19 +817,36 @@
             "name": "limit",
             "in": "query",
             "required": false,
-            "description": "페이지당 항목 수 (기본값: 100)",
+            "description": "페이지당 항목 수 (기본값: 10, 최대: 1000)",
             "schema": {
               "type": "integer",
               "minimum": 1,
               "maximum": 1000,
-              "default": 100
+              "default": 10
             },
             "example": 100
-          }
-        ],
-        "security": [
+          },
           {
-            "bearerAuth": []
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "검색어 (약국명, 사업자등록번호, 대표자명)",
+            "schema": {
+              "type": "string"
+            },
+            "example": "온누리"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "상태 필터 (기본값: active)",
+            "schema": {
+              "type": "string",
+              "enum": ["active", "inactive", "all"],
+              "default": "active"
+            },
+            "example": "active"
           }
         ],
         "responses": {
@@ -785,26 +861,42 @@
                       "type": "boolean",
                       "example": true
                     },
+                    "message": {
+                      "type": "string",
+                      "example": "약국 목록 조회 성공"
+                    },
                     "data": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "properties": {
                           "id": {
-                            "type": "string",
+                            "type": "integer",
                             "description": "약국 ID"
+                          },
+                          "client_code": {
+                            "type": "string",
+                            "description": "클라이언트 코드"
                           },
                           "name": {
                             "type": "string",
                             "description": "약국명"
                           },
-                          "pharmacy_code": {
+                          "business_registration_number": {
                             "type": "string",
-                            "description": "약국코드"
+                            "description": "사업자등록번호"
+                          },
+                          "owner_name": {
+                            "type": "string",
+                            "description": "대표자명"
                           },
                           "address": {
                             "type": "string",
                             "description": "주소"
+                          },
+                          "remarks": {
+                            "type": "string",
+                            "description": "비고"
                           },
                           "status": {
                             "type": "string",
@@ -814,7 +906,46 @@
                             "type": "string",
                             "format": "date-time",
                             "description": "생성일시"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "수정일시"
                           }
+                        }
+                      }
+                    },
+                    "dataSource": {
+                      "type": "string",
+                      "example": "clients",
+                      "description": "데이터 소스 (clients 테이블에서 약국 필터링)"
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "currentPage": {
+                          "type": "integer",
+                          "description": "현재 페이지"
+                        },
+                        "limit": {
+                          "type": "integer",
+                          "description": "페이지당 항목 수"
+                        },
+                        "totalCount": {
+                          "type": "integer",
+                          "description": "전체 항목 수"
+                        },
+                        "totalPages": {
+                          "type": "integer",
+                          "description": "전체 페이지 수"
+                        },
+                        "hasNextPage": {
+                          "type": "boolean",
+                          "description": "다음 페이지 존재 여부"
+                        },
+                        "hasPrevPage": {
+                          "type": "boolean",
+                          "description": "이전 페이지 존재 여부"
                         }
                       }
                     }
@@ -823,8 +954,8 @@
               }
             }
           },
-          "401": {
-            "description": "인증 실패",
+          "400": {
+            "description": "잘못된 요청 (페이지네이션 파라미터 오류)",
             "content": {
               "application/json": {
                 "schema": {
