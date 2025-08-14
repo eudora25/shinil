@@ -38,35 +38,35 @@
                     const ui = SwaggerUIBundle({
                         spec: spec,
                         dom_id: '#swagger-ui',
-                        deepLinking: true,
-                        presets: [
-                            SwaggerUIBundle.presets.apis,
-                            SwaggerUIStandalonePreset
-                        ],
-                        plugins: [
-                            SwaggerUIBundle.plugins.DownloadUrl
-                        ],
-                        layout: "StandaloneLayout",
-                        validatorUrl: null,
-                        docExpansion: 'list',
-                        filter: true,
-                        showRequestHeaders: true,
-                        showCommonExtensions: true,
-                        supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
-                        tryItOutEnabled: true,
-                        defaultModelsExpandDepth: 1,
-                        defaultModelExpandDepth: 1,
-                        defaultModelRendering: 'example',
-                        displayRequestDuration: true,
-                        requestInterceptor: function(request) {
-                            // 현재 도메인 API 서버로 고정
-                            request.url = request.url.replace(/^https?:\/\/[^\/]+/, '');
-                            if (!request.url.startsWith('/api')) {
-                                request.url = '/api' + request.url;
-                            }
-                            return request;
-                        }
-                    });
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "StandaloneLayout",
+                validatorUrl: null,
+                docExpansion: 'list',
+                filter: true,
+                showRequestHeaders: true,
+                showCommonExtensions: true,
+                supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+                tryItOutEnabled: true,
+                defaultModelsExpandDepth: 1,
+                defaultModelExpandDepth: 1,
+                defaultModelRendering: 'example',
+                displayRequestDuration: true,
+                requestInterceptor: function(request) {
+                    // 현재 도메인 API 서버로 고정
+                    request.url = request.url.replace(/^https?:\/\/[^\/]+/, '');
+                    if (!request.url.startsWith('/api')) {
+                        request.url = '/api' + request.url;
+                    }
+                    return request;
+                }
+            });
                 })
                 .catch(error => {
                     console.error('Error loading swagger spec:', error);

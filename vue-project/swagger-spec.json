@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "신일 프로젝트 API",
-    "description": "신일 프로젝트의 REST API 문서입니다. 기본 정보, 인증, 공지사항 등의 조회 기능을 제공합니다.",
-    "version": "2.1.0",
+    "description": "신일 프로젝트의 REST API 문서입니다. 기본 정보, 인증, 공지사항, 실적관리, 정산관리 등의 기능을 제공합니다.",
+    "version": "2.2.0",
     "contact": {
       "name": "신일 프로젝트 개발팀",
       "email": "dev@shinil.com"
@@ -51,6 +51,14 @@
     {
       "name": "공지사항",
       "description": "공지사항 조회"
+    },
+    {
+      "name": "실적 관리",
+      "description": "실적 정보, 흡수율, 증빙 파일 관리"
+    },
+    {
+      "name": "정산 관리",
+      "description": "정산월, 정산내역서, 매출 정보 관리"
     }
   ],
   "paths": {
@@ -67,30 +75,26 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "test": {
+                    "name": {
                       "type": "string",
-                      "example": "001"
+                      "example": "Shinil PMS API"
+                    },
+                    "version": {
+                      "type": "string",
+                      "example": "1.0.0"
                     },
                     "status": {
                       "type": "string",
-                      "example": "OK"
+                      "example": "running"
                     },
                     "timestamp": {
                       "type": "string",
                       "format": "date-time",
                       "example": "2024-01-01T00:00:00.000Z"
                     },
-                    "version": {
-                      "type": "string",
-                      "example": "1.0.0"
-                    },
                     "environment": {
                       "type": "string",
-                      "example": "production"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Vercel API Routes working correctly"
+                      "example": "development"
                     }
                   }
                 }
@@ -105,6 +109,11 @@
         "tags": ["시스템"],
         "summary": "시스템 상태 확인",
         "description": "시스템의 전반적인 상태를 확인합니다.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "시스템 상태 확인 성공",
@@ -113,32 +122,34 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "test": {
-                      "type": "string",
-                      "example": "001"
-                    },
                     "status": {
                       "type": "string",
-                      "example": "OK"
+                      "example": "healthy"
                     },
                     "timestamp": {
                       "type": "string",
                       "format": "date-time",
                       "example": "2024-01-01T00:00:00.000Z"
                     },
-                    "version": {
-                      "type": "string",
-                      "example": "1.0.0"
+                    "uptime": {
+                      "type": "number",
+                      "description": "서버 가동 시간 (초)"
                     },
                     "environment": {
                       "type": "string",
-                      "example": "production"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Health check API working correctly"
+                      "example": "development"
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 실패",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -189,19 +200,11 @@
                     },
                     "message": {
                       "type": "string",
-                      "example": "Authentication successful"
+                      "example": "Login successful"
                     },
                     "data": {
                       "type": "object",
                       "properties": {
-                        "token": {
-                          "type": "string",
-                          "description": "JWT 액세스 토큰"
-                        },
-                        "refreshToken": {
-                          "type": "string",
-                          "description": "JWT 리프레시 토큰"
-                        },
                         "user": {
                           "type": "object",
                           "properties": {
@@ -220,27 +223,22 @@
                             "approvalStatus": {
                               "type": "string",
                               "description": "승인 상태"
-                            },
-                            "createdAt": {
-                              "type": "string",
-                              "format": "date-time",
-                              "description": "계정 생성일"
-                            },
-                            "lastSignIn": {
-                              "type": "string",
-                              "format": "date-time",
-                              "description": "마지막 로그인"
                             }
                           }
                         },
-                        "expiresIn": {
-                          "type": "string",
-                          "example": "24h"
-                        },
-                        "expiresAt": {
-                          "type": "string",
-                          "format": "date-time",
-                          "description": "토큰 만료 시간"
+                        "session": {
+                          "type": "object",
+                          "properties": {
+                            "access_token": {
+                              "type": "string",
+                              "description": "JWT 액세스 토큰"
+                            },
+                            "expires_at": {
+                              "type": "string",
+                              "format": "date-time",
+                              "description": "토큰 만료 시간"
+                            }
+                          }
                         }
                       }
                     }
@@ -261,26 +259,6 @@
           },
           "401": {
             "description": "인증 실패",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "계정 승인 대기 중",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "405": {
-            "description": "허용되지 않는 메서드",
             "content": {
               "application/json": {
                 "schema": {
@@ -361,16 +339,6 @@
                             "approvalStatus": {
                               "type": "string",
                               "description": "승인 상태"
-                            },
-                            "createdAt": {
-                              "type": "string",
-                              "format": "date-time",
-                              "description": "계정 생성일"
-                            },
-                            "lastSignIn": {
-                              "type": "string",
-                              "format": "date-time",
-                              "description": "마지막 로그인"
                             }
                           }
                         },
@@ -397,298 +365,6 @@
           },
           "401": {
             "description": "토큰 검증 실패",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "405": {
-            "description": "허용되지 않는 메서드",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "서버 오류",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth": {
-      "post": {
-        "tags": ["인증"],
-        "summary": "사용자 로그인",
-        "description": "이메일과 비밀번호를 사용하여 사용자 인증을 수행합니다.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["email", "password"],
-                "properties": {
-                  "email": {
-                    "type": "string",
-                    "format": "email",
-                    "description": "사용자 이메일",
-                    "example": "user@example.com"
-                  },
-                  "password": {
-                    "type": "string",
-                    "description": "사용자 비밀번호",
-                    "example": "password123"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "로그인 성공",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Authentication successful"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "token": {
-                          "type": "string",
-                          "description": "JWT 액세스 토큰"
-                        },
-                        "refreshToken": {
-                          "type": "string",
-                          "description": "JWT 리프레시 토큰"
-                        },
-                        "user": {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "string",
-                              "description": "사용자 ID"
-                            },
-                            "email": {
-                              "type": "string",
-                              "description": "사용자 이메일"
-                            },
-                            "role": {
-                              "type": "string",
-                              "description": "사용자 역할"
-                            },
-                            "approvalStatus": {
-                              "type": "string",
-                              "description": "승인 상태"
-                            },
-                            "createdAt": {
-                              "type": "string",
-                              "format": "date-time",
-                              "description": "계정 생성일"
-                            },
-                            "lastSignIn": {
-                              "type": "string",
-                              "format": "date-time",
-                              "description": "마지막 로그인"
-                            }
-                          }
-                        },
-                        "expiresIn": {
-                          "type": "string",
-                          "example": "24h"
-                        },
-                        "expiresAt": {
-                          "type": "string",
-                          "format": "date-time",
-                          "description": "토큰 만료 시간"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "잘못된 요청",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "인증 실패",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "계정 승인 대기 중",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "405": {
-            "description": "허용되지 않는 메서드",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "서버 오류",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/verify-token": {
-      "post": {
-        "tags": ["인증"],
-        "summary": "토큰 검증",
-        "description": "JWT 토큰의 유효성을 검증합니다.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["token"],
-                "properties": {
-                  "token": {
-                    "type": "string",
-                    "description": "검증할 JWT 토큰"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "토큰 검증 성공",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Token is valid"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "user": {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "string",
-                              "description": "사용자 ID"
-                            },
-                            "email": {
-                              "type": "string",
-                              "description": "사용자 이메일"
-                            },
-                            "role": {
-                              "type": "string",
-                              "description": "사용자 역할"
-                            },
-                            "approvalStatus": {
-                              "type": "string",
-                              "description": "승인 상태"
-                            },
-                            "createdAt": {
-                              "type": "string",
-                              "format": "date-time",
-                              "description": "계정 생성일"
-                            },
-                            "lastSignIn": {
-                              "type": "string",
-                              "format": "date-time",
-                              "description": "마지막 로그인"
-                            }
-                          }
-                        },
-                        "valid": {
-                          "type": "boolean",
-                          "example": true
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "토큰이 제공되지 않음",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "토큰 검증 실패",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "405": {
-            "description": "허용되지 않는 메서드",
             "content": {
               "application/json": {
                 "schema": {
@@ -713,8 +389,8 @@
     "/companies": {
       "get": {
         "tags": ["기본 정보"],
-        "summary": "업체정보 조회",
-        "description": "등록된 업체들의 정보를 페이지네이션과 함께 조회합니다.",
+        "summary": "회사정보 조회 (페이지네이션)",
+        "description": "등록된 회사들의 정보를 조회합니다. clients 테이블에서 데이터를 가져와 페이지네이션을 지원합니다.",
         "parameters": [
           {
             "name": "page",
@@ -732,24 +408,41 @@
             "name": "limit",
             "in": "query",
             "required": false,
-            "description": "페이지당 항목 수 (기본값: 100)",
+            "description": "페이지당 항목 수 (기본값: 10, 최대: 1000)",
             "schema": {
               "type": "integer",
               "minimum": 1,
               "maximum": 1000,
-              "default": 100
+              "default": 10
             },
             "example": 100
-          }
-        ],
-        "security": [
+          },
           {
-            "bearerAuth": []
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "검색어 (회사명, 사업자등록번호, 대표자명)",
+            "schema": {
+              "type": "string"
+            },
+            "example": "삼성"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "상태 필터 (기본값: active)",
+            "schema": {
+              "type": "string",
+              "enum": ["active", "inactive", "all"],
+              "default": "active"
+            },
+            "example": "active"
           }
         ],
         "responses": {
           "200": {
-            "description": "업체정보 조회 성공",
+            "description": "회사정보 조회 성공",
             "content": {
               "application/json": {
                 "schema": {
@@ -761,7 +454,7 @@
                     },
                     "message": {
                       "type": "string",
-                      "example": "업체 목록 조회 성공"
+                      "example": "회사 목록 조회 성공"
                     },
                     "data": {
                       "type": "array",
@@ -769,28 +462,32 @@
                         "type": "object",
                         "properties": {
                           "id": {
-                            "type": "string",
-                            "description": "업체 ID"
+                            "type": "integer",
+                            "description": "회사 ID"
                           },
-                          "company_name": {
+                          "client_code": {
                             "type": "string",
-                            "description": "업체명"
+                            "description": "클라이언트 코드"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "회사명"
                           },
                           "business_registration_number": {
                             "type": "string",
                             "description": "사업자등록번호"
                           },
-                          "representative_name": {
+                          "owner_name": {
                             "type": "string",
                             "description": "대표자명"
                           },
-                          "email": {
+                          "address": {
                             "type": "string",
-                            "description": "이메일"
+                            "description": "주소"
                           },
-                          "mobile_phone": {
+                          "remarks": {
                             "type": "string",
-                            "description": "휴대폰번호"
+                            "description": "비고"
                           },
                           "status": {
                             "type": "string",
@@ -800,6 +497,11 @@
                             "type": "string",
                             "format": "date-time",
                             "description": "생성일시"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "수정일시"
                           }
                         }
                       }
@@ -807,7 +509,7 @@
                     "pagination": {
                       "type": "object",
                       "properties": {
-                        "page": {
+                        "currentPage": {
                           "type": "integer",
                           "description": "현재 페이지"
                         },
@@ -815,13 +517,21 @@
                           "type": "integer",
                           "description": "페이지당 항목 수"
                         },
-                        "total": {
+                        "totalCount": {
                           "type": "integer",
                           "description": "전체 항목 수"
                         },
-                        "total_pages": {
+                        "totalPages": {
                           "type": "integer",
                           "description": "전체 페이지 수"
+                        },
+                        "hasNextPage": {
+                          "type": "boolean",
+                          "description": "다음 페이지 존재 여부"
+                        },
+                        "hasPrevPage": {
+                          "type": "boolean",
+                          "description": "이전 페이지 존재 여부"
                         }
                       }
                     }
@@ -830,8 +540,8 @@
               }
             }
           },
-          "401": {
-            "description": "인증 실패",
+          "400": {
+            "description": "잘못된 요청 (페이지네이션 파라미터 오류)",
             "content": {
               "application/json": {
                 "schema": {
@@ -857,7 +567,7 @@
       "get": {
         "tags": ["기본 정보"],
         "summary": "제품정보 조회",
-        "description": "등록된 제품들의 정보를 페이지네이션과 함께 조회합니다.",
+        "description": "등록된 제품들의 정보를 조회합니다. products_standard_code와 조인하여 표준코드 정보도 포함합니다.",
         "parameters": [
           {
             "name": "page",
@@ -902,10 +612,6 @@
                       "type": "boolean",
                       "example": true
                     },
-                    "message": {
-                      "type": "string",
-                      "example": "제품 목록 조회 성공"
-                    },
                     "data": {
                       "type": "array",
                       "items": {
@@ -923,48 +629,27 @@
                             "type": "string",
                             "description": "보험코드"
                           },
-                          "drug_price": {
+                          "price": {
                             "type": "number",
-                            "description": "약가"
+                            "description": "가격"
                           },
-                          "commission_rate": {
+                          "standard_code": {
+                            "type": "string",
+                            "description": "표준코드"
+                          },
+                          "unit_packaging_desc": {
+                            "type": "string",
+                            "description": "단위포장설명"
+                          },
+                          "unit_quantity": {
                             "type": "number",
-                            "description": "수수료율"
-                          },
-                          "manufacturer": {
-                            "type": "string",
-                            "description": "제조사"
-                          },
-                          "description": {
-                            "type": "string",
-                            "description": "설명"
+                            "description": "단위수량"
                           },
                           "created_at": {
                             "type": "string",
                             "format": "date-time",
                             "description": "생성일시"
                           }
-                        }
-                      }
-                    },
-                    "pagination": {
-                      "type": "object",
-                      "properties": {
-                        "page": {
-                          "type": "integer",
-                          "description": "현재 페이지"
-                        },
-                        "limit": {
-                          "type": "integer",
-                          "description": "페이지당 항목 수"
-                        },
-                        "total": {
-                          "type": "integer",
-                          "description": "전체 항목 수"
-                        },
-                        "total_pages": {
-                          "type": "integer",
-                          "description": "전체 페이지 수"
                         }
                       }
                     }
@@ -1000,7 +685,7 @@
       "get": {
         "tags": ["기본 정보"],
         "summary": "병원정보 조회",
-        "description": "등록된 병원들의 정보를 페이지네이션과 함께 조회합니다.",
+        "description": "등록된 병원들의 정보를 조회합니다.",
         "parameters": [
           {
             "name": "page",
@@ -1018,14 +703,14 @@
             "name": "limit",
             "in": "query",
             "required": false,
-            "description": "페이지당 항목 수 (기본값: 500)",
+            "description": "페이지당 항목 수 (기본값: 100)",
             "schema": {
               "type": "integer",
               "minimum": 1,
               "maximum": 1000,
-              "default": 500
+              "default": 100
             },
-            "example": 500
+            "example": 100
           }
         ],
         "security": [
@@ -1044,10 +729,6 @@
                     "success": {
                       "type": "boolean",
                       "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "병원 목록 조회 성공"
                     },
                     "data": {
                       "type": "array",
@@ -1085,27 +766,6 @@
                           }
                         }
                       }
-                    },
-                    "pagination": {
-                      "type": "object",
-                      "properties": {
-                        "page": {
-                          "type": "integer",
-                          "description": "현재 페이지"
-                        },
-                        "limit": {
-                          "type": "integer",
-                          "description": "페이지당 항목 수"
-                        },
-                        "total": {
-                          "type": "integer",
-                          "description": "전체 항목 수"
-                        },
-                        "total_pages": {
-                          "type": "integer",
-                          "description": "전체 페이지 수"
-                        }
-                      }
                     }
                   }
                 }
@@ -1138,8 +798,8 @@
     "/pharmacies": {
       "get": {
         "tags": ["기본 정보"],
-        "summary": "약국정보 조회",
-        "description": "등록된 약국들의 정보를 페이지네이션과 함께 조회합니다.",
+        "summary": "약국정보 조회 (페이지네이션)",
+        "description": "등록된 약국들의 정보를 조회합니다. clients 테이블에서 약국 키워드로 필터링하여 데이터를 가져와 페이지네이션을 지원합니다.",
         "parameters": [
           {
             "name": "page",
@@ -1157,19 +817,36 @@
             "name": "limit",
             "in": "query",
             "required": false,
-            "description": "페이지당 항목 수 (기본값: 500)",
+            "description": "페이지당 항목 수 (기본값: 10, 최대: 1000)",
             "schema": {
               "type": "integer",
               "minimum": 1,
               "maximum": 1000,
-              "default": 500
+              "default": 10
             },
-            "example": 500
-          }
-        ],
-        "security": [
+            "example": 100
+          },
           {
-            "bearerAuth": []
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "검색어 (약국명, 사업자등록번호, 대표자명)",
+            "schema": {
+              "type": "string"
+            },
+            "example": "온누리"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "상태 필터 (기본값: active)",
+            "schema": {
+              "type": "string",
+              "enum": ["active", "inactive", "all"],
+              "default": "active"
+            },
+            "example": "active"
           }
         ],
         "responses": {
@@ -1194,20 +871,32 @@
                         "type": "object",
                         "properties": {
                           "id": {
-                            "type": "string",
+                            "type": "integer",
                             "description": "약국 ID"
+                          },
+                          "client_code": {
+                            "type": "string",
+                            "description": "클라이언트 코드"
                           },
                           "name": {
                             "type": "string",
                             "description": "약국명"
                           },
-                          "pharmacy_code": {
+                          "business_registration_number": {
                             "type": "string",
-                            "description": "약국코드"
+                            "description": "사업자등록번호"
+                          },
+                          "owner_name": {
+                            "type": "string",
+                            "description": "대표자명"
                           },
                           "address": {
                             "type": "string",
                             "description": "주소"
+                          },
+                          "remarks": {
+                            "type": "string",
+                            "description": "비고"
                           },
                           "status": {
                             "type": "string",
@@ -1217,14 +906,24 @@
                             "type": "string",
                             "format": "date-time",
                             "description": "생성일시"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "수정일시"
                           }
                         }
                       }
                     },
+                    "dataSource": {
+                      "type": "string",
+                      "example": "clients",
+                      "description": "데이터 소스 (clients 테이블에서 약국 필터링)"
+                    },
                     "pagination": {
                       "type": "object",
                       "properties": {
-                        "page": {
+                        "currentPage": {
                           "type": "integer",
                           "description": "현재 페이지"
                         },
@@ -1232,13 +931,21 @@
                           "type": "integer",
                           "description": "페이지당 항목 수"
                         },
-                        "total": {
+                        "totalCount": {
                           "type": "integer",
                           "description": "전체 항목 수"
                         },
-                        "total_pages": {
+                        "totalPages": {
                           "type": "integer",
                           "description": "전체 페이지 수"
+                        },
+                        "hasNextPage": {
+                          "type": "boolean",
+                          "description": "다음 페이지 존재 여부"
+                        },
+                        "hasPrevPage": {
+                          "type": "boolean",
+                          "description": "이전 페이지 존재 여부"
                         }
                       }
                     }
@@ -1247,136 +954,8 @@
               }
             }
           },
-          "401": {
-            "description": "인증 실패",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "서버 오류",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/clients": {
-      "get": {
-        "tags": ["기본 정보"],
-        "summary": "병원정보 조회",
-        "description": "등록된 병원들의 정보를 조회합니다.",
-        "responses": {
-          "200": {
-            "description": "병원정보 조회 성공",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "병원 목록 조회 성공"
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string"
-                          },
-                          "created_at": {
-                            "type": "string",
-                            "format": "date-time"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "405": {
-            "description": "허용되지 않는 메서드",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "서버 오류",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/products": {
-      "get": {
-        "tags": ["기본 정보"],
-        "summary": "제품정보 조회",
-        "description": "등록된 제품들의 정보를 조회합니다.",
-        "responses": {
-          "200": {
-            "description": "제품정보 조회 성공",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "example": true
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "제품 목록 조회 성공"
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string"
-                          },
-                          "created_at": {
-                            "type": "string",
-                            "format": "date-time"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "405": {
-            "description": "허용되지 않는 메서드",
+          "400": {
+            "description": "잘못된 요청 (페이지네이션 파라미터 오류)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1402,7 +981,39 @@
       "get": {
         "tags": ["공지사항"],
         "summary": "공지사항 조회",
-        "description": "등록된 공지사항 목록을 조회합니다.",
+        "description": "등록된 공지사항 목록을 조회합니다. 조회수 정보도 포함됩니다.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "페이지 번호 (기본값: 1)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "페이지당 항목 수 (기본값: 100)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            },
+            "example": 100
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "공지사항 조회 성공",
@@ -1415,17 +1026,14 @@
                       "type": "boolean",
                       "example": true
                     },
-                    "message": {
-                      "type": "string",
-                      "example": "공지사항 목록 조회 성공"
-                    },
                     "data": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "properties": {
                           "id": {
-                            "type": "string"
+                            "type": "string",
+                            "description": "공지사항 ID"
                           },
                           "title": {
                             "type": "string",
@@ -1438,6 +1046,15 @@
                           "is_important": {
                             "type": "boolean",
                             "description": "중요 공지 여부"
+                          },
+                          "view_count": {
+                            "type": "integer",
+                            "description": "조회수"
+                          },
+                          "last_viewed_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "마지막 조회 시간"
                           },
                           "created_at": {
                             "type": "string",
@@ -1452,8 +1069,8 @@
               }
             }
           },
-          "405": {
-            "description": "허용되지 않는 메서드",
+          "401": {
+            "description": "인증 실패",
             "content": {
               "application/json": {
                 "schema": {
@@ -2253,6 +1870,814 @@
                         "total_pages": {
                           "type": "integer",
                           "description": "전체 페이지 수"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 실패",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/settlement-months": {
+      "get": {
+        "tags": ["정산 관리"],
+        "summary": "정산월 목록 조회",
+        "description": "정산월 정보 목록을 조회합니다.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "페이지 번호 (기본값: 1)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "페이지당 항목 수 (기본값: 100)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            },
+            "example": 100
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "정산월 목록 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "정산월 ID"
+                          },
+                          "settlement_month": {
+                            "type": "string",
+                            "description": "정산월"
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "상태"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "생성일시"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 실패",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/performance-records": {
+      "get": {
+        "tags": ["실적 관리"],
+        "summary": "실적정보 목록 조회",
+        "description": "실적 정보 목록을 조회합니다.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "페이지 번호 (기본값: 1)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "페이지당 항목 수 (기본값: 100)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            },
+            "example": 100
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "실적정보 목록 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "실적 ID"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "생성일시"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 실패",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/performance-records-absorption": {
+      "get": {
+        "tags": ["실적 관리"],
+        "summary": "실적-흡수율 정보 목록 조회",
+        "description": "실적-흡수율 정보 목록을 조회합니다. 병원, 업체, 제품 정보와 조인됩니다.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "페이지 번호 (기본값: 1)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "페이지당 항목 수 (기본값: 100)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            },
+            "example": 100
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "실적-흡수율 정보 목록 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "실적-흡수율 ID"
+                          },
+                          "clients": {
+                            "type": "object",
+                            "description": "병원 정보"
+                          },
+                          "companies": {
+                            "type": "object",
+                            "description": "업체 정보"
+                          },
+                          "products": {
+                            "type": "object",
+                            "description": "제품 정보"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "생성일시"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 실패",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/performance-evidence-files": {
+      "get": {
+        "tags": ["실적 관리"],
+        "summary": "실적 증빙 파일 목록 조회",
+        "description": "실적 증빙 파일 목록을 조회합니다. 병원, 업체 정보와 조인됩니다.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "페이지 번호 (기본값: 1)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "페이지당 항목 수 (기본값: 100)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            },
+            "example": 100
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "실적 증빙 파일 목록 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "증빙 파일 ID"
+                          },
+                          "clients": {
+                            "type": "object",
+                            "description": "병원 정보"
+                          },
+                          "companies": {
+                            "type": "object",
+                            "description": "업체 정보"
+                          },
+                          "uploaded_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "업로드 일시"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 실패",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/settlement-share": {
+      "get": {
+        "tags": ["정산 관리"],
+        "summary": "정산내역서 목록 조회",
+        "description": "정산내역서 목록을 조회합니다. 업체 정보와 조인됩니다.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "페이지 번호 (기본값: 1)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "페이지당 항목 수 (기본값: 100)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            },
+            "example": 100
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "정산내역서 목록 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "정산내역서 ID"
+                          },
+                          "companies": {
+                            "type": "object",
+                            "description": "업체 정보"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "생성일시"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 실패",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/client-company-assignments": {
+      "get": {
+        "tags": ["관계 정보"],
+        "summary": "병원-업체 매핑정보 목록 조회",
+        "description": "병원-업체 매핑정보 목록을 조회합니다. 병원, 업체 정보와 조인됩니다.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "페이지 번호 (기본값: 1)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "페이지당 항목 수 (기본값: 100)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            },
+            "example": 100
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "병원-업체 매핑정보 목록 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "매핑 ID"
+                          },
+                          "clients": {
+                            "type": "object",
+                            "description": "병원 정보"
+                          },
+                          "companies": {
+                            "type": "object",
+                            "description": "업체 정보"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "생성일시"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 실패",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/client-pharmacy-assignments": {
+      "get": {
+        "tags": ["관계 정보"],
+        "summary": "병원-약국 매핑정보 목록 조회",
+        "description": "병원-약국 매핑정보 목록을 조회합니다. 병원, 약국 정보와 조인됩니다.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "페이지 번호 (기본값: 1)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "페이지당 항목 수 (기본값: 100)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            },
+            "example": 100
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "병원-약국 매핑정보 목록 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "매핑 ID"
+                          },
+                          "clients": {
+                            "type": "object",
+                            "description": "병원 정보"
+                          },
+                          "pharmacies": {
+                            "type": "object",
+                            "description": "약국 정보"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "생성일시"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 실패",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/product-company-not-assignments": {
+      "get": {
+        "tags": ["관계 정보"],
+        "summary": "제품-업체 미배정 매핑 정보 목록 조회",
+        "description": "제품-업체 미배정 매핑 정보 목록을 조회합니다. 제품, 업체 정보와 조인됩니다.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "페이지 번호 (기본값: 1)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "페이지당 항목 수 (기본값: 100)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            },
+            "example": 100
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "제품-업체 미배정 매핑 정보 목록 조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "매핑 ID"
+                          },
+                          "product": {
+                            "type": "object",
+                            "description": "제품 정보"
+                          },
+                          "company": {
+                            "type": "object",
+                            "description": "업체 정보"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "생성일시"
+                          }
                         }
                       }
                     }
