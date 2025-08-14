@@ -1,7 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY
+// Vercel 환경에서 환경 변수 확인
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+
+// 환경 변수 검증
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase environment variables:', {
+    supabaseUrl: !!supabaseUrl,
+    supabaseAnonKey: !!supabaseAnonKey
+  })
+}
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
@@ -27,6 +36,16 @@ export default async function handler(req, res) {
   }
   
   try {
+    // 환경 변수 검증
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Supabase configuration missing')
+      return res.status(500).json({
+        success: false,
+        message: 'Server configuration error',
+        error: 'Supabase configuration not found'
+      })
+    }
+
     const { email, password } = req.body
     
     // 필수 필드 검증
@@ -46,6 +65,8 @@ export default async function handler(req, res) {
       })
     }
     
+    console.log('Attempting authentication for:', email)
+    
     // Supabase를 사용한 실제 인증
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email,
@@ -53,6 +74,7 @@ export default async function handler(req, res) {
     })
     
     if (error) {
+      console.error('Supabase auth error:', error)
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password',
@@ -71,6 +93,8 @@ export default async function handler(req, res) {
         message: 'Account is pending approval. Please contact administrator.'
       })
     }
+    
+    console.log('Authentication successful for user:', data.user.id)
     
     // 인증 성공 시 토큰 반환
     return res.status(200).json({
