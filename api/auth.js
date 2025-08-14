@@ -8,11 +8,20 @@ const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABA
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase environment variables:', {
     supabaseUrl: !!supabaseUrl,
-    supabaseAnonKey: !!supabaseAnonKey
+    supabaseAnonKey: !!supabaseAnonKey,
+    envKeys: Object.keys(process.env).filter(key => key.includes('SUPABASE'))
   })
 }
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Supabase 클라이언트 생성 (안전하게)
+let supabase = null
+try {
+  if (supabaseUrl && supabaseAnonKey) {
+    supabase = createClient(supabaseUrl, supabaseAnonKey)
+  }
+} catch (error) {
+  console.error('Failed to create Supabase client:', error)
+}
 
 export default async function handler(req, res) {
   // CORS 헤더 설정
@@ -43,6 +52,16 @@ export default async function handler(req, res) {
         success: false,
         message: 'Server configuration error',
         error: 'Supabase configuration not found'
+      })
+    }
+
+    // Supabase 클라이언트 검증
+    if (!supabase) {
+      console.error('Supabase client not initialized')
+      return res.status(500).json({
+        success: false,
+        message: 'Server configuration error',
+        error: 'Supabase client not initialized'
       })
     }
 
