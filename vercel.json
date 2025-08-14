@@ -1,39 +1,22 @@
 {
-  "version": 2,
-  "builds": [
+  "buildCommand": "cd vue-project && npm run build",
+  "outputDirectory": "vue-project/dist",
+  "rewrites": [
     {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     },
     {
-      "src": "vue-project/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
+      "source": "/swagger-ui.html",
+      "destination": "/swagger-ui.html"
+    },
+    {
+      "source": "/swagger-spec.json",
+      "destination": "/swagger-spec.json"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/swagger-ui.html",
-      "dest": "/swagger-ui.html"
-    },
-    {
-      "src": "/swagger-spec.json",
-      "dest": "/swagger-spec.json"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
-  "functions": {
-    "api/**/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  }
+  ]
 }
