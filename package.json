@@ -13,10 +13,12 @@
     "api:pm2:status": "pm2 status",
     "start": "cd vue-project && node server.js",
     "dev": "cd vue-project && npm run dev",
-    "build": "cd vue-project && npm run build"
+    "build": "cd vue-project && npm run build",
+    "vercel-build": "cd vue-project && npm install && npm run build"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.4"
+    "@supabase/supabase-js": "^2.49.4",
+    "dotenv": "^17.2.1"
   },
   "keywords": [
     "api",

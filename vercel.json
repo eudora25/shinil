@@ -1,6 +1,12 @@
 {
-  "buildCommand": "cd vue-project && npm run build",
+  "buildCommand": "npm install && cd vue-project && npm install && npm run build",
   "outputDirectory": "vue-project/dist",
+  "installCommand": "npm install",
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",

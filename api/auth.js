@@ -1,17 +1,33 @@
 // ES 모듈 import (Vercel 호환)
 import { createClient } from '@supabase/supabase-js'
 
-// 환경 변수 확인
-const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+// 환경 변수 확인 함수
+function getEnvironmentVariables() {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+  
+  console.log('Environment check:', {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+    urlStart: supabaseUrl ? supabaseUrl.substring(0, 20) + '...' : 'missing'
+  })
+  
+  return { supabaseUrl, supabaseAnonKey }
+}
 
-// Supabase 클라이언트 생성
-let supabase = null
-if (supabaseUrl && supabaseAnonKey) {
+// Supabase 클라이언트 생성 함수
+function createSupabaseClient() {
+  const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
+  
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase configuration missing')
+  }
+  
   try {
-    supabase = createClient(supabaseUrl, supabaseAnonKey)
+    return createClient(supabaseUrl, supabaseAnonKey)
   } catch (error) {
     console.error('Failed to create Supabase client:', error)
+    throw error
   }
 }
 
@@ -37,21 +53,17 @@ export default async function handler(req, res) {
   }
   
   try {
-    // 환경 변수 검증
-    if (!supabaseUrl || !supabaseAnonKey) {
+    // Supabase 클라이언트 생성
+    let supabase
+    try {
+      supabase = createSupabaseClient()
+    } catch (configError) {
+      console.error('Supabase configuration error:', configError)
       return res.status(500).json({
         success: false,
         message: 'Server configuration error',
-        error: 'Supabase configuration not found'
-      })
-    }
-
-    // Supabase 클라이언트 검증
-    if (!supabase) {
-      return res.status(500).json({
-        success: false,
-        message: 'Server configuration error',
-        error: 'Supabase client not initialized'
+        error: 'Supabase client initialization failed',
+        details: configError.message
       })
     }
 
@@ -121,11 +133,18 @@ export default async function handler(req, res) {
     })
     
   } catch (error) {
-    console.error('Auth error:', error)
+    console.error('Auth error details:', {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+      requestBody: req.body ? { email: req.body.email } : 'missing'
+    })
+    
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
-      error: error.message
+      error: error.message,
+      timestamp: new Date().toISOString()
     })
   }
 } 

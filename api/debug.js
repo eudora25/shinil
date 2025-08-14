@@ -1,4 +1,6 @@
-export default function handler(req, res) {
+import { createClient } from '@supabase/supabase-js'
+
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -18,33 +20,48 @@ export default function handler(req, res) {
   
   try {
     // 환경 변수 확인 (민감한 정보는 제외)
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
+    const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+    
     const envCheck = {
-      hasSupabaseUrl: !!process.env.VITE_SUPABASE_URL || !!process.env.SUPABASE_URL,
-      hasSupabaseKey: !!process.env.VITE_SUPABASE_ANON_KEY || !!process.env.SUPABASE_ANON_KEY,
+      hasSupabaseUrl: !!supabaseUrl,
+      hasSupabaseKey: !!supabaseAnonKey,
       nodeEnv: process.env.NODE_ENV,
       vercelEnv: process.env.VERCEL_ENV,
-      supabaseUrlLength: (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '').length,
-      supabaseKeyLength: (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '').length,
+      supabaseUrlLength: (supabaseUrl || '').length,
+      supabaseKeyLength: (supabaseAnonKey || '').length,
+      supabaseUrlStart: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'missing',
       allEnvKeys: Object.keys(process.env).filter(key => key.includes('SUPABASE'))
     }
     
     // Supabase 클라이언트 생성 테스트
-    let supabaseTest = null
+    let supabaseClientTest = 'Not tested'
+    let supabaseConnectionTest = 'Not tested'
     let supabaseError = null
     
     try {
-      const { createClient } = require('@supabase/supabase-js')
-      const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
-      const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
-      
       if (supabaseUrl && supabaseAnonKey) {
-        supabaseTest = createClient(supabaseUrl, supabaseAnonKey)
-        supabaseTest = 'Success'
+        // 클라이언트 생성 테스트
+        const supabase = createClient(supabaseUrl, supabaseAnonKey)
+        supabaseClientTest = 'Success'
+        
+        // 실제 연결 테스트 (간단한 쿼리)
+        try {
+          const { data, error } = await supabase.from('auth.users').select('count').limit(1)
+          if (error) {
+            supabaseConnectionTest = `Connection failed: ${error.message}`
+          } else {
+            supabaseConnectionTest = 'Connection successful'
+          }
+        } catch (connectionError) {
+          supabaseConnectionTest = `Connection error: ${connectionError.message}`
+        }
       } else {
-        supabaseTest = 'Missing credentials'
+        supabaseClientTest = 'Missing credentials'
       }
     } catch (error) {
       supabaseError = error.message
+      supabaseClientTest = 'Client creation failed'
     }
     
     return res.status(200).json({
@@ -52,7 +69,8 @@ export default function handler(req, res) {
       message: 'Debug information',
       timestamp: new Date().toISOString(),
       environment: envCheck,
-      supabaseTest: supabaseTest,
+      supabaseClientTest: supabaseClientTest,
+      supabaseConnectionTest: supabaseConnectionTest,
       supabaseError: supabaseError
     })
     
