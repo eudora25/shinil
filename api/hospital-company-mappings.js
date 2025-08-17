@@ -68,8 +68,8 @@ export default async function handler(req, res) {
         .from('client_company_assignments')
         .select(`
           *,
-          clients:client_id(id, name, address, business_registration_number, client_code, owner_name, status),
-          companies:company_id(id, company_name, business_registration_number, representative_name, status)
+          clients:client_id(id, name, address, business_registration_number, client_code, owner_name),
+          companies:company_id(id, company_name, business_registration_number, representative_name)
         `, { count: 'exact' })
         .order('created_at', { ascending: false })
 
