@@ -65,11 +65,11 @@ export default async function handler(req, res) {
       }
 
       let query = supabase
-        .from('hospital_company_mappings')
+        .from('client_company_assignments')
         .select(`
           *,
-          hospitals:hospital_id(id, name, address, phone),
-          companies:company_id(id, name, business_registration_number, owner_name)
+          clients:client_id(id, name, address, business_registration_number, client_code, owner_name, status),
+          companies:company_id(id, company_name, business_registration_number, representative_name, status)
         `, { count: 'exact' })
         .order('created_at', { ascending: false })
 
@@ -78,9 +78,9 @@ export default async function handler(req, res) {
         query = query.eq('status', status)
       }
 
-      // 병원 ID 필터링
+      // 고객사 ID 필터링
       if (hospitalId) {
-        query = query.eq('hospital_id', hospitalId)
+        query = query.eq('client_id', hospitalId)
       }
 
       // 회사 ID 필터링
@@ -91,7 +91,7 @@ export default async function handler(req, res) {
       // 검색 기능
       if (search && search.trim()) {
         const searchTerm = search.trim()
-        query = query.or(`hospitals.name.ilike.%${searchTerm}%,companies.name.ilike.%${searchTerm}%`)
+        query = query.or(`clients.name.ilike.%${searchTerm}%,companies.company_name.ilike.%${searchTerm}%`)
       }
 
       // 페이지네이션 적용
