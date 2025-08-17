@@ -1,9 +1,28 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = 'https://qtnhpuzfxiblltvytigl.supabase.co'
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0bmhwdXpmeGlibGx0dnl0aWdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM3NjY1NTYsImV4cCI6MjA2OTM0MjU1Nn0.XAra9lsCKqTEsP-0w91-AwRvWKjx5Wh4Jascd1YqoVE'
+// 환경 변수 확인 함수
+function getEnvironmentVariables() {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+  
+  return { supabaseUrl, supabaseAnonKey }
+}
 
-const supabase = createClient(supabaseUrl, supabaseKey)
+// Supabase 클라이언트 생성 함수
+function createSupabaseClient() {
+  const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
+  
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase configuration missing')
+  }
+  
+  try {
+    return createClient(supabaseUrl, supabaseAnonKey)
+  } catch (error) {
+    console.error('Failed to create Supabase client:', error)
+    throw error
+  }
+}
 
 export default async function handler(req, res) {
   // CORS 헤더 설정
@@ -27,6 +46,27 @@ export default async function handler(req, res) {
   }
 
   try {
+    if (req.method !== 'GET') {
+      return res.status(405).json({
+        success: false,
+        message: 'Method not allowed. Only GET is supported.'
+      })
+    }
+
+    // Supabase 클라이언트 생성
+    let supabase
+    try {
+      supabase = createSupabaseClient()
+    } catch (configError) {
+      console.error('Supabase configuration error:', configError)
+      return res.status(500).json({
+        success: false,
+        message: 'Server configuration error',
+        error: 'Supabase client initialization failed',
+        details: configError.message
+      })
+    }
+
     // 쿼리 파라미터 파싱
     const page = parseInt(req.query.page) || 1
     const limit = parseInt(req.query.limit) || 100
