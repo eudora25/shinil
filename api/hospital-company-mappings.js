@@ -73,10 +73,10 @@ export default async function handler(req, res) {
         `, { count: 'exact' })
         .order('created_at', { ascending: false })
 
-      // 상태 필터링
-      if (status && status !== 'all') {
-        query = query.eq('status', status)
-      }
+      // 상태 필터링 - client_company_assignments 테이블에는 status 컬럼이 없으므로 제거
+      // if (status && status !== 'all') {
+      //   query = query.eq('status', status)
+      // }
 
       // 고객사 ID 필터링
       if (hospitalId) {
