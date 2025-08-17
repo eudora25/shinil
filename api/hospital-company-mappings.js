@@ -44,11 +44,12 @@ export default async function handler(req, res) {
       })
     }
 
-    // GET: 제품-회사 매핑 목록 조회
+    // GET: 병원-회사 매핑 목록 조회
     if (req.method === 'GET') {
       const page = parseInt(req.query.page) || 1
       const limit = parseInt(req.query.limit) || 100
-      const productId = req.query.product_id
+      const search = req.query.search || ''
+      const hospitalId = req.query.hospital_id
       const companyId = req.query.company_id
       const status = req.query.status || 'active'
 
@@ -56,23 +57,44 @@ export default async function handler(req, res) {
       const pageNum = Math.max(1, page)
       const offset = (pageNum - 1) * limitNum
 
+      if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1 || limitNum > 1000) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid pagination parameters. Page must be >= 1, limit must be between 1 and 1000.'
+        })
+      }
+
       let query = supabase
-        .from('product_company_mappings')
-        .select('*', { count: 'exact' })
+        .from('hospital_company_mappings')
+        .select(`
+          *,
+          hospitals:hospital_id(id, name, address, phone),
+          companies:company_id(id, name, business_registration_number, owner_name)
+        `, { count: 'exact' })
         .order('created_at', { ascending: false })
 
-      // 필터링
-      if (productId) {
-        query = query.eq('product_id', productId)
-      }
-      if (companyId) {
-        query = query.eq('company_id', companyId)
-      }
+      // 상태 필터링
       if (status && status !== 'all') {
         query = query.eq('status', status)
       }
 
-      // 페이지네이션
+      // 병원 ID 필터링
+      if (hospitalId) {
+        query = query.eq('hospital_id', hospitalId)
+      }
+
+      // 회사 ID 필터링
+      if (companyId) {
+        query = query.eq('company_id', companyId)
+      }
+
+      // 검색 기능
+      if (search && search.trim()) {
+        const searchTerm = search.trim()
+        query = query.or(`hospitals.name.ilike.%${searchTerm}%,companies.name.ilike.%${searchTerm}%`)
+      }
+
+      // 페이지네이션 적용
       query = query.range(offset, offset + limitNum - 1)
 
       const { data: mappings, error: getError, count } = await query
@@ -85,7 +107,7 @@ export default async function handler(req, res) {
 
       return res.status(200).json({
         success: true,
-        message: '제품-회사 매핑 목록 조회 성공',
+        message: '병원-회사 매핑 목록 조회 성공',
         data: mappings,
         pagination: {
           currentPage: pageNum,
@@ -98,23 +120,24 @@ export default async function handler(req, res) {
       })
     }
 
-    // POST: 새로운 제품-회사 매핑 생성
+    // POST: 새로운 병원-회사 매핑 생성
     if (req.method === 'POST') {
-      const { product_id, company_id, status = 'active', remarks } = req.body
+      const { hospital_id, company_id, start_date, end_date, commission_rate, status = 'active', remarks } = req.body
 
-      if (!product_id || !company_id) {
+      if (!hospital_id || !company_id) {
         return res.status(400).json({
           success: false,
-          message: '제품 ID와 회사 ID는 필수입니다.'
+          message: '병원 ID와 회사 ID는 필수입니다.'
         })
       }
 
       // 중복 매핑 확인
       const { data: existingMapping, error: checkError } = await supabase
-        .from('product_company_mappings')
-        .select('*')
-        .eq('product_id', product_id)
+        .from('hospital_company_mappings')
+        .select('id')
+        .eq('hospital_id', hospital_id)
         .eq('company_id', company_id)
+        .eq('status', 'active')
         .single()
 
       if (checkError && checkError.code !== 'PGRST116') {
@@ -124,18 +147,21 @@ export default async function handler(req, res) {
       if (existingMapping) {
         return res.status(409).json({
           success: false,
-          message: '이미 존재하는 제품-회사 매핑입니다.'
+          message: '이미 존재하는 활성 매핑입니다.'
         })
       }
 
       const { data: newMapping, error: createError } = await supabase
-        .from('product_company_mappings')
-        .insert({
-          product_id,
+        .from('hospital_company_mappings')
+        .insert([{
+          hospital_id,
           company_id,
+          start_date,
+          end_date,
+          commission_rate,
           status,
           remarks
-        })
+        }])
         .select()
         .single()
 
@@ -143,14 +169,14 @@ export default async function handler(req, res) {
 
       return res.status(201).json({
         success: true,
-        message: '제품-회사 매핑 생성 성공',
+        message: '병원-회사 매핑 생성 성공',
         data: newMapping
       })
     }
 
-    // PUT: 제품-회사 매핑 수정
+    // PUT: 병원-회사 매핑 수정
     if (req.method === 'PUT') {
-      const { id, status, remarks } = req.body
+      const { id, hospital_id, company_id, start_date, end_date, commission_rate, status, remarks } = req.body
 
       if (!id) {
         return res.status(400).json({
@@ -160,11 +186,16 @@ export default async function handler(req, res) {
       }
 
       const updateData = {}
+      if (hospital_id !== undefined) updateData.hospital_id = hospital_id
+      if (company_id !== undefined) updateData.company_id = company_id
+      if (start_date !== undefined) updateData.start_date = start_date
+      if (end_date !== undefined) updateData.end_date = end_date
+      if (commission_rate !== undefined) updateData.commission_rate = commission_rate
       if (status !== undefined) updateData.status = status
       if (remarks !== undefined) updateData.remarks = remarks
 
       const { data: updatedMapping, error: updateError } = await supabase
-        .from('product_company_mappings')
+        .from('hospital_company_mappings')
         .update(updateData)
         .eq('id', id)
         .select()
@@ -175,18 +206,18 @@ export default async function handler(req, res) {
       if (!updatedMapping) {
         return res.status(404).json({
           success: false,
-          message: '해당 매핑을 찾을 수 없습니다.'
+          message: '매핑을 찾을 수 없습니다.'
         })
       }
 
       return res.status(200).json({
         success: true,
-        message: '제품-회사 매핑 수정 성공',
+        message: '병원-회사 매핑 수정 성공',
         data: updatedMapping
       })
     }
 
-    // DELETE: 제품-회사 매핑 삭제
+    // DELETE: 병원-회사 매핑 삭제 (소프트 삭제)
     if (req.method === 'DELETE') {
       const { id } = req.query
 
@@ -198,8 +229,8 @@ export default async function handler(req, res) {
       }
 
       const { data: deletedMapping, error: deleteError } = await supabase
-        .from('product_company_mappings')
-        .delete()
+        .from('hospital_company_mappings')
+        .update({ status: 'inactive' })
         .eq('id', id)
         .select()
         .single()
@@ -209,13 +240,13 @@ export default async function handler(req, res) {
       if (!deletedMapping) {
         return res.status(404).json({
           success: false,
-          message: '해당 매핑을 찾을 수 없습니다.'
+          message: '매핑을 찾을 수 없습니다.'
         })
       }
 
       return res.status(200).json({
         success: true,
-        message: '제품-회사 매핑 삭제 성공',
+        message: '병원-회사 매핑 삭제 성공',
         data: deletedMapping
       })
     }
@@ -226,7 +257,7 @@ export default async function handler(req, res) {
     })
 
   } catch (error) {
-    console.error('Product-Company Mappings API error details:', {
+    console.error('Hospital-Company Mappings API error details:', {
       message: error.message,
       stack: error.stack,
       timestamp: new Date().toISOString()

@@ -931,7 +931,109 @@ async function createServer() {
     }
   })
 
+  // 병원-업체 매핑정보 목록 엔드포인트
+  app.get('/api/hospital-company-mappings', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
+    res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Access-Control-Allow-Origin', '*')
 
+    try {
+      const { data, error } = await supabase
+        .from('client_company_assignments')
+        .select(`
+          *,
+          clients!inner(
+            id,
+            name,
+            address,
+            business_registration_number,
+            client_code,
+            owner_name,
+            status
+          ),
+          companies!inner(
+            id,
+            company_name,
+            business_registration_number,
+            representative_name,
+            status
+          )
+        `)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to fetch hospital-company mappings',
+          error: error.message
+        })
+      }
+
+      res.json({
+        success: true,
+        data: data || []
+      })
+
+    } catch (error) {
+      console.error('Hospital-Company Mappings API error:', error)
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      })
+    }
+  })
+
+  // 병원-약국 매핑정보 목록 엔드포인트 (기존 client-pharmacy-assignments와 동일)
+  app.get('/api/hospital-pharmacy-mappings', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
+    res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Access-Control-Allow-Origin', '*')
+
+    try {
+      const { data, error } = await supabase
+        .from('client_pharmacy_assignments')
+        .select(`
+          *,
+          clients!inner(
+            id,
+            name,
+            address,
+            business_registration_number,
+            client_code,
+            owner_name,
+            status
+          ),
+          pharmacies!inner(
+            id,
+            name,
+            pharmacy_code,
+            address,
+            status
+          )
+        `)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to fetch hospital-pharmacy mappings',
+          error: error.message
+        })
+      }
+
+      res.json({
+        success: true,
+        data: data || []
+      })
+
+    } catch (error) {
+      console.error('Hospital-Pharmacy Mappings API error:', error)
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      })
+    }
+  })
 
   app.post('/api/auth', checkIPAccess, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
