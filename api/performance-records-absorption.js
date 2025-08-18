@@ -95,8 +95,7 @@ export default async function handler(req, res) {
         products:product_id(
           id,
           product_name,
-          insurance_code,
-          standard_code
+          insurance_code
         )
       `, { count: 'exact' })
       .order('created_at', { ascending: false })

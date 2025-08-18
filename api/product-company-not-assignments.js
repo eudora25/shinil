@@ -84,7 +84,6 @@ export default async function handler(req, res) {
         id,
         product_name,
         insurance_code,
-        standard_code,
         status
       `, { count: 'exact' })
       .eq('status', 'active')
