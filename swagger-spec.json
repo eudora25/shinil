@@ -77,7 +77,7 @@
                   "properties": {
                     "name": {
                       "type": "string",
-                      "example": "Shinil PMS API"
+                      "example": "Sinil PMS API"
                     },
                     "version": {
                       "type": "string",

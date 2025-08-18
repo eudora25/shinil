@@ -205,7 +205,7 @@ async function createServer() {
   app.get('/api', checkIPAccess, logApiCall, (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.json({
-      name: "Shinil PMS API",
+      name: "Sinil PMS API",
       version: "1.0.0",
       status: "running",
       timestamp: new Date().toISOString(),
