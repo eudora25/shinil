@@ -76,16 +76,11 @@ export default async function handler(req, res) {
     ]
 
     return res.status(200).json({
-      success: true,
-      message: 'API 서버가 정상적으로 작동 중입니다.',
-      data: {
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        database: 'connected',
-        environment: process.env.NODE_ENV || 'development',
-        totalApis: availableApis.length,
-        availableApis: availableApis
-      }
+      name: "Shinil PMS API",
+      version: "1.0.0",
+      status: "running",
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
     })
   } catch (error) {
     console.error('API index error:', error)
