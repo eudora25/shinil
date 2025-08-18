@@ -58,16 +58,14 @@ export default async function handler(req, res) {
       })
     }
 
-    // Authorization 헤더에서 토큰 추출
-    const authHeader = req.headers.authorization
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
+    // request body에서 토큰 추출
+    const { token } = req.body
+    if (!token) {
+      return res.status(400).json({
         success: false,
-        message: 'Authorization header missing or invalid'
+        message: 'Token is required in request body'
       })
     }
-
-    const token = authHeader.substring(7)
 
     // 토큰 검증
     const { data: { user }, error } = await supabase.auth.getUser(token)
