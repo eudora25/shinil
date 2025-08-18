@@ -95,7 +95,7 @@ export default async function handler(req, res) {
         products:product_id(
           id,
           product_name,
-          product_code,
+          insurance_code,
           specification
         )
       `, { count: 'exact' })
