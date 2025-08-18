@@ -12,7 +12,9 @@ const IP_ACCESS_CONFIG = {
     '112.187.169.69',   // 추가 허용 IP
     '58.229.119.165',   // 추가 허용 IP
     '172.19.0.1',       // Docker 컨테이너 네트워크 IP
-    '::ffff:172.19.0.1' // Docker 컨테이너 네트워크 IP (IPv6 형식)
+    '::ffff:172.19.0.1', // Docker 컨테이너 네트워크 IP (IPv6 형식)
+    '172.64.149.246',   // 현재 클라이언트 IP
+    '::ffff:172.64.149.246' // 현재 클라이언트 IP (IPv6 형식)
   ],
 
   // 환경 변수에서 IP 목록 로드
@@ -77,9 +79,7 @@ const IP_ACCESS_CONFIG = {
         return res.status(403).json({
           success: false,
           message: '접근이 거부되었습니다. 허용된 IP에서만 접근 가능합니다.',
-          error: 'IP_ACCESS_DENIED',
-          clientIP: realIP,
-          allowedIPs: this.allowedIPs
+          error: 'IP_ACCESS_DENIED'
         })
       }
       
