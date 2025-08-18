@@ -92,7 +92,7 @@ export default async function handler(req, res) {
         ),
         pharmacies:pharmacy_id(
           id,
-          pharmacy_name,
+          name,
           business_registration_number,
           address,
           pharmacy_code
@@ -118,7 +118,7 @@ export default async function handler(req, res) {
     // 검색 기능
     if (search && search.trim()) {
       const searchTerm = search.trim()
-      query = query.or(`clients.name.ilike.%${searchTerm}%,pharmacies.pharmacy_name.ilike.%${searchTerm}%`)
+      query = query.or(`clients.name.ilike.%${searchTerm}%,pharmacies.name.ilike.%${searchTerm}%`)
     }
 
     // 페이지네이션 적용

@@ -92,7 +92,7 @@ export default async function handler(req, res) {
         ),
         pharmacies:pharmacy_id(
           id,
-          pharmacy_name,
+          name,
           business_registration_number,
           address,
           pharmacy_code
@@ -100,10 +100,10 @@ export default async function handler(req, res) {
       `, { count: 'exact' })
       .order('created_at', { ascending: false })
 
-    // 상태 필터링
-    if (status && status !== 'all') {
-      query = query.eq('status', status)
-    }
+    // 상태 필터링 (client_pharmacy_assignments 테이블에는 status 컬럼이 없으므로 제거)
+    // if (status && status !== 'all') {
+    //   query = query.eq('status', status)
+    // }
 
     // 병원 ID 필터링
     if (clientId) {
@@ -118,7 +118,7 @@ export default async function handler(req, res) {
     // 검색 기능
     if (search && search.trim()) {
       const searchTerm = search.trim()
-      query = query.or(`clients.name.ilike.%${searchTerm}%,pharmacies.pharmacy_name.ilike.%${searchTerm}%`)
+      query = query.or(`clients.name.ilike.%${searchTerm}%,pharmacies.name.ilike.%${searchTerm}%`)
     }
 
     // 페이지네이션 적용
