@@ -76,7 +76,7 @@ export default async function handler(req, res) {
     ]
 
     return res.status(200).json({
-      name: "Shinil PMS API",
+      name: "Sinil PMS API",
       version: "1.0.0",
       status: "running",
       timestamp: new Date().toISOString(),
