@@ -82,13 +82,11 @@ export default defineConfig(({ mode }) => {
         external: ['xlsx'],
       },
     },
-    // 환경 변수 설정 - .env.production 파일을 강제로 사용
+    // 환경 변수 설정 - .env 파일들을 자동으로 로드
     envDir: '.',
     envPrefix: 'VITE_',
     define: {
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify('https://selklngerzfmuvagcvvf.supabase.co'),
-      'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlbGtsbmdlcnpmbXV2YWdjdnZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3MzQ5MDUsImV4cCI6MjA2ODMxMDkwNX0.cRe78UqA-HDdVClq0qrXlOXxwNpQWLB6ycFnoHzQI4U')
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
     }
   }
 })

@@ -213,8 +213,8 @@ async function createServer() {
     })
   })
 
-  // 헬스 체크 엔드포인트
-  app.get('/api/health', checkIPAccess, requireAuth, logApiCall, (req, res) => {
+  // 헬스 체크 엔드포인트 (인증 및 IP 제어 불필요)
+  app.get('/api/health', (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.json({
       status: 'healthy',
@@ -885,28 +885,21 @@ async function createServer() {
     res.setHeader('Access-Control-Allow-Origin', '*')
 
     try {
-      const { data, error } = await supabase
+      // 쿼리 파라미터 파싱
+      const page = parseInt(req.query.page) || 1
+      const limit = parseInt(req.query.limit) || 100
+      const offset = (page - 1) * limit
+
+      // 중복 관계 문제를 해결하기 위해 기본 데이터만 조회
+      let query = supabase
         .from('client_pharmacy_assignments')
-        .select(`
-          *,
-          clients!inner(
-            id,
-            name,
-            address,
-            business_registration_number,
-            client_code,
-            owner_name,
-            status
-          ),
-          pharmacies!inner(
-            id,
-            name,
-            pharmacy_code,
-            address,
-            status
-          )
-        `)
+        .select('id, client_id, pharmacy_id, created_at', { count: 'exact' })
         .order('created_at', { ascending: false })
+
+      // 페이지네이션 적용
+      query = query.range(offset, offset + limit - 1)
+
+      const { data: assignments, error, count } = await query
 
       if (error) {
         return res.status(500).json({
@@ -916,9 +909,70 @@ async function createServer() {
         })
       }
 
+      // 별도로 병원과 약국 정보를 조회
+      let enrichedData = []
+      if (assignments && assignments.length > 0) {
+        // 고유한 client_id와 pharmacy_id 추출
+        const clientIds = [...new Set(assignments.map(item => item.client_id))]
+        const pharmacyIds = [...new Set(assignments.map(item => item.pharmacy_id))]
+
+        // 병원 정보 조회
+        const { data: clients, error: clientsError } = await supabase
+          .from('clients')
+          .select('id, name, address, business_registration_number, client_code, owner_name, status')
+          .in('id', clientIds)
+
+        if (clientsError) {
+          return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch clients',
+            error: clientsError.message
+          })
+        }
+
+        // 약국 정보 조회
+        const { data: pharmacies, error: pharmaciesError } = await supabase
+          .from('pharmacies')
+          .select('id, name, business_registration_number, address, pharmacy_code, status')
+          .in('id', pharmacyIds)
+
+        if (pharmaciesError) {
+          return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch pharmacies',
+            error: pharmaciesError.message
+          })
+        }
+
+        // 클라이언트와 약국 정보를 맵으로 변환
+        const clientsMap = new Map(clients.map(client => [client.id, client]))
+        const pharmaciesMap = new Map(pharmacies.map(pharmacy => [pharmacy.id, pharmacy]))
+
+        // 데이터 결합
+        enrichedData = assignments.map(assignment => ({
+          ...assignment,
+          client: clientsMap.get(assignment.client_id) || null,
+          pharmacy: pharmaciesMap.get(assignment.pharmacy_id) || null
+        }))
+      }
+
+      // 페이지네이션 정보 계산
+      const totalCount = count || 0
+      const totalPages = Math.ceil(totalCount / limit)
+      const hasNextPage = page < totalPages
+      const hasPrevPage = page > 1
+
       res.json({
         success: true,
-        data: data || []
+        data: enrichedData,
+        pagination: {
+          currentPage: page,
+          limit,
+          totalCount,
+          totalPages,
+          hasNextPage,
+          hasPrevPage
+        }
       })
 
     } catch (error) {
@@ -983,34 +1037,27 @@ async function createServer() {
     }
   })
 
-  // 병원-약국 매핑정보 목록 엔드포인트 (기존 client-pharmacy-assignments와 동일)
+  // 병원-약국 매핑정보 목록 엔드포인트
   app.get('/api/hospital-pharmacy-mappings', checkIPAccess, requireAuth, logApiCall, async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Access-Control-Allow-Origin', '*')
 
     try {
-      const { data, error } = await supabase
+      // 쿼리 파라미터 파싱
+      const page = parseInt(req.query.page) || 1
+      const limit = parseInt(req.query.limit) || 100
+      const offset = (page - 1) * limit
+
+      // 중복 관계 문제를 해결하기 위해 기본 데이터만 조회
+      let query = supabase
         .from('client_pharmacy_assignments')
-        .select(`
-          *,
-          clients!inner(
-            id,
-            name,
-            address,
-            business_registration_number,
-            client_code,
-            owner_name,
-            status
-          ),
-          pharmacies!inner(
-            id,
-            name,
-            pharmacy_code,
-            address,
-            status
-          )
-        `)
+        .select('id, client_id, pharmacy_id, created_at', { count: 'exact' })
         .order('created_at', { ascending: false })
+
+      // 페이지네이션 적용
+      query = query.range(offset, offset + limit - 1)
+
+      const { data: assignments, error, count } = await query
 
       if (error) {
         return res.status(500).json({
@@ -1020,9 +1067,70 @@ async function createServer() {
         })
       }
 
+      // 별도로 병원과 약국 정보를 조회
+      let enrichedData = []
+      if (assignments && assignments.length > 0) {
+        // 고유한 client_id와 pharmacy_id 추출
+        const clientIds = [...new Set(assignments.map(item => item.client_id))]
+        const pharmacyIds = [...new Set(assignments.map(item => item.pharmacy_id))]
+
+        // 병원 정보 조회
+        const { data: clients, error: clientsError } = await supabase
+          .from('clients')
+          .select('id, name, address, business_registration_number, client_code, owner_name, status')
+          .in('id', clientIds)
+
+        if (clientsError) {
+          return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch clients',
+            error: clientsError.message
+          })
+        }
+
+        // 약국 정보 조회
+        const { data: pharmacies, error: pharmaciesError } = await supabase
+          .from('pharmacies')
+          .select('id, name, business_registration_number, address, pharmacy_code, status')
+          .in('id', pharmacyIds)
+
+        if (pharmaciesError) {
+          return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch pharmacies',
+            error: pharmaciesError.message
+          })
+        }
+
+        // 클라이언트와 약국 정보를 맵으로 변환
+        const clientsMap = new Map(clients.map(client => [client.id, client]))
+        const pharmaciesMap = new Map(pharmacies.map(pharmacy => [pharmacy.id, pharmacy]))
+
+        // 데이터 결합
+        enrichedData = assignments.map(assignment => ({
+          ...assignment,
+          client: clientsMap.get(assignment.client_id) || null,
+          pharmacy: pharmaciesMap.get(assignment.pharmacy_id) || null
+        }))
+      }
+
+      // 페이지네이션 정보 계산
+      const totalCount = count || 0
+      const totalPages = Math.ceil(totalCount / limit)
+      const hasNextPage = page < totalPages
+      const hasPrevPage = page > 1
+
       res.json({
         success: true,
-        data: data || []
+        data: enrichedData,
+        pagination: {
+          currentPage: page,
+          limit,
+          totalCount,
+          totalPages,
+          hasNextPage,
+          hasPrevPage
+        }
       })
 
     } catch (error) {
@@ -1082,11 +1190,11 @@ async function createServer() {
             role: data.user.user_metadata?.user_type || 'user',
             approvalStatus: data.user.user_metadata?.approval_status || 'pending'
           },
-          // 보안을 위해 세션 전체를 반환하지 않고 필요한 최소 정보만 반환
-          session: {
-            access_token: data.session.access_token,
-            expires_at: data.session.expires_at
-          }
+          // Vercel 함수와 동일한 구조로 통일
+          token: data.session.access_token,
+          expiresAt: data.session.expires_at,
+          expiresIn: data.session.expires_in,
+          refreshToken: data.session.refresh_token
         }
       })
       
