@@ -71,7 +71,7 @@ export default async function handler(req, res) {
       })
     }
 
-    // 토큰 검증
+    // 토큰 검증 및 인증된 클라이언트 생성
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     if (authError || !user) {
       return res.status(401).json({
@@ -80,9 +80,22 @@ export default async function handler(req, res) {
         error: authError?.message || 'Token verification failed'
       })
     }
+    
+    // 인증된 사용자 컨텍스트로 새로운 클라이언트 생성
+    const authenticatedSupabase = createClient(
+      process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
+      process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      }
+    )
 
-    // 제품 정보 조회
-    const { data: products, error: productsError } = await supabase
+    // 제품 정보 조회 (인증된 클라이언트 사용)
+    const { data: products, error: productsError } = await authenticatedSupabase
       .from('products')
       .select('*')
       .order('created_at', { ascending: false })

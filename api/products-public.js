@@ -63,6 +63,9 @@ export default async function handler(req, res) {
     }
 
     // 제품 정보 조회 (인증 없이)
+    console.log('Supabase 클라이언트 생성 완료')
+    console.log('제품 테이블 조회 시작...')
+    
     const { data: products, error: productsError } = await supabase
       .from('products')
       .select('*')
@@ -73,9 +76,12 @@ export default async function handler(req, res) {
       return res.status(500).json({
         success: false,
         message: 'Failed to fetch products',
-        error: productsError.message
+        error: productsError.message,
+        details: productsError
       })
     }
+    
+    console.log('제품 조회 결과:', products ? products.length : 0, '개')
     
     // products_standard_code 정보 조회
     const { data: standardCodes, error: standardCodesError } = await supabase
