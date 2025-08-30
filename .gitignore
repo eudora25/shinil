@@ -148,3 +148,49 @@ local-*.js
 dev-*.js
 docs/API_ENDPOINTS_LIST.md
 docs/
+
+# Additional files to ignore
+# Excel files (if they are generated)
+*.xlsx
+*.xls
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Check and fix files
+check_*.py
+fix_*.py
+
+# API documentation files (if generated)
+API_Files/
+
+# Database backup files
+database_backup_*.sql
+mariadb_*.sql
+
+# Swagger files (keep these - they are important API documentation)
+# swagger-*.json
+# swagger-*.html
+
+# Vercel specific
+.vercel/
+
+# Local test files
+test-*.js
+test-*.html
+
+# Temporary directories
+.tmp/
+.temp/
+
+# Lock files (if not needed)
+package-lock.json
+yarn.lock
+
+# Environment files (except production)
+.env.development
+.env.test
