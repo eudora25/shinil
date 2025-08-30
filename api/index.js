@@ -80,7 +80,8 @@ export default async function handler(req, res) {
       version: "1.0.0",
       status: "running",
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development'
+      environment: process.env.NODE_ENV || 'development',
+      supabaseUrl: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'not_set'
     })
   } catch (error) {
     console.error('API index error:', error)
