@@ -45,6 +45,17 @@ export default async function handler(req, res) {
       })
     }
 
+    // 인증 토큰 확인
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authorization header with Bearer token is required'
+      })
+    }
+
+    const token = authHeader.substring(7) // 'Bearer ' 제거
+
     // Supabase 클라이언트 생성
     let supabase
     try {
@@ -56,6 +67,16 @@ export default async function handler(req, res) {
         message: 'Server configuration error',
         error: 'Supabase client initialization failed',
         details: configError.message
+      })
+    }
+
+    // 토큰 검증
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    if (authError || !user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired token',
+        error: authError?.message || 'Token verification failed'
       })
     }
 
