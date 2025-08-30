@@ -73,6 +73,10 @@ export default async function handler(req, res) {
       })
     }
     
+    // 디버깅: 제품 개수 확인
+    console.log('Products count:', products ? products.length : 0)
+    console.log('Supabase URL:', process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)
+    
     // products_standard_code 정보 조회
     const { data: standardCodes, error: standardCodesError } = await supabase
       .from('products_standard_code')

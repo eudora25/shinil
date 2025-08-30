@@ -81,7 +81,8 @@ export default async function handler(req, res) {
       status: "running",
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development',
-      supabaseUrl: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'not_set'
+      supabaseUrl: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'not_set',
+      database: "connected"
     })
   } catch (error) {
     console.error('API index error:', error)
