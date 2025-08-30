@@ -37,6 +37,8 @@ services:
     environment:
       - NODE_ENV=development
       - DOCKER_ENV=true
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
     networks:
       - shinil-network
     depends_on:
