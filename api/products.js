@@ -87,6 +87,7 @@ export default async function handler(req, res) {
       .order('created_at', { ascending: false })
     
     if (productsError) {
+      console.error('Products fetch error:', productsError)
       return res.status(500).json({
         success: false,
         message: 'Failed to fetch products',
@@ -97,6 +98,7 @@ export default async function handler(req, res) {
     // 디버깅: 제품 개수 확인
     console.log('Products count:', products ? products.length : 0)
     console.log('Supabase URL:', process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)
+    console.log('User ID:', user.id)
     
     // products_standard_code 정보 조회
     const { data: standardCodes, error: standardCodesError } = await supabase
@@ -126,7 +128,13 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       message: '제품 목록 조회 성공',
-      data: productsWithStandardCode || []
+      data: productsWithStandardCode || [],
+      debug: {
+        productsCount: products ? products.length : 0,
+        standardCodesCount: standardCodes ? standardCodes.length : 0,
+        supabaseUrl: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
+        userId: user.id
+      }
     })
 
   } catch (error) {
