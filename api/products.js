@@ -4,20 +4,28 @@ import { createClient } from '@supabase/supabase-js'
 function getEnvironmentVariables() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
   const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   
-  return { supabaseUrl, supabaseAnonKey }
+  return { supabaseUrl, supabaseAnonKey, supabaseServiceKey }
 }
 
 // Supabase 클라이언트 생성 함수
 function createSupabaseClient() {
-  const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
+  const { supabaseUrl, supabaseAnonKey, supabaseServiceKey } = getEnvironmentVariables()
   
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Supabase configuration missing')
   }
   
   try {
-    return createClient(supabaseUrl, supabaseAnonKey)
+    // 서비스 롤 키가 있으면 사용, 없으면 익명 키 사용
+    const key = supabaseServiceKey || supabaseAnonKey
+    return createClient(supabaseUrl, key, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
   } catch (error) {
     console.error('Failed to create Supabase client:', error)
     throw error
