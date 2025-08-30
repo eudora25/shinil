@@ -146,3 +146,5 @@ tmp-*.html
 # Local development files
 local-*.js
 dev-*.js
+docs/API_ENDPOINTS_LIST.md
+docs/

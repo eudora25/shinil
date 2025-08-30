@@ -1,58 +1,7 @@
 import { fileURLToPath, URL } from 'node:url'
-
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
-
-// API 경로를 포트 3001로 프록시하는 플러그인
-function apiPlugin() {
-  return {
-    name: 'api-plugin',
-    configureServer(server) {
-      server.middlewares.use(async (req, res, next) => {
-        // swagger 파일들은 프록시하지 않음
-        if (req.url.startsWith('/swagger-') || req.url.startsWith('/test-spec.json') || req.url === '/swagger-spec.json') {
-          return next();
-        }
-        
-        // 정적 파일들은 프록시하지 않음
-        if (req.url.includes('.json') || req.url.includes('.html') || req.url.includes('.css') || req.url.includes('.js')) {
-          return next();
-        }
-        
-        // API 경로인 경우에만 포트 3001로 프록시
-        if (req.url.startsWith('/api/')) {
-          try {
-            const response = await fetch(`http://localhost:3001${req.url}`, {
-              method: req.method,
-              headers: {
-                'Content-Type': 'application/json',
-                ...req.headers
-              },
-              body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined
-            });
-            
-            const data = await response.json();
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify(data));
-            return;
-          } catch (error) {
-            console.error('API proxy error:', error);
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({
-              success: false,
-              message: 'API 서버 연결 오류',
-              error: error.message
-            }));
-            return;
-          }
-        }
-        
-        next();
-      });
-    }
-  }
-}
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -62,12 +11,19 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       vue(),
-      vueDevTools(),
-      apiPlugin()
+      vueDevTools()
     ],
     server: {
       port: 3000,
-      host: true
+      host: true,
+      proxy: {
+        '/api': {
+          target: 'http://api-server:3001',
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path
+        }
+      }
     },
     resolve: {
       alias: {

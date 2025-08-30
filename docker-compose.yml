@@ -36,6 +36,7 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
+      - DOCKER_ENV=true
     networks:
       - shinil-network
     depends_on:

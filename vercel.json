@@ -2,6 +2,7 @@
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "vue-project/dist",
   "installCommand": "npm install && cd vue-project && npm install",
+
   "rewrites": [
     {
       "source": "/api/(.*)",
