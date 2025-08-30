@@ -59,18 +59,49 @@ export default async function handler(req, res) {
       })
     }
 
-    // 제품 목록 조회
-    const { data: products, error: getError } = await supabase
+    // 제품 정보 조회
+    const { data: products, error: productsError } = await supabase
       .from('products')
       .select('*')
       .order('created_at', { ascending: false })
-
-    if (getError) throw getError
+    
+    if (productsError) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to fetch products',
+        error: productsError.message
+      })
+    }
+    
+    // products_standard_code 정보 조회
+    const { data: standardCodes, error: standardCodesError } = await supabase
+      .from('products_standard_code')
+      .select('*')
+      .eq('status', 'active')
+    
+    if (standardCodesError) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to fetch standard codes',
+        error: standardCodesError.message
+      })
+    }
+    
+    // insurance_code를 기준으로 데이터 조합
+    const productsWithStandardCode = products.map(product => {
+      const standardCode = standardCodes.find(sc => sc.insurance_code === product.insurance_code)
+      return {
+        ...product,
+        standard_code: standardCode?.standard_code || null,
+        unit_packaging_desc: standardCode?.unit_packaging_desc || null,
+        unit_quantity: standardCode?.unit_quantity || null
+      }
+    })
 
     return res.status(200).json({
       success: true,
       message: '제품 목록 조회 성공',
-      data: products
+      data: productsWithStandardCode || []
     })
 
   } catch (error) {
