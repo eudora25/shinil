@@ -20,12 +20,7 @@ function createSupabaseClient() {
   try {
     // 서비스 롤 키가 있으면 사용, 없으면 익명 키 사용
     const key = supabaseServiceKey || supabaseAnonKey
-    return createClient(supabaseUrl, key, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    })
+    return createClient(supabaseUrl, key)
   } catch (error) {
     console.error('Failed to create Supabase client:', error)
     throw error
