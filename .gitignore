@@ -129,10 +129,10 @@ env/
 ENV/
 
 # Test files
-test-*.js
-test-*.html
-*-test.js
-*-test.html
+tests/test-*.js
+tests/test-*.html
+tests/*-test.js
+tests/*-test.html
 
 # Temporary test files
 temp-*.js
@@ -151,8 +151,8 @@ docs/
 
 # Additional files to ignore
 # Excel files (if they are generated)
-*.xlsx
-*.xls
+exports/*.xlsx
+exports/*.xls
 
 # Python cache files
 __pycache__/
@@ -162,15 +162,15 @@ __pycache__/
 .Python
 
 # Check and fix files
-check_*.py
-fix_*.py
+scripts/check_*.py
+scripts/fix_*.py
 
 # API documentation files (if generated)
 API_Files/
 
 # Database backup files
-database_backup_*.sql
-mariadb_*.sql
+database/database_backup_*.sql
+database/mariadb_*.sql
 
 # Swagger files (keep these - they are important API documentation)
 # swagger-*.json
