@@ -3,11 +3,18 @@
   "outputDirectory": "vue-project/dist",
   "installCommand": "npm install && cd vue-project && npm install",
   "functions": {
+    "api/swagger-ui.html.js": {
+      "maxDuration": 10
+    },
     "api/docs.js": {
       "maxDuration": 10
     }
   },
   "routes": [
+    {
+      "src": "/swagger-ui.html",
+      "dest": "/api/swagger-ui.html"
+    },
     {
       "src": "/docs",
       "dest": "/api/docs"
@@ -18,10 +25,6 @@
     },
     {
       "src": "/swagger",
-      "dest": "/api/docs"
-    },
-    {
-      "src": "/swagger-ui.html",
       "dest": "/api/docs"
     },
     {
