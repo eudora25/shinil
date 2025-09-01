@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     <script>
         window.onload = function() {
             const ui = SwaggerUIBundle({
-                url: '/api/swagger-spec.json',
+                url: '/swagger-spec.json',
                 dom_id: '#swagger-ui',
                 deepLinking: true,
                 presets: [
