@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  // Vercel 환경에 맞게 인라인으로 API 명세 작성
+  // 루트의 swagger-spec.json 파일과 동일한 전체 API 명세
   const swaggerSpec = {
     "openapi": "3.0.3",
     "info": {
@@ -144,6 +144,268 @@ export default async function handler(req, res) {
             },
             "401": {
               "description": "인증 실패"
+            }
+          }
+        }
+      },
+      "/products": {
+        "get": {
+          "tags": ["기본 정보"],
+          "summary": "제품 목록 조회",
+          "description": "인증된 사용자를 위한 제품 목록을 반환합니다",
+          "security": [{"bearerAuth": []}],
+          "responses": {
+            "200": {
+              "description": "성공",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {"type": "boolean"},
+                      "products": {"type": "array"}
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "인증 필요"
+            }
+          }
+        }
+      },
+      "/products-public": {
+        "get": {
+          "tags": ["기본 정보"],
+          "summary": "공개 제품 목록",
+          "description": "인증 없이 접근 가능한 공개 제품 목록을 반환합니다",
+          "responses": {
+            "200": {
+              "description": "성공",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {"type": "boolean"},
+                      "products": {"type": "array"}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/companies": {
+        "get": {
+          "tags": ["기본 정보"],
+          "summary": "업체 목록 조회",
+          "description": "등록된 업체 목록을 반환합니다",
+          "security": [{"bearerAuth": []}],
+          "responses": {
+            "200": {
+              "description": "성공",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {"type": "boolean"},
+                      "companies": {"type": "array"}
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "인증 필요"
+            }
+          }
+        }
+      },
+      "/hospitals": {
+        "get": {
+          "tags": ["기본 정보"],
+          "summary": "병원 목록 조회",
+          "description": "등록된 병원 목록을 반환합니다",
+          "security": [{"bearerAuth": []}],
+          "responses": {
+            "200": {
+              "description": "성공",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {"type": "boolean"},
+                      "hospitals": {"type": "array"}
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "인증 필요"
+            }
+          }
+        }
+      },
+      "/pharmacies": {
+        "get": {
+          "tags": ["기본 정보"],
+          "summary": "약국 목록 조회",
+          "description": "등록된 약국 목록을 반환합니다",
+          "security": [{"bearerAuth": []}],
+          "responses": {
+            "200": {
+              "description": "성공",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {"type": "boolean"},
+                      "pharmacies": {"type": "array"}
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "인증 필요"
+            }
+          }
+        }
+      },
+      "/clients": {
+        "get": {
+          "tags": ["기본 정보"],
+          "summary": "고객 목록 조회",
+          "description": "등록된 고객 목록을 반환합니다",
+          "security": [{"bearerAuth": []}],
+          "responses": {
+            "200": {
+              "description": "성공",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {"type": "boolean"},
+                      "clients": {"type": "array"}
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "인증 필요"
+            }
+          }
+        }
+      },
+      "/notices": {
+        "get": {
+          "tags": ["공지사항"],
+          "summary": "공지사항 목록 조회",
+          "description": "등록된 공지사항 목록을 반환합니다",
+          "responses": {
+            "200": {
+              "description": "성공",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {"type": "boolean"},
+                      "notices": {"type": "array"}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/performance-records": {
+        "get": {
+          "tags": ["실적 관리"],
+          "summary": "실적 기록 조회",
+          "description": "등록된 실적 기록을 반환합니다",
+          "security": [{"bearerAuth": []}],
+          "responses": {
+            "200": {
+              "description": "성공",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {"type": "boolean"},
+                      "performanceRecords": {"type": "array"}
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "인증 필요"
+            }
+          }
+        }
+      },
+      "/wholesale-sales": {
+        "get": {
+          "tags": ["매출 관리"],
+          "summary": "도매 매출 조회",
+          "description": "도매 매출 정보를 반환합니다",
+          "security": [{"bearerAuth": []}],
+          "responses": {
+            "200": {
+              "description": "성공",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {"type": "boolean"},
+                      "wholesaleSales": {"type": "array"}
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "인증 필요"
+            }
+          }
+        }
+      },
+      "/direct-sales": {
+        "get": {
+          "tags": ["매출 관리"],
+          "summary": "직매 매출 조회",
+          "description": "직매 매출 정보를 반환합니다",
+          "security": [{"bearerAuth": []}],
+          "responses": {
+            "200": {
+              "description": "성공",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {"type": "boolean"},
+                      "directSales": {"type": "array"}
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "인증 필요"
             }
           }
         }
