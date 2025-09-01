@@ -3,7 +3,7 @@
     <h2>로그인</h2>
     <form @submit.prevent="handleLogin">
       <div class="form-group">
-        <label for="email">이메일</label>
+        <label for="email">이메일!</label>
         <input type="email" id="email" v-model="email" required>
       </div>
       <div class="form-group">
