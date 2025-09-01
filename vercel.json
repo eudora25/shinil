@@ -28,11 +28,15 @@
       "dest": "/api/docs"
     },
     {
+      "src": "/swagger-spec.json",
+      "dest": "/swagger-spec.json"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "/api/$1"
     },
     {
-      "src": "/(.*)",
+      "src": "/((?!swagger-ui.html|docs|api-docs|swagger|swagger-spec.json|api).*)",
       "dest": "/index.html"
     }
   ]
