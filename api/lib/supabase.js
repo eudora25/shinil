@@ -1,4 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
+import { config } from 'dotenv'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+// ES 모듈에서 __dirname 대체
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// 환경에 따라 적절한 환경 변수 파일 로드
+const env = process.env.NODE_ENV || 'development'
+const envFile = env === 'production' ? '.env.production' : '.env.local'
+config({ path: path.join(__dirname, '../../vue-project', envFile) })
 
 // 환경 변수 확인 함수
 export function getEnvironmentVariables() {

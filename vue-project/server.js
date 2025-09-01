@@ -7,8 +7,10 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// vue-project의 .env.production 파일 로드
-config({ path: path.join(__dirname, '.env.production') })
+// 환경에 따라 적절한 환경 변수 파일 로드
+const env = process.env.NODE_ENV || 'development'
+const envFile = env === 'production' ? '.env.production' : '.env.local'
+config({ path: path.join(__dirname, envFile) })
 
 async function createServer() {
   const app = express()
@@ -630,18 +632,7 @@ async function createServer() {
     try {
       const { data, error } = await supabase
         .from('settlement_share')
-        .select(`
-          *,
-          companies!inner(
-            id,
-            company_name,
-            business_registration_number,
-            representative_name,
-            status,
-            email,
-            mobile_phone
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
 
       if (error) {
