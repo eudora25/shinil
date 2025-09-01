@@ -2,42 +2,23 @@
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "vue-project/dist",
   "installCommand": "npm install && cd vue-project && npm install",
-  "functions": {
-    "api/swagger-ui.html.js": {
-      "maxDuration": 10
-    },
-    "api/docs.js": {
-      "maxDuration": 10
-    }
-  },
-  "routes": [
+
+  "rewrites": [
     {
-      "src": "/swagger-ui.html",
-      "dest": "/api/swagger-ui.html"
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     },
     {
-      "src": "/docs",
-      "dest": "/api/docs"
+      "source": "/swagger-ui.html",
+      "destination": "/swagger-ui.html"
     },
     {
-      "src": "/api-docs", 
-      "dest": "/api/docs"
+      "source": "/swagger-spec.json",
+      "destination": "/swagger-spec.json"
     },
     {
-      "src": "/swagger",
-      "dest": "/api/docs"
-    },
-    {
-      "src": "/swagger-spec.json",
-      "dest": "/swagger-spec.json"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/((?!swagger-ui.html|docs|api-docs|swagger|swagger-spec.json|api).*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

@@ -1,5 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
-import { getEnvironmentVariables } from './lib/supabase.js'
+
+// 환경 변수 확인 함수
+function getEnvironmentVariables() {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+  
+  return { supabaseUrl, supabaseAnonKey }
+}
 
 // Supabase 클라이언트 생성 함수
 function createSupabaseClient() {
@@ -75,10 +82,18 @@ export default async function handler(req, res) {
 
     const offset = (page - 1) * limit
 
-    // 정산내역서 목록 조회 (단순 조회)
+    // 정산내역서 목록 조회 (업체 정보와 조인)
     let query = supabase
       .from('settlement_share')
-      .select('*', { count: 'exact' })
+      .select(`
+        *,
+        companies:company_id(
+          id,
+          company_name,
+          business_registration_number,
+          representative_name
+        )
+      `, { count: 'exact' })
       .order('created_at', { ascending: false })
 
     // 페이지네이션 적용

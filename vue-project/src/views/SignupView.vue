@@ -1,83 +1,152 @@
 <template>
-  <div class="signup">
-    <h2>회원가입</h2>
-    <form @submit.prevent="handleSignup">
-      <div class="form-group">
-        <label for="email">이메일</label>
-        <input type="email" id="email" v-model="email" required>
-      </div>
-      <div class="form-group">
-        <label for="password">비밀번호</label>
-        <input type="password" id="password" v-model="password" required>
-      </div>
-      <div class="form-group">
-        <label for="confirmPassword">비밀번호 확인</label>
-        <input type="password" id="confirmPassword" v-model="confirmPassword" required>
-      </div>
-      <button type="submit" class="btn btn-primary">회원가입</button>
-    </form>
-    <router-link to="/login">로그인</router-link>
+  <div class="signup-root">
+    <div class="signup-right">
+      <div class="signup-logo">신일제약 실적관리 시스템</div>
+      <form class="signup-form" @submit.prevent="handleSignup">
+        <div class="form-row" v-for="field in fields" :key="field.key">
+          <label :for="field.key">{{ field.label }}</label>
+          <input
+            v-if="field.type !== 'password' && field.type !== 'password2'"
+            :id="field.key"
+            :type="field.inputType"
+            v-model="formData[field.key]"
+          />
+          <div v-else-if="field.type === 'password'" style="position: relative;">
+            <input
+              :id="field.key"
+              :type="showPassword ? 'text' : 'password'"
+              v-model="formData.password"
+              style="padding-right: 2.5rem;"
+            />
+            <i
+              :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"
+              style="position: absolute; right: 0.7rem; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; font-size: 1.2rem;"
+              @click="showPassword = !showPassword"
+            ></i>
+          </div>
+          <div v-else-if="field.type === 'password2'" style="position: relative;">
+            <input
+              :id="field.key"
+              :type="showPassword2 ? 'text' : 'password'"
+              v-model="formData.confirmPassword"
+              style="padding-right: 2.5rem;"
+            />
+            <i
+              :class="showPassword2 ? 'pi pi-eye-slash' : 'pi pi-eye'"
+              style="position: absolute; right: 0.7rem; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; font-size: 1.2rem;"
+              @click="showPassword2 = !showPassword2"
+            ></i>
+          </div>
+        </div>
+        <div class="button-row">
+          <Button label="회원가입" class="signup-btn" @click="handleSignup" />
+          <Button label="취소" class="cancel-btn" @click.prevent="goToLogin" />
+        </div>
+        <div class="login-link">
+          <a @click.prevent="goToLogin" href="#">이미 계정이 있으신가요? 로그인</a>
+        </div>
+      </form>
+      <div class="copyright">© 2025. 주식회사 팜플코리아 All Rights Reserved.</div>
+    </div>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'SignupView',
-  data() {
-    return {
-      email: '',
-      password: '',
-      confirmPassword: ''
-    }
-  },
-  methods: {
-    handleSignup() {
-      if (this.password !== this.confirmPassword) {
-        alert('비밀번호가 일치하지 않습니다.')
-        return
-      }
-      // 회원가입 로직 구현
-      console.log('회원가입 시도:', this.email)
-    }
+<script setup>
+import { ref } from 'vue';
+import Button from 'primevue/button';
+import { supabase } from '@/supabase';
+import { useRouter } from 'vue-router';
+import { onMounted, onUnmounted } from 'vue';
+
+const formData = ref({
+  email: '',
+  password: '',
+  confirmPassword: '',
+  companyName: '',
+  businessRegistrationNumber: '',
+  representativeName: '',
+  businessAddress: '',
+  contactPersonName: '',
+  mobilePhone: '',
+});
+const router = useRouter();
+
+const fields = [
+  { key: 'email', label: '아이디(이메일)', inputType: 'email' },
+  { key: 'password', label: '비밀번호', type: 'password' },
+  { key: 'confirmPassword', label: '비밀번호 확인', type: 'password2' },
+  { key: 'companyName', label: '업체명', inputType: 'text' },
+  { key: 'businessRegistrationNumber', label: '사업자등록번호', inputType: 'text' },
+  { key: 'representativeName', label: '대표자명', inputType: 'text' },
+  { key: 'businessAddress', label: '사업장 소재지', inputType: 'text' },
+  { key: 'contactPersonName', label: '담당자명', inputType: 'text' },
+  { key: 'mobilePhone', label: '휴대폰번호', inputType: 'text' },
+];
+
+const showPassword = ref(false);
+const showPassword2 = ref(false);
+
+const handleSignup = async () => {
+  if (formData.value.password !== formData.value.confirmPassword) {
+    alert('비밀번호가 일치하지 않습니다.');
+    return;
   }
-}
-</script>
+  try {
+    const emailLower = formData.value.email.trim().toLowerCase();
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: emailLower,
+      password: formData.value.password,
+      options: {
+        data: {
+          user_type: 'user',
+          approval_status: 'pending'
+        }
+      }
+    });
+    if (authError) throw authError;
 
-<style scoped>
-.signup {
-  max-width: 400px;
-  margin: 0 auto;
-  padding: 2rem;
-}
+    if (authData && authData.user) {
+      const companyDataToInsert = {
+        user_id: authData.user.id,
+        email: emailLower,
+        company_name: formData.value.companyName,
+        business_registration_number: formData.value.businessRegistrationNumber,
+        representative_name: formData.value.representativeName,
+        business_address: formData.value.businessAddress,
+        contact_person_name: formData.value.contactPersonName,
+        mobile_phone: formData.value.mobilePhone,
+        user_type: 'user',
+        approval_status: 'pending',
+        created_by: authData.user.id,
+      };
 
-.form-group {
-  margin-bottom: 1rem;
-}
+      // 1. companies 테이블에 먼저 insert
+      const { error: companyInsertError } = await supabase
+        .from('companies')
+        .insert([companyDataToInsert]);
+      if (companyInsertError) throw companyInsertError;
 
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-}
+      // 2. 안내 후 로그아웃
+      alert('가입 요청이 완료되었습니다. 관리자 승인 후 로그인 가능합니다.');
+      await supabase.auth.signOut();
+      router.push('/login');
+    } else {
+      throw new Error('사용자 정보가 생성되지 않았습니다.');
+    }
+  } catch (error) {
+    alert('가입 요청 실패: ' + (error.error_description || error.message));
+  }
+};
 
-.form-group input {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
+const goToLogin = () => {
+  router.push('/login');
+};
 
-.btn {
-  width: 100%;
-  padding: 0.75rem;
-  margin-top: 1rem;
-  border: none;
-  border-radius: 4px;
-  font-weight: bold;
-  cursor: pointer;
-}
+onMounted(() => {
+  document.body.classList.add('no-main-padding');
+});
 
-.btn-primary {
-  background-color: #007bff;
-  color: white;
-}
-</style>
+onUnmounted(() => {
+  document.body.classList.remove('no-main-padding');
+});
+</script> 

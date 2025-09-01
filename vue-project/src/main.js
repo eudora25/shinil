@@ -1,13 +1,31 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router'
-import './assets/main.css'
+// import '@primevue/themes/aura/theme.css';
+import 'primeicons/primeicons.css';
 
-// Swagger UI 경로들은 Vue.js 애플리케이션에서 제외
-const excludedPaths = ['/swagger-ui.html', '/docs', '/api-docs', '/swagger', '/swagger-spec.json']
+// 기타 전역 CSS
+import '@/assets/buttons.css';
+import './assets/main.css';
 
-if (!excludedPaths.includes(window.location.pathname)) {
-  const app = createApp(App)
-  app.use(router)
-  app.mount('#app')
-}
+// JS/라이브러리 import
+import { createApp } from 'vue';
+import App from './App.vue';
+import router from './router';
+
+import PrimeVue from 'primevue/config';
+import Aura from '@primevue/themes/aura';
+import ConfirmationService from 'primevue/confirmationservice';
+import ToastService from 'primevue/toastservice';
+
+const app = createApp(App);
+
+app.use(router);
+app.use(PrimeVue, {
+  theme: Aura,
+  ripple: true,
+  inputStyle: 'filled',
+});
+
+// PrimeVue 서비스 등록
+app.use(ConfirmationService);
+app.use(ToastService);
+
+app.mount('#app');

@@ -1,6 +1,19 @@
 // ES 모듈 import (Vercel 호환)
 import { createClient } from '@supabase/supabase-js'
-import { getEnvironmentVariables } from './lib/supabase.js'
+
+// 환경 변수 확인 함수
+function getEnvironmentVariables() {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+  
+  console.log('Environment check:', {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+    urlStart: supabaseUrl ? supabaseUrl.substring(0, 20) + '...' : 'missing'
+  })
+  
+  return { supabaseUrl, supabaseAnonKey }
+}
 
 // Supabase 클라이언트 생성 함수
 function createSupabaseClient() {

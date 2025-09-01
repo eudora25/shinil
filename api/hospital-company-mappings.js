@@ -1,5 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
-import { getEnvironmentVariables } from './lib/supabase.js'
+
+function getEnvironmentVariables() {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+  return { supabaseUrl, supabaseAnonKey }
+}
 
 function createSupabaseClient() {
   const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
