@@ -3,22 +3,22 @@
   "outputDirectory": "vue-project/dist",
   "installCommand": "npm install && cd vue-project && npm install",
 
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "src": "/swagger-ui.html",
+      "dest": "/swagger-ui.html"
     },
     {
-      "source": "/swagger-ui.html",
-      "destination": "/swagger-ui.html"
+      "src": "/swagger-spec.json",
+      "dest": "/swagger-spec.json"
     },
     {
-      "source": "/swagger-spec.json",
-      "destination": "/swagger-spec.json"
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }

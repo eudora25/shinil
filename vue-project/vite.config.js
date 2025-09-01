@@ -43,6 +43,8 @@ export default defineConfig(({ mode }) => {
     envPrefix: 'VITE_',
     define: {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
-    }
+    },
+    // Swagger UI 파일들을 빌드 결과물에 포함
+    publicDir: 'public'
   }
 })
