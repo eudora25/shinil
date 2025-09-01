@@ -5,6 +5,18 @@
 
   "rewrites": [
     {
+      "source": "/docs",
+      "destination": "/api/swagger-ui"
+    },
+    {
+      "source": "/api-docs",
+      "destination": "/api/swagger-ui"
+    },
+    {
+      "source": "/swagger",
+      "destination": "/api/swagger-ui"
+    },
+    {
       "source": "/swagger-ui.html",
       "destination": "/api/swagger-ui"
     },
