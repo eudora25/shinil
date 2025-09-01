@@ -107,7 +107,6 @@ export default async function handler(req, res) {
       debug: {
         productsCount: products ? products.length : 0,
         standardCodesCount: standardCodes ? standardCodes.length : 0,
-        supabaseUrl: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
         hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
       }
     })
