@@ -10,34 +10,34 @@
       "maxDuration": 10
     }
   },
-  "rewrites": [
+  "routes": [
     {
-      "source": "/swagger-ui.html",
-      "destination": "/api/swagger-ui.html"
+      "src": "/swagger-ui.html",
+      "dest": "/api/swagger-ui.html"
     },
     {
-      "source": "/docs",
-      "destination": "/api/docs"
+      "src": "/docs",
+      "dest": "/api/docs"
     },
     {
-      "source": "/api-docs", 
-      "destination": "/api/docs"
+      "src": "/api-docs", 
+      "dest": "/api/docs"
     },
     {
-      "source": "/swagger",
-      "destination": "/api/docs"
+      "src": "/swagger",
+      "dest": "/api/docs"
     },
     {
-      "source": "/swagger-spec.json",
-      "destination": "/swagger-spec.json"
+      "src": "/swagger-spec.json",
+      "dest": "/swagger-spec.json"
     },
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
