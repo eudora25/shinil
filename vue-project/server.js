@@ -1008,6 +1008,23 @@ async function createServer() {
         }, {})
       }
 
+      // 페이지·리미트 파라미터 (메타 정보로 응답에 포함)
+      const page = parseInt(req.query.page) || 1
+      const limit = parseInt(req.query.limit) || 100
+
+      // 날짜 필터 파라미터 처리 (기본: 오늘 하루)
+      const { startDate: qsStart, endDate: qsEnd } = req.query
+      const { start: defaultStart, end: defaultEnd } = getDefaultDateRange()
+      const startDate = startOfDay(parseDateOnly(qsStart) || defaultStart)
+      const endDate = endOfDay(parseDateOnly(qsEnd) || defaultEnd)
+
+      if (startDate > endDate) {
+        return res.status(400).json({
+          success: false,
+          message: 'startDate must be less than or equal to endDate'
+        })
+      }
+
       // 응답 조합
       const combined = mappings.map(m => ({
         ...m,
@@ -1015,7 +1032,17 @@ async function createServer() {
         company: m.company_id ? companiesById[m.company_id] || null : null
       }))
 
-      res.json({ success: true, data: combined })
+      res.json({ 
+        success: true, 
+        data: combined,
+        totalCount: combined.length,
+        filters: {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          page,
+          limit
+        }
+      })
     } catch (error) {
       console.error('Product-Company Not Assignments API error:', error)
       res.status(500).json({
@@ -1103,22 +1130,28 @@ async function createServer() {
         }))
       }
 
-      // 페이지네이션 정보 계산
-      const totalCount = count || 0
-      const totalPages = Math.ceil(totalCount / limit)
-      const hasNextPage = page < totalPages
-      const hasPrevPage = page > 1
+      // 날짜 필터 파라미터 처리 (기본: 오늘 하루)
+      const { startDate: qsStart, endDate: qsEnd } = req.query
+      const { start: defaultStart, end: defaultEnd } = getDefaultDateRange()
+      const startDate = startOfDay(parseDateOnly(qsStart) || defaultStart)
+      const endDate = endOfDay(parseDateOnly(qsEnd) || defaultEnd)
+
+      if (startDate > endDate) {
+        return res.status(400).json({
+          success: false,
+          message: 'startDate must be less than or equal to endDate'
+        })
+      }
 
       res.json({
         success: true,
         data: enrichedData,
-        pagination: {
-          currentPage: page,
-          limit,
-          totalCount,
-          totalPages,
-          hasNextPage,
-          hasPrevPage
+        totalCount: count || 0,
+        filters: {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          page,
+          limit
         }
       })
 
@@ -1138,7 +1171,24 @@ async function createServer() {
     res.setHeader('Access-Control-Allow-Origin', '*')
 
     try {
-      const { data, error } = await supabase
+      // 페이지·리미트 파라미터 (메타 정보로 응답에 포함)
+      const page = parseInt(req.query.page) || 1
+      const limit = parseInt(req.query.limit) || 100
+
+      // 날짜 필터 파라미터 처리 (기본: 오늘 하루)
+      const { startDate: qsStart, endDate: qsEnd } = req.query
+      const { start: defaultStart, end: defaultEnd } = getDefaultDateRange()
+      const startDate = startOfDay(parseDateOnly(qsStart) || defaultStart)
+      const endDate = endOfDay(parseDateOnly(qsEnd) || defaultEnd)
+
+      if (startDate > endDate) {
+        return res.status(400).json({
+          success: false,
+          message: 'startDate must be less than or equal to endDate'
+        })
+      }
+
+      const { data, error, count: totalCount } = await supabase
         .from('client_company_assignments')
         .select(`
           *,
@@ -1158,8 +1208,10 @@ async function createServer() {
             representative_name,
             status
           )
-        `)
+        `, { count: 'exact' })
         .order('created_at', { ascending: false })
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString())
 
       if (error) {
         return res.status(500).json({
@@ -1171,7 +1223,14 @@ async function createServer() {
 
       res.json({
         success: true,
-        data: data || []
+        data: data || [],
+        totalCount: totalCount || 0,
+        filters: {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          page,
+          limit
+        }
       })
 
     } catch (error) {
@@ -1261,22 +1320,28 @@ async function createServer() {
         }))
       }
 
-      // 페이지네이션 정보 계산
-      const totalCount = count || 0
-      const totalPages = Math.ceil(totalCount / limit)
-      const hasNextPage = page < totalPages
-      const hasPrevPage = page > 1
+      // 날짜 필터 파라미터 처리 (기본: 오늘 하루)
+      const { startDate: qsStart, endDate: qsEnd } = req.query
+      const { start: defaultStart, end: defaultEnd } = getDefaultDateRange()
+      const startDate = startOfDay(parseDateOnly(qsStart) || defaultStart)
+      const endDate = endOfDay(parseDateOnly(qsEnd) || defaultEnd)
+
+      if (startDate > endDate) {
+        return res.status(400).json({
+          success: false,
+          message: 'startDate must be less than or equal to endDate'
+        })
+      }
 
       res.json({
         success: true,
         data: enrichedData,
-        pagination: {
-          currentPage: page,
-          limit,
-          totalCount,
-          totalPages,
-          hasNextPage,
-          hasPrevPage
+        totalCount: count || 0,
+        filters: {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          page,
+          limit
         }
       })
 
