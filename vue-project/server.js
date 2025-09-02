@@ -359,10 +359,29 @@ async function createServer() {
     res.setHeader('Access-Control-Allow-Origin', '*')
     
     try {
-      const { data, error } = await supabase
+      // 페이지·리미트 파라미터 (메타 정보로 응답에 포함)
+      const page = parseInt(req.query.page) || 1
+      const limit = parseInt(req.query.limit) || 100
+
+      // 날짜 필터 파라미터 처리 (기본: 오늘 하루)
+      const { startDate: qsStart, endDate: qsEnd } = req.query
+      const { start: defaultStart, end: defaultEnd } = getDefaultDateRange()
+      const startDate = startOfDay(parseDateOnly(qsStart) || defaultStart)
+      const endDate = endOfDay(parseDateOnly(qsEnd) || defaultEnd)
+
+      if (startDate > endDate) {
+        return res.status(400).json({
+          success: false,
+          message: 'startDate must be less than or equal to endDate'
+        })
+      }
+
+      const { data, error, count: totalCount } = await supabase
         .from('clients')
-        .select('*')
-        .order('created_at', { ascending: false })
+        .select('*', { count: 'exact' })
+        .order('updated_at', { ascending: false })
+        .gte('updated_at', startDate.toISOString())
+        .lte('updated_at', endDate.toISOString())
       
       if (error) {
         return res.status(500).json({
@@ -374,7 +393,14 @@ async function createServer() {
       
       res.json({
         success: true,
-        data: data || []
+        data: data || [],
+        totalCount: totalCount || 0,
+        filters: {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          page,
+          limit
+        }
       })
       
     } catch (error) {
@@ -452,10 +478,29 @@ async function createServer() {
     res.setHeader('Access-Control-Allow-Origin', '*')
     
     try {
-      const { data, error } = await supabase
+      // 페이지·리미트 파라미터 (메타 정보로 응답에 포함)
+      const page = parseInt(req.query.page) || 1
+      const limit = parseInt(req.query.limit) || 100
+
+      // 날짜 필터 파라미터 처리 (기본: 오늘 하루)
+      const { startDate: qsStart, endDate: qsEnd } = req.query
+      const { start: defaultStart, end: defaultEnd } = getDefaultDateRange()
+      const startDate = startOfDay(parseDateOnly(qsStart) || defaultStart)
+      const endDate = endOfDay(parseDateOnly(qsEnd) || defaultEnd)
+
+      if (startDate > endDate) {
+        return res.status(400).json({
+          success: false,
+          message: 'startDate must be less than or equal to endDate'
+        })
+      }
+
+      const { data, error, count: totalCount } = await supabase
         .from('pharmacies')
-        .select('*')
-        .order('created_at', { ascending: false })
+        .select('*', { count: 'exact' })
+        .order('updated_at', { ascending: false })
+        .gte('updated_at', startDate.toISOString())
+        .lte('updated_at', endDate.toISOString())
       
       if (error) {
         return res.status(500).json({
@@ -467,7 +512,14 @@ async function createServer() {
       
       res.json({
         success: true,
-        data: data || []
+        data: data || [],
+        totalCount: totalCount || 0,
+        filters: {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          page,
+          limit
+        }
       })
       
     } catch (error) {
