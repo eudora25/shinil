@@ -92,23 +92,37 @@ async function createServer() {
       const authHeader = req.headers.authorization
       const bearer = authHeader && authHeader.startsWith('Bearer ')
       const accessToken = bearer ? authHeader.substring(7) : null
-      // 1) 우선 access token으로 검증 시도
-      if (accessToken) {
-        const { data, error } = await supabase.auth.getUser(accessToken)
-        if (!error && data?.user) {
-          req.user = data.user
-          return next()
-        }
+      
+      // Access Token이 반드시 있어야 함
+      if (!accessToken) {
+        return res.status(401).json({ 
+          success: false, 
+          message: 'Unauthorized: Access token is required' 
+        })
       }
 
-      // 2) 실패 시 refresh token으로 갱신 시도 (쿠키 또는 헤더)
+      // 1) Access token으로 검증 시도
+      const { data, error } = await supabase.auth.getUser(accessToken)
+      if (!error && data?.user) {
+        req.user = data.user
+        return next()
+      }
+
+      // 2) Access token이 만료된 경우에만 refresh token으로 갱신 시도
       const refreshToken = getRefreshTokenFromRequest(req)
       if (!refreshToken) {
-        return res.status(401).json({ success: false, message: 'Unauthorized: missing token' })
+        return res.status(401).json({ 
+          success: false, 
+          message: 'Unauthorized: Access token expired and no refresh token provided' 
+        })
       }
+      
       const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession({ refresh_token: refreshToken })
       if (refreshError || !refreshed?.session?.access_token || !refreshed?.user) {
-        return res.status(401).json({ success: false, message: 'Unauthorized: token refresh failed' })
+        return res.status(401).json({ 
+          success: false, 
+          message: 'Unauthorized: token refresh failed' 
+        })
       }
 
       // 재발급 토큰 쿠키 저장 및 요청 컨텍스트 업데이트
@@ -161,6 +175,32 @@ async function createServer() {
     res.cookie?.('rp_at', session.access_token, { ...common, maxAge: (session.expires_in || 3600) * 1000 })
     res.cookie?.('rp_rft', session.refresh_token, { ...common, maxAge: 60 * 24 * 60 * 60 * 1000 }) // 60일
     res.setHeader('X-Access-Token', session.access_token)
+  }
+
+  // 날짜 유틸리티
+  function parseDateOnly(input) {
+    if (!input) return null
+    const date = new Date(input)
+    return isNaN(date.getTime()) ? null : date
+  }
+
+  function startOfDay(date) {
+    const d = new Date(date)
+    d.setHours(0, 0, 0, 0)
+    return d
+  }
+
+  function endOfDay(date) {
+    const d = new Date(date)
+    d.setHours(23, 59, 59, 999)
+    return d
+  }
+
+  function getDefaultDateRange() {
+    const now = new Date()
+    const start = startOfDay(now)
+    const end = endOfDay(now)
+    return { start, end }
   }
 
   // 데이터베이스에 로그 저장
@@ -230,11 +270,33 @@ async function createServer() {
     res.setHeader('Access-Control-Allow-Origin', '*')
     
     try {
-      // 제품 정보 조회
-      const { data: products, error: productsError } = await supabase
+      // 페이지·리미트 파라미터 (메타 정보로 응답에 포함)
+      const page = parseInt(req.query.page) || 1
+      const limit = parseInt(req.query.limit) || 100
+
+      // 날짜 필터 파라미터 처리 (기본: 오늘 하루)
+      const { startDate: qsStart, endDate: qsEnd } = req.query
+      const { start: defaultStart, end: defaultEnd } = getDefaultDateRange()
+      const startDate = startOfDay(parseDateOnly(qsStart) || defaultStart)
+      const endDate = endOfDay(parseDateOnly(qsEnd) || defaultEnd)
+
+      if (startDate > endDate) {
+        return res.status(400).json({
+          success: false,
+          message: 'startDate must be less than or equal to endDate'
+        })
+      }
+
+      // 제품 정보 조회 (전체 건수 포함)
+      let query = supabase
         .from('products')
-        .select('*')
-        .order('created_at', { ascending: false })
+        .select('*', { count: 'exact' })
+        .order('updated_at', { ascending: false })
+
+      // updated_at 기준 날짜 필터
+      query = query.gte('updated_at', startDate.toISOString()).lte('updated_at', endDate.toISOString())
+
+      const { data: products, error: productsError, count: totalCount } = await query
       
       if (productsError) {
         return res.status(500).json({
@@ -271,7 +333,14 @@ async function createServer() {
       
       res.json({
         success: true,
-        data: productsWithStandardCode || []
+        data: productsWithStandardCode || [],
+        totalCount: totalCount || 0,
+        filters: {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          page,
+          limit
+        }
       })
       
     } catch (error) {
@@ -417,10 +486,29 @@ async function createServer() {
     res.setHeader('Access-Control-Allow-Origin', '*')
 
     try {
-      const { data, error } = await supabase
+      // 페이지·리미트 파라미터 (메타 정보로 응답에 포함)
+      const page = parseInt(req.query.page) || 1
+      const limit = parseInt(req.query.limit) || 100
+
+      // 날짜 필터 파라미터 처리 (기본: 오늘 하루)
+      const { startDate: qsStart, endDate: qsEnd } = req.query
+      const { start: defaultStart, end: defaultEnd } = getDefaultDateRange()
+      const startDate = startOfDay(parseDateOnly(qsStart) || defaultStart)
+      const endDate = endOfDay(parseDateOnly(qsEnd) || defaultEnd)
+
+      if (startDate > endDate) {
+        return res.status(400).json({
+          success: false,
+          message: 'startDate must be less than or equal to endDate'
+        })
+      }
+
+      const { data, error, count: totalCount } = await supabase
         .from('companies')
-        .select('*')
-        .order('created_at', { ascending: false })
+        .select('*', { count: 'exact' })
+        .order('updated_at', { ascending: false })
+        .gte('updated_at', startDate.toISOString())
+        .lte('updated_at', endDate.toISOString())
 
       if (error) {
         return res.status(500).json({
@@ -432,7 +520,14 @@ async function createServer() {
 
       res.json({
         success: true,
-        data: data || []
+        data: data || [],
+        totalCount: totalCount || 0,
+        filters: {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          page,
+          limit
+        }
       })
 
     } catch (error) {

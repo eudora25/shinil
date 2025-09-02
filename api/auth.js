@@ -144,6 +144,15 @@ export default async function handler(req, res) {
       })
     }
     
+    // 쿠키에 토큰 설정
+    const secure = process.env.NODE_ENV === 'production'
+    const sameSite = 'lax'
+    
+    res.setHeader('Set-Cookie', [
+      `accessToken=${authData.session.access_token}; HttpOnly; Path=/; SameSite=${sameSite}${secure ? '; Secure' : ''}; Max-Age=3600`,
+      `refreshToken=${authData.session.refresh_token}; HttpOnly; Path=/; SameSite=${sameSite}${secure ? '; Secure' : ''}; Max-Age=2592000` // 30일
+    ])
+
     // 성공 응답
     return res.status(200).json({
       success: true,

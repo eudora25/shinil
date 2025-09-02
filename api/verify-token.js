@@ -1,34 +1,11 @@
-import { createClient } from '@supabase/supabase-js'
-
-// 환경 변수 확인 함수
-function getEnvironmentVariables() {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
-  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
-  
-  return { supabaseUrl, supabaseAnonKey }
-}
-
-// Supabase 클라이언트 생성 함수
-function createSupabaseClient() {
-  const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
-  
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase configuration missing')
-  }
-  
-  try {
-    return createClient(supabaseUrl, supabaseAnonKey)
-  } catch (error) {
-    console.error('Failed to create Supabase client:', error)
-    throw error
-  }
-}
+import { authenticateToken } from './lib/auth-middleware.js'
 
 export default async function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie')
+  res.setHeader('Content-Type', 'application/json')
 
   // OPTIONS 요청 처리
   if (req.method === 'OPTIONS') {
@@ -44,52 +21,41 @@ export default async function handler(req, res) {
       })
     }
 
-    // Supabase 클라이언트 생성
-    let supabase
-    try {
-      supabase = createSupabaseClient()
-    } catch (configError) {
-      console.error('Supabase configuration error:', configError)
-      return res.status(500).json({
+    // 인증 미들웨어를 통해 토큰 검증 및 자동 갱신
+    const authResult = await authenticateToken(req, res)
+    
+    if (!authResult.success) {
+      return res.status(authResult.statusCode || 401).json({
         success: false,
-        message: 'Server configuration error',
-        error: 'Supabase client initialization failed',
-        details: configError.message
+        message: authResult.error || 'Invalid or expired token'
       })
     }
 
-    // request body에서 토큰 추출
-    const { token } = req.body
-    if (!token) {
-      return res.status(400).json({
-        success: false,
-        message: 'Token is required in request body'
-      })
-    }
-
-    // 토큰 검증
-    const { data: { user }, error } = await supabase.auth.getUser(token)
-
-    if (error || !user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid or expired token',
-        error: error?.message || 'Token verification failed'
-      })
-    }
-
-    return res.status(200).json({
+    // 성공 응답 생성
+    const responseData = {
       success: true,
       message: 'Token is valid',
       data: {
         user: {
-          id: user.id,
-          email: user.email,
-          role: user.user_metadata?.user_type || 'user',
-          approvalStatus: user.user_metadata?.approval_status || 'pending'
+          id: authResult.user.id,
+          email: authResult.user.email,
+          role: authResult.user.user_metadata?.user_type || 'user',
+          approvalStatus: authResult.user.user_metadata?.approval_status || 'pending'
         }
       }
-    })
+    }
+
+    // 새로운 토큰이 발급된 경우 응답에 포함
+    if (authResult.newTokens) {
+      responseData.data.newTokens = {
+        accessToken: authResult.newTokens.accessToken,
+        refreshToken: authResult.newTokens.refreshToken,
+        expiresAt: authResult.newTokens.expiresAt
+      }
+      responseData.message = 'Token refreshed and validated'
+    }
+
+    return res.status(200).json(responseData)
 
   } catch (error) {
     console.error('Token verification API error:', error)
