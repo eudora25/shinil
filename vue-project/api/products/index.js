@@ -1,9 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
 
-export const config = {
-  runtime: 'edge'
-}
-
 export default async function handler(req, res) {
   // CORS 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
