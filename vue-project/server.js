@@ -353,8 +353,9 @@ async function createServer() {
         .select('*', { count: 'exact' })
         .order('updated_at', { ascending: false })
 
-      // updated_at 기준 날짜 필터
-      query = query.gte('updated_at', startDate.toISOString()).lte('updated_at', endDate.toISOString())
+      // created_at OR updated_at 기준 날짜 필터
+      query = query.or(`created_at.gte.${startDate.toISOString()},updated_at.gte.${startDate.toISOString()}`)
+        .or(`created_at.lte.${endDate.toISOString()},updated_at.lte.${endDate.toISOString()}`)
 
       const { data: products, error: productsError, count: totalCount } = await query
       
@@ -440,8 +441,8 @@ async function createServer() {
         .from('clients')
         .select('*', { count: 'exact' })
         .order('updated_at', { ascending: false })
-        .gte('updated_at', startDate.toISOString())
-        .lte('updated_at', endDate.toISOString())
+        .or(`created_at.gte.${startDate.toISOString()},updated_at.gte.${startDate.toISOString()}`)
+        .or(`created_at.lte.${endDate.toISOString()},updated_at.lte.${endDate.toISOString()}`)
       
       if (error) {
         return res.status(500).json({
@@ -501,8 +502,8 @@ async function createServer() {
         .from('notices')
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString())
+        .or(`created_at.gte.${startDate.toISOString()},updated_at.gte.${startDate.toISOString()}`)
+        .or(`created_at.lte.${endDate.toISOString()},updated_at.lte.${endDate.toISOString()}`)
       
       if (noticesError) {
         return res.status(500).json({
@@ -585,8 +586,8 @@ async function createServer() {
         .from('pharmacies')
         .select('*', { count: 'exact' })
         .order('updated_at', { ascending: false })
-        .gte('updated_at', startDate.toISOString())
-        .lte('updated_at', endDate.toISOString())
+        .or(`created_at.gte.${startDate.toISOString()},updated_at.gte.${startDate.toISOString()}`)
+        .or(`created_at.lte.${endDate.toISOString()},updated_at.lte.${endDate.toISOString()}`)
       
       if (error) {
         return res.status(500).json({
@@ -645,8 +646,8 @@ async function createServer() {
         .from('companies')
         .select('*', { count: 'exact' })
         .order('updated_at', { ascending: false })
-        .gte('updated_at', startDate.toISOString())
-        .lte('updated_at', endDate.toISOString())
+        .or(`created_at.gte.${startDate.toISOString()},updated_at.gte.${startDate.toISOString()}`)
+        .or(`created_at.lte.${endDate.toISOString()},updated_at.lte.${endDate.toISOString()}`)
 
       if (error) {
         return res.status(500).json({
@@ -1056,8 +1057,8 @@ async function createServer() {
         .from('wholesale_sales')
         .select('*', { count: 'exact' })
         .order('updated_at', { ascending: false })
-        .gte('updated_at', startDate.toISOString())
-        .lte('updated_at', endDate.toISOString())
+        .or(`created_at.gte.${startDate.toISOString()},updated_at.gte.${startDate.toISOString()}`)
+        .or(`created_at.lte.${endDate.toISOString()},updated_at.lte.${endDate.toISOString()}`)
 
       if (error) {
         return res.status(500).json({
@@ -1116,8 +1117,8 @@ async function createServer() {
         .from('direct_sales')
         .select('*', { count: 'exact' })
         .order('updated_at', { ascending: false })
-        .gte('updated_at', startDate.toISOString())
-        .lte('updated_at', endDate.toISOString())
+        .or(`created_at.gte.${startDate.toISOString()},updated_at.gte.${startDate.toISOString()}`)
+        .or(`created_at.lte.${endDate.toISOString()},updated_at.lte.${endDate.toISOString()}`)
 
       if (error) {
         return res.status(500).json({
