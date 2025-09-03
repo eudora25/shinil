@@ -55,26 +55,27 @@ export default async function handler(req, res) {
 
     // 기본 쿼리 시작
     let query = supabase
-      .from('notices')
+      .from('client_company_assignments')
       .select('*', { count: 'exact' })
 
-    // 날짜 필터링 (created_at 기준)
+    // 날짜 필터링 (created_at OR updated_at)
     if (startDate && endDate) {
       const start = new Date(startDate)
       const end = new Date(endDate)
-      query = query.gte('created_at', start.toISOString()).lte('created_at', end.toISOString())
+      query = query.or(`created_at.gte.${start.toISOString()},updated_at.gte.${start.toISOString()}`)
+        .or(`created_at.lte.${end.toISOString()},updated_at.lte.${end.toISOString()}`)
     }
 
     // 정렬 및 페이지네이션
     query = query
-      .order('created_at', { ascending: false })
+      .order('updated_at', { ascending: false })
       .range((page - 1) * limit, page * limit - 1)
 
     // 데이터 조회
-    const { data: notices, error: noticesError, count: totalCount } = await query
+    const { data: assignments, error: assignmentsError, count: totalCount } = await query
 
-    if (noticesError) {
-      console.error('Notices query error:', noticesError)
+    if (assignmentsError) {
+      console.error('Client company assignments query error:', assignmentsError)
       return res.status(500).json({ 
         success: false, 
         message: 'Database query failed' 
@@ -84,7 +85,7 @@ export default async function handler(req, res) {
     // 성공 응답
     res.status(200).json({
       success: true,
-      data: notices || [],
+      data: assignments || [],
       totalCount: totalCount || 0,
       filters: {
         startDate: startDate ? new Date(startDate).toISOString() : null,
@@ -95,11 +96,11 @@ export default async function handler(req, res) {
     })
 
   } catch (error) {
-    console.error('Notices API error:', error)
+    console.error('Client company assignments API error:', error)
     res.status(500).json({ 
       success: false, 
       message: 'Internal server error',
       error: error.message 
     })
   }
-} 
+}

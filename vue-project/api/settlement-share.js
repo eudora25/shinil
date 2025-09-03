@@ -55,7 +55,7 @@ export default async function handler(req, res) {
 
     // 기본 쿼리 시작
     let query = supabase
-      .from('notices')
+      .from('settlement_share')
       .select('*', { count: 'exact' })
 
     // 날짜 필터링 (created_at 기준)
@@ -71,10 +71,10 @@ export default async function handler(req, res) {
       .range((page - 1) * limit, page * limit - 1)
 
     // 데이터 조회
-    const { data: notices, error: noticesError, count: totalCount } = await query
+    const { data: shares, error: sharesError, count: totalCount } = await query
 
-    if (noticesError) {
-      console.error('Notices query error:', noticesError)
+    if (sharesError) {
+      console.error('Settlement share query error:', sharesError)
       return res.status(500).json({ 
         success: false, 
         message: 'Database query failed' 
@@ -84,7 +84,7 @@ export default async function handler(req, res) {
     // 성공 응답
     res.status(200).json({
       success: true,
-      data: notices || [],
+      data: shares || [],
       totalCount: totalCount || 0,
       filters: {
         startDate: startDate ? new Date(startDate).toISOString() : null,
@@ -95,11 +95,11 @@ export default async function handler(req, res) {
     })
 
   } catch (error) {
-    console.error('Notices API error:', error)
+    console.error('Settlement share API error:', error)
     res.status(500).json({ 
       success: false, 
       message: 'Internal server error',
       error: error.message 
     })
   }
-} 
+}
