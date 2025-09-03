@@ -26,8 +26,13 @@
     <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
     <script>
         window.onload = function() {
-            // swagger-spec.json 파일을 직접 로드
-            fetch('http://localhost:3001/swagger-spec.json')
+            // swagger-spec.json 파일을 직접 로드 (캐시 방지)
+            fetch('http://localhost:3001/swagger-spec.json', {
+                cache: 'no-cache',
+                headers: {
+                    'Cache-Control': 'no-cache'
+                }
+            })
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Failed to load swagger spec');
