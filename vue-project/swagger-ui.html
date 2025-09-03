@@ -27,7 +27,7 @@
     <script>
         window.onload = function() {
             // swagger-spec.json 파일을 직접 로드
-            fetch('/swagger-spec.json')
+            fetch('http://localhost:3001/swagger-spec.json')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Failed to load swagger spec');
