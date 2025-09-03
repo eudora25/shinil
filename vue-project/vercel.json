@@ -12,6 +12,10 @@
       "NODE_ENV": "production"
     }
   },
+  "env": {
+    "VITE_SUPABASE_URL": "https://selklngerzfmuvagcvvf.supabase.co",
+    "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlbGtsbmdlcnpmbXV2YWdjdnZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3MzQ5MDUsImV4cCI6MjA2ODMxMDkwNX0.cRe78UqA-HDdVClq0qrXlOXxwNpQWLB6ycFnoHzQI4U"
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
