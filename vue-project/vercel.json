@@ -7,14 +7,6 @@
       "destination": "/api/$1"
     },
     {
-      "source": "/swagger-ui.html",
-      "destination": "/api/swagger-access"
-    },
-    {
-      "source": "/swagger-spec.json",
-      "destination": "/api/swagger-spec"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
