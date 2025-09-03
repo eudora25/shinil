@@ -257,9 +257,9 @@ async function createServer() {
   }
 
   function getDefaultDateRange() {
-    const now = new Date()
-    const start = startOfDay(now)
-    const end = endOfDay(now)
+    // 기본값을 과거 데이터가 있는 기간으로 설정 (2025-01-01 ~ 2025-12-31)
+    const start = new Date('2025-01-01')
+    const end = new Date('2025-12-31')
     return { start, end }
   }
 
