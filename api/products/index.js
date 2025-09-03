@@ -55,47 +55,105 @@ export default async function handler(req, res) {
     }
 
     // 쿼리 파라미터 파싱
-    const { page = 1, limit = 100, startDate, endDate } = req.query
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 100
+    const { startDate: qsStart, endDate: qsEnd } = req.query
 
-    // 기본 쿼리 시작
-    let query = supabase
-      .from('products')
-      .select('*', { count: 'exact' })
-
-    // 날짜 필터링 (created_at OR updated_at)
-    if (startDate && endDate) {
-      const start = new Date(startDate)
-      const end = new Date(endDate)
-      query = query.or(`created_at.gte.${start.toISOString()},updated_at.gte.${start.toISOString()}`)
-        .or(`created_at.lte.${end.toISOString()},updated_at.lte.${end.toISOString()}`)
+    // 날짜 유틸리티 함수들
+    function parseDateOnly(input) {
+      if (!input) return null
+      const date = new Date(input)
+      return isNaN(date.getTime()) ? null : date
     }
 
-    // 정렬 및 페이지네이션
-    query = query
-      .order('updated_at', { ascending: false })
-      .range((page - 1) * limit, page * limit - 1)
+    function startOfDay(date) {
+      const d = new Date(date)
+      d.setHours(0, 0, 0, 0)
+      return d
+    }
 
-    // 데이터 조회
-    const { data: products, error: productsError, count: totalCount } = await query
+    function endOfDay(date) {
+      const d = new Date(date)
+      d.setHours(23, 59, 59, 999)
+      return d
+    }
 
-    if (productsError) {
-      console.error('Products query error:', productsError)
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Database query failed' 
+    function getDefaultDateRange() {
+      // 기본값을 과거 데이터가 있는 기간으로 설정 (2025-01-01 ~ 2025-12-31)
+      const start = new Date('2025-01-01')
+      const end = new Date('2025-12-31')
+      return { start, end }
+    }
+
+    // 날짜 필터 파라미터 처리 (기본: 2025-01-01 ~ 2025-12-31)
+    const { start: defaultStart, end: defaultEnd } = getDefaultDateRange()
+    const startDate = startOfDay(parseDateOnly(qsStart) || defaultStart)
+    const endDate = endOfDay(parseDateOnly(qsEnd) || defaultEnd)
+
+    if (startDate > endDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'startDate must be less than or equal to endDate'
       })
     }
 
+    // 제품 정보 조회 (전체 건수 포함)
+    let query = supabase
+      .from('products')
+      .select('*', { count: 'exact' })
+      .order('updated_at', { ascending: false })
+
+    // created_at OR updated_at 기준 날짜 필터
+    query = query.or(`created_at.gte.${startDate.toISOString()},updated_at.gte.${startDate.toISOString()}`)
+      .or(`created_at.lte.${endDate.toISOString()},updated_at.lte.${endDate.toISOString()}`)
+
+    const { data: products, error: productsError, count: totalCount } = await query
+    
+    if (productsError) {
+      console.error('Products query error:', productsError)
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to fetch products',
+        error: productsError.message
+      })
+    }
+    
+    // products_standard_code 정보 조회
+    const { data: standardCodes, error: standardCodesError } = await supabase
+      .from('products_standard_code')
+      .select('*')
+      .eq('status', 'active')
+    
+    if (standardCodesError) {
+      console.error('Standard codes query error:', standardCodesError)
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to fetch standard codes',
+        error: standardCodesError.message
+      })
+    }
+    
+    // insurance_code를 기준으로 데이터 조합
+    const productsWithStandardCode = products.map(product => {
+      const standardCode = standardCodes.find(sc => sc.insurance_code === product.insurance_code)
+      return {
+        ...product,
+        standard_code: standardCode?.standard_code || null,
+        unit_packaging_desc: standardCode?.unit_packaging_desc || null,
+        unit_quantity: standardCode?.unit_quantity || null
+      }
+    })
+    
     // 성공 응답 (로컬과 동일한 구조)
     res.status(200).json({
       success: true,
-      data: products || [],
+      data: productsWithStandardCode || [],
       totalCount: totalCount || 0,
       filters: {
-        startDate: startDate ? new Date(startDate).toISOString() : null,
-        endDate: endDate ? new Date(endDate).toISOString() : null,
-        page: parseInt(page),
-        limit: parseInt(limit)
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        page,
+        limit
       }
     })
 

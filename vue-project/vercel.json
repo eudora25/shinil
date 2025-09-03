@@ -7,7 +7,6 @@
       "maxDuration": 30
     }
   },
-
   "build": {
     "env": {
       "NODE_ENV": "production"
@@ -24,6 +23,15 @@
     }
   ],
   "headers": [
+    {
+      "source": "/swagger-ui.html",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/html"
+        }
+      ]
+    },
     {
       "source": "/swagger-ui.html",
       "headers": [
