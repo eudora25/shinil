@@ -15,6 +15,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, message: 'Method not allowed' })
   }
 
+  // 디버깅을 위한 로그 추가
+  console.log('Products API called with query:', req.query)
+  console.log('Products API headers:', req.headers)
+
   try {
     // 환경 변수에서 Supabase 설정 가져오기 (Vercel Functions 호환)
     const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://selklngerzfmuvagcvvf.supabase.co"
@@ -82,7 +86,7 @@ export default async function handler(req, res) {
       })
     }
 
-    // 성공 응답
+    // 성공 응답 (로컬과 동일한 구조)
     res.status(200).json({
       success: true,
       data: products || [],
