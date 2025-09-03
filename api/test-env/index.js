@@ -26,23 +26,27 @@ export default async function handler(req, res) {
     // Supabase 연결 테스트
     let supabaseConnection = '연결 안됨'
     let supabaseData = null
+    let tableStructure = null
     
     if (process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_ANON_KEY) {
       try {
         const { createClient } = await import('@supabase/supabase-js')
         const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY)
         
-        // 간단한 쿼리 테스트
-        const { data, error } = await supabase
+        // 테이블 구조 확인 (모든 컬럼 조회)
+        const { data: structureData, error: structureError } = await supabase
           .from('products')
-          .select('id, name')
+          .select('*')
           .limit(1)
         
-        if (error) {
-          supabaseConnection = `연결 실패: ${error.message}`
+        if (structureError) {
+          supabaseConnection = `연결 실패: ${structureError.message}`
         } else {
           supabaseConnection = '연결 성공'
-          supabaseData = data
+          if (structureData && structureData.length > 0) {
+            tableStructure = Object.keys(structureData[0])
+            supabaseData = structureData[0]
+          }
         }
       } catch (err) {
         supabaseConnection = `연결 오류: ${err.message}`
@@ -55,6 +59,7 @@ export default async function handler(req, res) {
       environment: envVars,
       supabase: {
         connection: supabaseConnection,
+        tableStructure: tableStructure,
         testData: supabaseData
       },
       timestamp: new Date().toISOString()
