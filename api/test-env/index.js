@@ -27,6 +27,7 @@ export default async function handler(req, res) {
     let supabaseConnection = '연결 안됨'
     let supabaseData = null
     let tableStructure = null
+    let debugInfo = {}
     
     if (process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_ANON_KEY) {
       try {
@@ -34,22 +35,35 @@ export default async function handler(req, res) {
         const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY)
         
         // 테이블 구조 확인 (모든 컬럼 조회)
+        console.log('=== Supabase 쿼리 시작 ===')
         const { data: structureData, error: structureError } = await supabase
           .from('products')
           .select('*')
           .limit(1)
         
+        console.log('=== 쿼리 결과 ===')
+        console.log('Data:', structureData)
+        console.log('Error:', structureError)
+        console.log('Data length:', structureData ? structureData.length : 'null')
+        
         if (structureError) {
           supabaseConnection = `연결 실패: ${structureError.message}`
+          debugInfo.error = structureError
         } else {
           supabaseConnection = '연결 성공'
           if (structureData && structureData.length > 0) {
             tableStructure = Object.keys(structureData[0])
             supabaseData = structureData[0]
+            debugInfo.dataLength = structureData.length
+            debugInfo.firstRecord = structureData[0]
+          } else {
+            debugInfo.dataLength = 0
+            debugInfo.message = '데이터가 없습니다'
           }
         }
       } catch (err) {
         supabaseConnection = `연결 오류: ${err.message}`
+        debugInfo.exception = err.message
       }
     }
 
@@ -62,6 +76,7 @@ export default async function handler(req, res) {
         tableStructure: tableStructure,
         testData: supabaseData
       },
+      debug: debugInfo,
       timestamp: new Date().toISOString()
     })
   } catch (error) {
