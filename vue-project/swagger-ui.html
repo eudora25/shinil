@@ -27,7 +27,8 @@
     <script>
         window.onload = function() {
             // swagger-spec.json 파일을 직접 로드 (캐시 방지)
-            fetch('http://localhost:3001/swagger-spec.json', {
+            const currentOrigin = window.location.origin;
+            fetch(currentOrigin + '/swagger-spec.json', {
                 cache: 'no-cache',
                 headers: {
                     'Cache-Control': 'no-cache'
