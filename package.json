@@ -6,7 +6,7 @@
   "scripts": {
     "api": "cd vue-project && node server.js",
     "api:dev": "cd vue-project && npm run dev:api",
-    "api:pm2": "pm2 start ecosystem.config.js",
+    "api:pm2": "pm2 start ecosystem.config.cjs",
     "api:pm2:stop": "pm2 stop shinil-api-server",
     "api:pm2:restart": "pm2 restart shinil-api-server",
     "api:pm2:logs": "pm2 logs shinil-api-server",

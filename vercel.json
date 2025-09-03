@@ -3,7 +3,24 @@
   "outputDirectory": "vue-project/dist",
   "installCommand": "npm install && cd vue-project && npm install",
 
+  "functions": {
+    "api/products.js": {
+      "maxDuration": 30
+    },
+    "api/auth.js": {
+      "maxDuration": 30
+    }
+  },
+
   "rewrites": [
+    {
+      "source": "/api/products",
+      "destination": "/api/products.js"
+    },
+    {
+      "source": "/api/auth",
+      "destination": "/api/auth.js"
+    },
     {
       "source": "/api/(.*)",
       "destination": "/api/$1"
