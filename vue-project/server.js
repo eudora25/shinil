@@ -7,8 +7,15 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// vue-project의 .env.production 파일 로드
-config({ path: path.join(__dirname, '.env.production') })
+// 환경에 따라 적절한 .env 파일 로드
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.local'
+config({ path: path.join(__dirname, envFile) })
+
+// 환경변수 로딩 확인
+console.log('=== 환경변수 로딩 확인 ===')
+console.log('NODE_ENV:', process.env.NODE_ENV)
+console.log('VITE_SUPABASE_URL:', process.env.VITE_SUPABASE_URL)
+console.log('VITE_SUPABASE_ANON_KEY:', process.env.VITE_SUPABASE_ANON_KEY ? '설정됨' : '설정되지 않음')
 
 async function createServer() {
   const app = express()
@@ -108,7 +115,11 @@ async function createServer() {
           const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString())
           const currentTime = Math.floor(Date.now() / 1000)
           
-
+          console.log(`=== JWT 토큰 검증 디버깅 ===`)
+          console.log(`Token payload:`, JSON.stringify(payload, null, 2))
+          console.log(`Current time: ${currentTime} (${new Date(currentTime * 1000).toISOString()})`)
+          console.log(`Token expiry: ${payload.exp} (${new Date(payload.exp * 1000).toISOString()})`)
+          console.log(`Time difference: ${payload.exp - currentTime} seconds`)
           
           if (payload.exp && payload.exp < currentTime) {
             // 토큰이 만료된 경우
@@ -836,9 +847,9 @@ async function createServer() {
             price
           )
         `, { count: 'exact' })
-        .order('created_at', { ascending: false })
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString())
+        .order('updated_at', { ascending: false })
+        .or(`created_at.gte.${startDate.toISOString()},updated_at.gte.${startDate.toISOString()}`)
+        .or(`created_at.lte.${endDate.toISOString()},updated_at.lte.${endDate.toISOString()}`)
 
       if (error) {
         return res.status(500).json({

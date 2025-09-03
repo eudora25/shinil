@@ -3,6 +3,8 @@ version: '3.8'
 services:
   # API 서버
   api-server:
+    env_file:
+      - ./vue-project/.env.local
     build:
       context: ./vue-project
       dockerfile: Dockerfile.api
@@ -15,8 +17,6 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3001
-      - VITE_SUPABASE_URL=https://vbmmfuraxvxlfpewqrsm.supabase.co
-      - VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZibW1mdXJheHZ4bGZwZXdxcnNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxNzA4ODAsImV4cCI6MjA3MTc0Njg4MH0.Vm_hl7IdeRMNtbm155fk7l_UUbQj6o9_BLV0NTMHbxc
       - JWT_EXPIRY=86400
       - JWT_REFRESH_EXPIRY=2592000
     networks:
@@ -25,6 +25,8 @@ services:
 
   # Vue.js 애플리케이션
   vue-app:
+    env_file:
+      - ./vue-project/.env.local
     build:
       context: ./vue-project
       dockerfile: Dockerfile
@@ -37,8 +39,6 @@ services:
     environment:
       - NODE_ENV=development
       - DOCKER_ENV=true
-      - VITE_SUPABASE_URL=https://vbmmfuraxvxlfpewqrsm.supabase.co
-      - VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZibW1mdXJheHZ4bGZwZXdxcnNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxNzA4ODAsImV4cCI6MjA3MTc0Njg4MH0.Vm_hl7IdeRMNtbm155fk7l_UUbQj6o9_BLV0NTMHbxc
     networks:
       - shinil-network
     depends_on:
