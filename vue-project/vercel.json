@@ -2,11 +2,12 @@
   "buildCommand": "cd vue-project && npm run build",
   "outputDirectory": "vue-project/dist",
   "functions": {
-    "api/**/index.js": {
+    "api/**/*.js": {
       "runtime": "nodejs18.x",
       "maxDuration": 30
     }
   },
+
   "build": {
     "env": {
       "NODE_ENV": "production"

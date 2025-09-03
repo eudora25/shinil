@@ -1,69 +1,83 @@
-import { authenticateToken } from './lib/auth-middleware.js'
+import { createClient } from '@supabase/supabase-js'
 
 export default async function handler(req, res) {
-  // CORS 헤더 설정
+  // CORS 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie')
-  res.setHeader('Content-Type', 'application/json')
-
-  // OPTIONS 요청 처리
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  
   if (req.method === 'OPTIONS') {
-    res.status(200).end()
-    return
+    return res.status(200).end()
+  }
+
+  // POST 요청만 처리
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, message: 'Method not allowed' })
   }
 
   try {
-    if (req.method !== 'POST') {
-      return res.status(405).json({
-        success: false,
-        message: 'Method not allowed. Only POST is supported.'
+    // 환경 변수에서 Supabase 설정 가져오기
+    const supabaseUrl = process.env.VITE_SUPABASE_URL
+    const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Supabase configuration missing' 
       })
     }
 
-    // 인증 미들웨어를 통해 토큰 검증 및 자동 갱신
-    const authResult = await authenticateToken(req, res)
-    
-    if (!authResult.success) {
-      return res.status(authResult.statusCode || 401).json({
-        success: false,
-        message: authResult.error || 'Invalid or expired token'
+    // Supabase 클라이언트 생성
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+    // Authorization 헤더 또는 요청 본문에서 토큰 가져오기
+    let token = req.headers.authorization
+    if (token && token.startsWith('Bearer ')) {
+      token = token.substring(7)
+    } else {
+      // 헤더에 없으면 본문에서 가져오기
+      const { token: bodyToken } = req.body
+      if (bodyToken) {
+        token = bodyToken
+      }
+    }
+
+    if (!token) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Token is required' 
       })
     }
 
-    // 성공 응답 생성
-    const responseData = {
+    // 토큰 검증
+    const { data: { user }, error } = await supabase.auth.getUser(token)
+
+    if (error || !user) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid or expired token' 
+      })
+    }
+
+    // 성공 응답
+    res.status(200).json({
       success: true,
       message: 'Token is valid',
       data: {
         user: {
-          id: authResult.user.id,
-          email: authResult.user.email,
-          role: authResult.user.user_metadata?.user_type || 'user',
-          approvalStatus: authResult.user.user_metadata?.approval_status || 'pending'
+          id: user.id,
+          email: user.email,
+          user_metadata: user.user_metadata
         }
       }
-    }
-
-    // 새로운 토큰이 발급된 경우 응답에 포함
-    if (authResult.newTokens) {
-      responseData.data.newTokens = {
-        accessToken: authResult.newTokens.accessToken,
-        refreshToken: authResult.newTokens.refreshToken,
-        expiresAt: authResult.newTokens.expiresAt
-      }
-      responseData.message = 'Token refreshed and validated'
-    }
-
-    return res.status(200).json(responseData)
+    })
 
   } catch (error) {
-    console.error('Token verification API error:', error)
-    return res.status(500).json({
-      success: false,
-      message: '서버 오류가 발생했습니다.',
-      error: error.message,
-      timestamp: new Date().toISOString()
+    console.error('Verify token API error:', error)
+    res.status(500).json({ 
+      success: false, 
+      message: 'Internal server error',
+      error: error.message 
     })
   }
 }

@@ -15,10 +15,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, message: 'Method not allowed' })
   }
 
+  // 디버깅을 위한 로그 추가
+  console.log('Products API called with query:', req.query)
+  console.log('Products API headers:', req.headers)
+
   try {
-    // 환경 변수에서 Supabase 설정 가져오기
-    const supabaseUrl = process.env.VITE_SUPABASE_URL
-    const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY
+    // 환경 변수에서 Supabase 설정 가져오기 (Vercel Functions 호환)
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://selklngerzfmuvagcvvf.supabase.co"
+    const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlbGtsbmdlcnpmbXV2YWdjdnZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3MzQ5MDUsImV4cCI6MjA2ODMxMDkwNX0.cRe78UqA-HDdVClq0qrXlOXxwNpQWLB6ycFnoHzQI4U"
 
     if (!supabaseUrl || !supabaseAnonKey) {
       return res.status(500).json({ 
@@ -55,7 +59,7 @@ export default async function handler(req, res) {
 
     // 기본 쿼리 시작
     let query = supabase
-      .from('client_company_assignments')
+      .from('products')
       .select('*', { count: 'exact' })
 
     // 날짜 필터링 (created_at OR updated_at)
@@ -72,20 +76,20 @@ export default async function handler(req, res) {
       .range((page - 1) * limit, page * limit - 1)
 
     // 데이터 조회
-    const { data: assignments, error: assignmentsError, count: totalCount } = await query
+    const { data: products, error: productsError, count: totalCount } = await query
 
-    if (assignmentsError) {
-      console.error('Client company assignments query error:', assignmentsError)
+    if (productsError) {
+      console.error('Products query error:', productsError)
       return res.status(500).json({ 
         success: false, 
         message: 'Database query failed' 
       })
     }
 
-    // 성공 응답
+    // 성공 응답 (로컬과 동일한 구조)
     res.status(200).json({
       success: true,
-      data: assignments || [],
+      data: products || [],
       totalCount: totalCount || 0,
       filters: {
         startDate: startDate ? new Date(startDate).toISOString() : null,
@@ -96,11 +100,11 @@ export default async function handler(req, res) {
     })
 
   } catch (error) {
-    console.error('Client company assignments API error:', error)
+    console.error('Products API error:', error)
     res.status(500).json({ 
       success: false, 
       message: 'Internal server error',
       error: error.message 
     })
   }
-}
+} 
