@@ -11,6 +11,13 @@
       "maxDuration": 30
     }
   },
+  "edge": {
+    "functions": {
+      "api/products/index.js": {
+        "runtime": "edge"
+      }
+    }
+  },
   "build": {
     "env": {
       "NODE_ENV": "production"
