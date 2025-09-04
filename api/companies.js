@@ -2,10 +2,10 @@ const { createClient } = require('@supabase/supabase-js')
 
 module.exports = async function handler(req, res) {
   try {
-    // 환경 변수 확인
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
-    const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    // 환경 변수 확인 (개행 문자 제거)
+    const supabaseUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)?.trim()
+    const supabaseAnonKey = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY)?.trim()
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
 
     console.log('Environment variables updated:', {
       supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
