@@ -44,6 +44,16 @@ function createSupabaseClient() {
 // Bearer Token 인증 필요
 router.get('/', tokenValidationMiddleware, async (req, res) => {
   try {
+    // 환경 변수 확인
+    const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return res.status(500).json({
+        success: false,
+        message: 'Server configuration error',
+        error: 'Supabase configuration missing'
+      })
+    }
 
     // Supabase 클라이언트 생성
     const supabase = createClient(supabaseUrl, supabaseAnonKey)
@@ -83,7 +93,6 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
       .from('notices')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
-      .range((page - 1) * limit, page * limit - 1)
 
     // 날짜 필터링 (startDate, endDate 파라미터 지원)
     if (startDate) {

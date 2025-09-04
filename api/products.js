@@ -47,19 +47,19 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
     console.log('🔍 Products API 호출됨')
     console.log('🔍 req.user:', req.user?.email)
 
-    // Supabase 클라이언트 생성
-    let supabase
-    try {
-      supabase = createSupabaseClient()
-    } catch (configError) {
-      console.error('Supabase configuration error:', configError)
+    // 환경 변수 확인
+    const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
       return res.status(500).json({
         success: false,
         message: 'Server configuration error',
-        error: 'Supabase client initialization failed',
-        details: configError.message
+        error: 'Supabase configuration missing'
       })
     }
+
+    // Supabase 클라이언트 생성
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
     // 쿼리 파라미터 파싱 (06_제품정보_조회.xlsx 형식에 맞춤)
     const { 

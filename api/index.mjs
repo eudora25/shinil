@@ -81,7 +81,7 @@ app.get('/api/', (req, res) => {
     version: '1.0.0',
     status: 'running',
     timestamp: new Date().toISOString(),
-    environment: envConfig.NODE_ENV
+    environment: 'production'
   })
 })
 

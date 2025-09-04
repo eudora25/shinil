@@ -7,6 +7,30 @@ module.exports = async function handler(req, res) {
     const supabaseAnonKey = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY)?.trim()
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
 
+    // 환경 변수 디버깅
+    console.log('Companies API - Environment variables:', {
+      supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
+      supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
+      serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing'
+    })
+
+    // 환경 변수가 없으면 기본값 사용 (개발용)
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return res.status(500).json({
+        success: false,
+        message: 'Server configuration error',
+        error: 'Supabase environment variables not configured',
+        debug: {
+          supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
+          supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing'
+        }
+      })
+    }
+
+    // 환경 변수 값 확인 (디버깅용)
+    console.log('Supabase URL:', supabaseUrl)
+    console.log('Supabase Anon Key (first 20 chars):', supabaseAnonKey?.substring(0, 20))
+
     console.log('Environment variables updated:', {
       supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
       supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
@@ -50,23 +74,12 @@ module.exports = async function handler(req, res) {
       })
     }
 
-    // 데이터 조회 (Service Role Key만 사용)
-    if (!serviceRoleKey) {
-      return res.status(500).json({
-        success: false,
-        message: 'Service Role Key not configured',
-        debug: {
-          serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing'
-        }
-      })
-    }
-    
-    // Supabase 클라이언트 생성 (기본 방식으로 시도)
-    const supabase = createClient(supabaseUrl, serviceRoleKey)
+    // Supabase 클라이언트 생성 (Anon Key 사용)
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
     
     // 연결 테스트 (간단한 쿼리)
     const { data: testData, error: testError } = await supabase
-      .from('clients')
+      .from('companies')
       .select('id')
       .limit(1)
     
@@ -78,7 +91,7 @@ module.exports = async function handler(req, res) {
         error: testError.message,
         debug: {
           supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
-          serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing',
+          supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
           testError: testError
         }
       })
@@ -90,7 +103,7 @@ module.exports = async function handler(req, res) {
     const offset = (pageNum - 1) * limitNum
 
     const { data: companies, error: getError, count } = await supabase
-      .from('clients')
+      .from('companies')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + limitNum - 1)

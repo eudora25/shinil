@@ -44,6 +44,16 @@ function createSupabaseClient() {
 // Bearer Token 인증 필요
 router.get('/', tokenValidationMiddleware, async (req, res) => {
   try {
+    // 환경 변수 확인
+    const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return res.status(500).json({
+        success: false,
+        message: 'Server configuration error',
+        error: 'Supabase configuration missing'
+      })
+    }
 
     // Supabase 클라이언트 생성
     const supabase = createClient(supabaseUrl, supabaseAnonKey)

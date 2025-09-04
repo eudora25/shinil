@@ -44,6 +44,16 @@ function createSupabaseClient() {
 // Bearer Token 인증 필요
 router.get('/', tokenValidationMiddleware, async (req, res) => {
   try {
+    // 환경 변수 확인
+    const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return res.status(500).json({
+        success: false,
+        message: 'Server configuration error',
+        error: 'Supabase configuration missing'
+      })
+    }
 
     // Supabase 클라이언트 생성
     const supabase = createClient(supabaseUrl, supabaseAnonKey)
@@ -89,9 +99,9 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
       })
     }
 
-    // 기본 쿼리 설정 (clients 테이블을 pharmacies로 사용)
+    // 기본 쿼리 설정
     let query = supabase
-      .from('clients')
+      .from('pharmacies')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
 
@@ -119,7 +129,7 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
     }
 
     // 페이지네이션 정보 계산
-    const totalPages = Math.ceil(count / limitNum)
+    const totalPages = Math.ceil(totalCount / limitNum)
     const hasNextPage = pageNum < totalPages
     const hasPrevPage = pageNum > 1
 
@@ -128,7 +138,7 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
       success: true,
       message: '약국 목록 조회 성공',
       data: pharmacies || [],
-      count: count || 0,
+      count: totalCount || 0,
       page: pageNum,
       limit: limitNum
     }
