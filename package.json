@@ -5,8 +5,8 @@
   "description": "Shinil Project API Server with Swagger UI and Token Authentication",
   "main": "api/index.js",
   "scripts": {
-    "start": "node api/index.js",
-    "dev": "node api/index.js",
+    "start": "node api/server.mjs",
+    "dev": "node api/server.mjs",
     "docker:up": "docker-compose -f docker-compose.api-only.yml up -d",
     "docker:down": "docker-compose -f docker-compose.api-only.yml down",
     "docker:logs": "docker logs shinil_project-api-server",
