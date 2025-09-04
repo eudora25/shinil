@@ -6,6 +6,8 @@
     { "source": "/api/verify-token", "destination": "/api/verify-token.mjs" },
     { "source": "/api/companies", "destination": "/api/companies.mjs" },
     { "source": "/api/products", "destination": "/api/products.mjs" },
+    { "source": "/api/clients", "destination": "/api/clients.mjs" },
+    { "source": "/api/notices", "destination": "/api/notices.mjs" },
     { "source": "/api/(.*)", "destination": "/api/index.mjs" },
     { "source": "/(.*)", "destination": "/api/index.mjs" }
   ],
