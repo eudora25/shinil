@@ -4,6 +4,8 @@
     { "source": "/api/health", "destination": "/api/health.mjs" },
     { "source": "/api/auth", "destination": "/api/auth.mjs" },
     { "source": "/api/verify-token", "destination": "/api/verify-token.mjs" },
+    { "source": "/api/companies", "destination": "/api/companies.mjs" },
+    { "source": "/api/products", "destination": "/api/products.mjs" },
     { "source": "/api/(.*)", "destination": "/api/index.mjs" },
     { "source": "/(.*)", "destination": "/api/index.mjs" }
   ],
