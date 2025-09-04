@@ -1,8 +1,5 @@
-// 토큰 검증 API (04_토큰_검증.xlsx 형식에 맞춤)
-import express from 'express'
+// Vercel 서버리스 함수 형식 (04_토큰_검증.xlsx 형식에 맞춤)
 import { createClient } from '@supabase/supabase-js'
-
-const router = express.Router()
 
 // 환경 변수 확인 함수
 function getEnvironmentVariables() {
@@ -29,7 +26,15 @@ function createSupabaseClient() {
 }
 
 // POST /api/verify-token - JWT 토큰 유효성 검증 (04_토큰_검증.xlsx 형식에 맞춤)
-router.post('/', async (req, res) => {
+export default async (req, res) => {
+  // POST 메서드만 허용
+  if (req.method !== 'POST') {
+    return res.status(405).json({
+      success: false,
+      valid: false,
+      message: 'Method not allowed'
+    })
+  }
   try {
     const { token } = req.body
     
@@ -117,6 +122,4 @@ router.post('/', async (req, res) => {
       error: error.message
     })
   }
-})
-
-export default router
+}
