@@ -7,10 +7,20 @@ module.exports = async function handler(req, res) {
     const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
+    console.log('Environment variables:', {
+      supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
+      supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
+      serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing'
+    })
+
     if (!supabaseUrl || !supabaseAnonKey) {
       return res.status(500).json({
         success: false,
-        message: 'Server configuration error'
+        message: 'Server configuration error',
+        debug: {
+          supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
+          supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing'
+        }
       })
     }
 
