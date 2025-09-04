@@ -49,9 +49,13 @@ module.exports = async function handler(req, res) {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
     let supabase
     
+    console.log('🔍 Service Role Key status:', serviceRoleKey ? 'Available' : 'Not available')
+    
     if (serviceRoleKey) {
+      console.log('🔍 Using Service Role Key for RLS bypass')
       supabase = createClient(supabaseUrl, serviceRoleKey)
     } else {
+      console.log('🔍 Service Role Key not available, using Anon Key')
       supabase = createClient(supabaseUrl, supabaseAnonKey)
     }
     
