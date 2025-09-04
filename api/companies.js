@@ -74,8 +74,15 @@ module.exports = async function handler(req, res) {
       })
     }
 
-    // Supabase 클라이언트 생성 (Anon Key 사용)
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    // Supabase 클라이언트 생성 (RLS 정책 무시를 위해 Service Role Key 사용)
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
+    let supabase
+    
+    if (serviceRoleKey) {
+      supabase = createClient(supabaseUrl, serviceRoleKey)
+    } else {
+      supabase = createClient(supabaseUrl, supabaseAnonKey)
+    }
     
     // 연결 테스트 (간단한 쿼리)
     const { data: testData, error: testError } = await supabase
