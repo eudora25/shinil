@@ -1,13 +1,29 @@
 {
   "version": 2,
+  "functions": {
+    "api/companies.mjs": {
+      "runtime": "nodejs18.x"
+    },
+    "api/products.mjs": {
+      "runtime": "nodejs18.x"
+    },
+    "api/clients.mjs": {
+      "runtime": "nodejs18.x"
+    },
+    "api/notices.mjs": {
+      "runtime": "nodejs18.x"
+    },
+    "api/health.mjs": {
+      "runtime": "nodejs18.x"
+    },
+    "api/auth.mjs": {
+      "runtime": "nodejs18.x"
+    },
+    "api/verify-token.mjs": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "rewrites": [
-    { "source": "/api/health", "destination": "/api/health.mjs" },
-    { "source": "/api/auth", "destination": "/api/auth.mjs" },
-    { "source": "/api/verify-token", "destination": "/api/verify-token.mjs" },
-    { "source": "/api/companies", "destination": "/api/companies.mjs" },
-    { "source": "/api/products", "destination": "/api/products.mjs" },
-    { "source": "/api/clients", "destination": "/api/clients.mjs" },
-    { "source": "/api/notices", "destination": "/api/notices.mjs" },
     { "source": "/api/(.*)", "destination": "/api/index.mjs" },
     { "source": "/(.*)", "destination": "/api/index.mjs" }
   ],
