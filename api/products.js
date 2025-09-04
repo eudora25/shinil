@@ -27,13 +27,23 @@ module.exports = async function handler(req, res) {
       })
     }
 
-    // Authorization 헤더 확인
+    // 토큰 검증
     const authHeader = req.headers.authorization
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        message: 'Unauthorized',
-        error: 'Bearer token required'
+        message: 'Unauthorized'
+      })
+    }
+
+    const token = authHeader.substring(7)
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey)
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token)
+
+    if (authError || !user || user.user_metadata?.user_type !== 'admin') {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized'
       })
     }
 
@@ -43,6 +53,27 @@ module.exports = async function handler(req, res) {
       supabase = createClient(supabaseUrl, serviceRoleKey)
     } else {
       supabase = createClient(supabaseUrl, supabaseAnonKey)
+    }
+    
+    // 연결 테스트 (간단한 쿼리)
+    const { data: testData, error: testError } = await supabase
+      .from('products')
+      .select('id')
+      .limit(1)
+    
+    if (testError) {
+      console.error('Supabase connection test failed:', testError)
+      return res.status(500).json({
+        success: false,
+        message: 'Supabase connection failed',
+        error: testError.message,
+        debug: {
+          supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
+          supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
+          serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing',
+          testError: testError
+        }
+      })
     }
 
     // 쿼리 파라미터 파싱 (06_제품정보_조회.xlsx 형식에 맞춤)
