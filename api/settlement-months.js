@@ -1,70 +1,76 @@
-// Express.js 라우터 형식으로 변경 (20_정산월_목록조회.xlsx 형식에 맞춤)
-import express from 'express'
+// Vercel 서버리스 함수 형식으로 변경 (20_정산월_목록조회.xlsx 형식에 맞춤)
 import { createClient } from '@supabase/supabase-js'
-import { tokenValidationMiddleware } from '../middleware/tokenValidation.js'
 
-const router = express.Router()
-
-// 환경 변수 확인 함수
-function getEnvironmentVariables() {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
-  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
-  
-  return { supabaseUrl, supabaseAnonKey }
-}
-
-// Supabase 클라이언트 생성 함수
-function createSupabaseClient() {
-  const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
-  
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase configuration missing')
-  }
-  
+export default async function handler(req, res) {
   try {
-    // RLS 문제 해결을 위해 service role key 사용
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY
-    if (serviceRoleKey) {
-      return createClient(supabaseUrl, serviceRoleKey, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
+    // 환경 변수 확인 (개행 문자 제거)
+    const supabaseUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)?.trim()
+    const supabaseAnonKey = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY)?.trim()
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
+
+    // 환경 변수 디버깅
+    console.log('Settlement Months API - Environment variables:', {
+      supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
+      supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
+      serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing'
+    })
+
+    // 환경 변수가 없으면 기본값 사용 (개발용)
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return res.status(500).json({
+        success: false,
+        message: 'Server configuration error',
+        error: 'Supabase configuration missing'
       })
-    } else {
-      return createClient(supabaseUrl, supabaseAnonKey)
     }
-  } catch (error) {
-    console.error('Failed to create Supabase client:', error)
-    throw error
-  }
-}
 
-// GET /api/settlement-months - 정산월 목록 조회 (20_정산월_목록조회.xlsx 형식에 맞춤)
-// Bearer Token 인증 필요
-router.get('/', tokenValidationMiddleware, async (req, res) => {
-  try {
-
-    // Supabase 클라이언트 생성
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-    // Authorization 헤더 확인
+    // 토큰 검증
     const authHeader = req.headers.authorization
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Unauthorized: Access token is required' 
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized'
       })
     }
 
     const token = authHeader.substring(7)
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey)
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token)
 
-    // 토큰 검증
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-    if (authError || !user) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid or expired token' 
+    if (authError || !user || user.user_metadata?.user_type !== 'admin') {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized'
+      })
+    }
+
+    // Supabase 클라이언트 생성 (RLS 정책 무시를 위해 Service Role Key 사용)
+    let supabase
+    if (serviceRoleKey) {
+      console.log('🔍 Using Service Role Key for RLS bypass')
+      supabase = createClient(supabaseUrl, serviceRoleKey)
+    } else {
+      console.log('🔍 Service Role Key not available, using Anon Key')
+      supabase = createClient(supabaseUrl, supabaseAnonKey)
+    }
+
+    // 연결 테스트 (간단한 쿼리)
+    const { data: testData, error: testError } = await supabase
+      .from('settlement_months')
+      .select('id')
+      .limit(1)
+
+    if (testError) {
+      console.error('Supabase connection test failed:', testError)
+      return res.status(500).json({
+        success: false,
+        message: 'Supabase connection failed',
+        error: testError.message,
+        debug: {
+          supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
+          supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
+          testError: testError
+        }
       })
     }
 
@@ -94,6 +100,7 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
     let query = supabase
       .from('settlement_months')
       .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
 
     // 날짜 필터링 (startDate, endDate 파라미터 지원)
     if (startDate) {
@@ -111,19 +118,17 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
     // 페이지네이션 적용
     query = query.range(offset, offset + limitNum - 1)
 
-    // 정렬 및 페이지네이션
-    query = query
-      .order('created_at', { ascending: false })
-      .range((page - 1) * limit, page * limit - 1)
-
     // 데이터 조회
-    const { data: months, error: monthsError, count: totalCount } = await query
+    const { data, error, count } = await query
 
-    if (monthsError) {
-      console.error('Settlement months query error:', monthsError)
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Database query failed' 
+    console.log('🔍 Settlement Months query result:', { data: data?.length, error, count })
+
+    if (error) {
+      console.error('Settlement Months fetch error:', error)
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to fetch settlement months',
+        error: error.message
       })
     }
 
@@ -139,19 +144,26 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
       data: data || [],
       count: count || 0,
       page: pageNum,
-      limit: limitNum
+      limit: limitNum,
+      totalPages,
+      hasNextPage,
+      hasPrevPage
     }
 
     res.json(response)
 
   } catch (error) {
-    console.error('Settlement months API error:', error)
-    res.status(500).json({ 
-      success: false, 
-      message: 'Internal server error',
-      error: error.message 
+    console.error('Settlement Months API error details:', {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    })
+
+    return res.status(500).json({
+      success: false,
+      message: '서버 오류가 발생했습니다.',
+      error: error.message,
+      timestamp: new Date().toISOString()
     })
   }
-})
-
-export default router
+}
