@@ -3,11 +3,8 @@ import cors from 'cors'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import envConfig from '../config/env.js'
-import ipRestrictionPkg from '../middleware/ipRestriction.js'
-import tokenValidationPkg from '../middleware/tokenValidation.js'
-
-const { ipRestrictionMiddleware } = ipRestrictionPkg
-const { tokenValidationMiddleware } = tokenValidationPkg
+import { ipRestrictionMiddleware } from '../middleware/ipRestriction.js'
+import { tokenValidationMiddleware } from '../middleware/tokenValidation.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
