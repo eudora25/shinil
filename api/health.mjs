@@ -44,11 +44,8 @@ export default async function handler(req, res) {
     // Supabase 연결 테스트
     const supabase = createSupabaseClient()
     
-    // 간단한 쿼리로 연결 테스트 (실제 존재하는 테이블 사용)
-    const { data, error } = await supabase
-      .from('companies')
-      .select('count')
-      .limit(1)
+    // 간단한 쿼리로 연결 테스트 (auth.users 테이블 사용)
+    const { data, error } = await supabase.auth.getUser()
 
     if (error) {
       console.error('Supabase 연결 오류:', error)
