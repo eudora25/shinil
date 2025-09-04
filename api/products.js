@@ -5,13 +5,11 @@ module.exports = async function handler(req, res) {
     // 환경 변수 확인 (개행 문자 제거)
     const supabaseUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)?.trim()
     const supabaseAnonKey = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY)?.trim()
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
 
     // 환경 변수 디버깅
     console.log('Products API - Environment variables:', {
       supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
-      supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
-      serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing'
+      supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing'
     })
 
     // 환경 변수가 없으면 기본값 사용 (개발용)
@@ -47,13 +45,8 @@ module.exports = async function handler(req, res) {
       })
     }
 
-    // Supabase 클라이언트 생성 (RLS 정책 무시를 위해 Service Role Key 사용)
-    let supabase
-    if (serviceRoleKey) {
-      supabase = createClient(supabaseUrl, serviceRoleKey)
-    } else {
-      supabase = createClient(supabaseUrl, supabaseAnonKey)
-    }
+    // Supabase 클라이언트 생성 (Anon Key 사용)
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
     
     // 연결 테스트 (간단한 쿼리)
     const { data: testData, error: testError } = await supabase
@@ -70,7 +63,6 @@ module.exports = async function handler(req, res) {
         debug: {
           supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
           supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
-          serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing',
           testError: testError
         }
       })
