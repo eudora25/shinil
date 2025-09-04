@@ -13,6 +13,13 @@ export default async function handler(req, res) {
       supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
       serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing'
     })
+    
+    // Service Role Key 디버깅
+    console.log('🔍 Service Role Key status:', serviceRoleKey ? 'Available' : 'Not available')
+    if (serviceRoleKey) {
+      console.log('🔍 Service Role Key length:', serviceRoleKey.length)
+      console.log('🔍 Service Role Key starts with:', serviceRoleKey.substring(0, 20) + '...')
+    }
 
     // 환경 변수가 없으면 기본값 사용 (개발용)
     if (!supabaseUrl || !supabaseAnonKey) {
