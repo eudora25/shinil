@@ -75,7 +75,6 @@ module.exports = async function handler(req, res) {
     }
 
     // Supabase 클라이언트 생성 (RLS 정책 무시를 위해 Service Role Key 사용)
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
     let supabase
     
     if (serviceRoleKey) {
