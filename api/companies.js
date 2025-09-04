@@ -56,12 +56,35 @@ module.exports = async function handler(req, res) {
       })
     }
     
+    // Supabase 클라이언트 생성 (다른 방식 시도)
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
+      },
+      db: {
+        schema: 'public'
       }
     })
+    
+    // 연결 테스트
+    const { data: testData, error: testError } = await supabase
+      .from('clients')
+      .select('count')
+      .limit(1)
+    
+    if (testError) {
+      console.error('Supabase connection test failed:', testError)
+      return res.status(500).json({
+        success: false,
+        message: 'Supabase connection failed',
+        error: testError.message,
+        debug: {
+          supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
+          serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing'
+        }
+      })
+    }
 
     const { page = 1, limit = 100 } = req.query
     const pageNum = parseInt(page, 10)
