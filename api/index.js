@@ -135,14 +135,5 @@ app.use((err, req, res, next) => {
   })
 })
 
-// 서버 시작
-app.listen(PORT, () => {
-  console.log(`🚀 Shinil API Server started`)
-  console.log(`🌍 Environment: ${envConfig.NODE_ENV}`)
-  console.log(`🔗 Server: http://localhost:${PORT}`)
-  console.log(`📚 Swagger UI: http://localhost:${PORT}/swagger-ui.html`)
-  console.log(`🏥 Health Check: http://localhost:${PORT}/api/health`)
-  console.log(`🔗 Supabase: ${envConfig.SUPABASE_URL}`)
-})
-
+// Vercel 서버리스 함수 형식
 export default app
