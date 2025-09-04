@@ -9,10 +9,5 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "api/**/*.mjs": {
-      "runtime": "nodejs18.x"
-    }
   }
 }
