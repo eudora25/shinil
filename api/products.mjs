@@ -4,12 +4,13 @@ import { createClient } from '@supabase/supabase-js'
 function getEnvironmentVariables() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
   const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   
-  return { supabaseUrl, supabaseAnonKey }
+  return { supabaseUrl, supabaseAnonKey, serviceRoleKey }
 }
 
 function createSupabaseClient() {
-  const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
+  const { supabaseUrl, supabaseAnonKey, serviceRoleKey } = getEnvironmentVariables()
   
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Supabase configuration missing')
@@ -17,7 +18,6 @@ function createSupabaseClient() {
   
   try {
     // RLS 문제 해결을 위해 service role key 사용
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (serviceRoleKey) {
       return createClient(supabaseUrl, serviceRoleKey, {
         auth: {
