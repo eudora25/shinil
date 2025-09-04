@@ -1,4 +1,7 @@
+import express from 'express'
 import { createClient } from '@supabase/supabase-js'
+
+const router = express.Router()
 
 // 환경 변수 확인 함수
 function getEnvironmentVariables() {
@@ -24,26 +27,12 @@ function createSupabaseClient() {
   }
 }
 
-export default async function handler(req, res) {
-  // CORS 헤더 설정
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+// 서버 시작 시간 기록 (uptime 계산용)
+const serverStartTime = Date.now()
 
-  // OPTIONS 요청 처리
-  if (req.method === 'OPTIONS') {
-    res.status(200).end()
-    return
-  }
-
+// GET /api/health - 시스템 상태 확인
+router.get('/', async (req, res) => {
   try {
-    if (req.method !== 'GET') {
-      return res.status(405).json({
-        success: false,
-        message: 'Method not allowed. Only GET is supported.'
-      })
-    }
-
     // Supabase 클라이언트 생성
     let supabase
     try {
@@ -71,24 +60,26 @@ export default async function handler(req, res) {
       })
     }
 
-    return res.status(200).json({
-      success: true,
-      message: 'System is healthy',
-      data: {
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        database: 'connected',
-        environment: process.env.NODE_ENV || 'development'
-      }
+    // 02_시스템_헬스체크.xlsx 파일 형식에 맞춘 응답
+    const currentTime = Date.now()
+    const uptimeSeconds = Math.floor((currentTime - serverStartTime) / 1000)
+
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: uptimeSeconds,
+      environment: process.env.NODE_ENV || 'development'
     })
 
   } catch (error) {
     console.error('Health check API error:', error)
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: '서버 오류가 발생했습니다.',
       error: error.message,
       timestamp: new Date().toISOString()
     })
   }
-}
+})
+
+export default router

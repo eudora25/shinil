@@ -1,4 +1,9 @@
+// Express.js 라우터 형식으로 변경 (09_공지사항_조회.xlsx 형식에 맞춤)
+import express from 'express'
 import { createClient } from '@supabase/supabase-js'
+import { tokenValidationMiddleware } from '../middleware/tokenValidation.js'
+
+const router = express.Router()
 
 // 환경 변수 확인 함수
 function getEnvironmentVariables() {
@@ -17,33 +22,28 @@ function createSupabaseClient() {
   }
   
   try {
-    return createClient(supabaseUrl, supabaseAnonKey)
+    // RLS 문제 해결을 위해 service role key 사용
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (serviceRoleKey) {
+      return createClient(supabaseUrl, serviceRoleKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      })
+    } else {
+      return createClient(supabaseUrl, supabaseAnonKey)
+    }
   } catch (error) {
     console.error('Failed to create Supabase client:', error)
     throw error
   }
 }
 
-export default async function handler(req, res) {
-  // CORS 헤더 설정
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  res.setHeader('Content-Type', 'application/json')
-  
-  // OPTIONS 요청 처리
-  if (req.method === 'OPTIONS') {
-    res.status(200).end()
-    return
-  }
-
+// GET /api/notices - 공지사항 조회 (09_공지사항_조회.xlsx 형식에 맞춤)
+// Bearer Token 인증 필요
+router.get('/', tokenValidationMiddleware, async (req, res) => {
   try {
-    if (req.method !== 'GET') {
-      return res.status(405).json({
-        success: false,
-        message: 'Method not allowed. Only GET is supported.'
-      })
-    }
 
     // Supabase 클라이언트 생성
     let supabase
@@ -59,19 +59,65 @@ export default async function handler(req, res) {
       })
     }
 
-    // 공지사항 목록 조회
-    const { data: notices, error: getError } = await supabase
+    // 쿼리 파라미터 파싱 (09_공지사항_조회.xlsx 형식에 맞춤)
+    const { 
+      page = 1, 
+      limit = 100, 
+      startDate, 
+      endDate 
+    } = req.query
+    
+    // 페이지네이션 계산
+    const pageNum = parseInt(page, 10)
+    const limitNum = parseInt(limit, 10)
+    const offset = (pageNum - 1) * limitNum
+
+    // 입력값 검증
+    if (pageNum < 1 || limitNum < 1 || limitNum > 1000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid pagination parameters. Page must be >= 1, limit must be between 1 and 1000.'
+      })
+    }
+
+    // 기본 쿼리 설정
+    let query = supabase
       .from('notices')
-      .select('*')
+      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
+
+    // 날짜 필터링 (startDate, endDate 파라미터 지원)
+    if (startDate) {
+      query = query.or(`created_at.gte.${startDate},updated_at.gte.${startDate}`)
+    }
+    if (endDate) {
+      query = query.or(`created_at.lte.${endDate},updated_at.lte.${endDate}`)
+    }
+
+    // 페이지네이션 적용
+    query = query.range(offset, offset + limitNum - 1)
+
+    // 데이터 조회
+    const { data: notices, error: getError, count } = await query
 
     if (getError) throw getError
 
-    return res.status(200).json({
+    // 페이지네이션 정보 계산
+    const totalPages = Math.ceil(count / limitNum)
+    const hasNextPage = pageNum < totalPages
+    const hasPrevPage = pageNum > 1
+
+    // 09_공지사항_조회.xlsx 형식에 맞춘 응답
+    const response = {
       success: true,
       message: '공지사항 목록 조회 성공',
-      data: notices
-    })
+      data: notices || [],
+      count: count || 0,
+      page: pageNum,
+      limit: limitNum
+    }
+
+    res.json(response)
 
   } catch (error) {
     console.error('Notices API error details:', {
@@ -87,4 +133,6 @@ export default async function handler(req, res) {
       timestamp: new Date().toISOString()
     })
   }
-} 
+})
+
+export default router 

@@ -1,107 +1,85 @@
-# 🏥 신일제약 PMS (Prescription Management System)
+# Shinil API Server
 
-신일제약의 실적관리 시스템입니다. Vue.js 3와 Supabase를 기반으로 구축된 현대적인 웹 애플리케이션입니다.
+신일 프로젝트의 API 서버입니다. Swagger UI와 토큰 인증 기능을 포함합니다.
 
-## 🚀 빠른 시작
+## 🚀 주요 기능
 
-### 프로덕션 배포
-- **메인 애플리케이션**: https://shinil.vercel.app/
-- **API 시스템**: https://shinil.vercel.app/api/
-- **관리자 계정**: admin@admin.com / admin123
+- **API 서버**: Express.js 기반 REST API
+- **Swagger UI**: API 문서화 및 테스트 인터페이스
+- **토큰 인증**: JWT 기반 인증 시스템
+- **Supabase 연동**: 데이터베이스 및 인증 서비스
 
-### 로컬 개발 환경
-```bash
-# 1. 저장소 클론
-git clone https://github.com/eudora25/shinil.git
-cd shinil
-
-# 2. 환경 변수 설정
-cp env.example .env
-# .env 파일에서 필요한 값들을 설정
-
-# 3. Docker 컨테이너 실행
-docker-compose up -d
-
-# 4. 브라우저에서 확인
-# http://localhost:3000/
-```
-
-## 📚 문서
-
-모든 프로젝트 문서는 [`docs/`](./docs/) 폴더에서 관리됩니다.
-
-### 📋 주요 문서
-- **[📊 프로젝트 상태](./docs/PROJECT_STATUS_20250724.md)** - 전체 프로젝트 진행 상황
-- **[🔐 API 문서](./docs/API_DOCUMENTATION.md)** - 외부 API 시스템 가이드
-- **[🛡️ 보안 가이드](./docs/SECURITY.md)** - 보안 정책 및 가이드라인
-- **[📖 문서 목록](./docs/README.md)** - 모든 문서 목록 및 개요
-
-## 🎯 주요 기능
-
-### 관리자 기능
-- 사용자 승인 및 관리
-- 업체/제품/고객 정보 관리
-- 실적 데이터 관리
-- 정산 및 수수료 계산
-- 흡수율 분석
-
-### 사용자 기능
-- 제품 및 병의원 정보 조회
-- 실적 등록 및 관리
-- EDI 및 결제 관리
-- 개인정보 관리
-
-### 외부 API
-- 토큰 기반 인증 시스템
-- 제품/고객/공지사항 API
-- 실시간 데이터 동기화
-
-## 🛠 기술 스택
-
-- **Frontend**: Vue.js 3, Vite, PrimeVue
-- **Backend**: Supabase (PostgreSQL, Auth, Storage)
-- **Deployment**: Vercel
-- **Container**: Docker & Docker Compose
-- **API**: RESTful API, JWT 토큰 인증
-
-## 📁 프로젝트 구조 (정리 완료)
+## 📁 프로젝트 구조
 
 ```
 shinil_project/
-├── 📚 docs/                    # 📖 프로젝트 문서
-├── 🎨 vue-project/            # Vue.js 애플리케이션
-├── 🔧 admin-scripts/          # 관리자 스크립트
-├── 🗄️ sql-scripts/            # SQL 스크립트
-├── 💾 database-backup/        # 데이터베이스 백업
-├── 📖 public/docs/            # 사용자 매뉴얼
-├── 🔌 api/                    # Vercel API Routes
-├── 🐳 docker-compose.yml      # Docker 설정
-├── 🐳 docker-compose.secure.yml # 보안 강화 Docker 설정
-├── 🚀 vercel.json            # Vercel 배포 설정
-├── 📄 README.md              # 프로젝트 개요 (현재 파일)
-├── 🔧 env.example            # 환경 변수 예시
-└── 🚫 .gitignore             # Git 제외 파일 설정
+├── api/                    # API 엔드포인트
+│   ├── auth.js            # 인증 관련 API
+│   ├── products.js        # 제품 관련 API
+│   ├── clients.js         # 거래처 관련 API
+│   ├── companies.js       # 업체 관련 API
+│   ├── health.js          # 헬스체크 API
+│   └── ...                # 기타 API 엔드포인트
+├── lib/                   # 공통 라이브러리
+│   ├── apiClient.js       # API 클라이언트
+│   ├── tokenManager.js    # 토큰 관리
+│   └── tokenRefresh.js    # 토큰 갱신
+├── middleware/            # 미들웨어
+│   └── authMiddleware.js  # 인증 미들웨어
+├── swagger-spec.json      # Swagger API 명세
+├── swagger-ui.html        # Swagger UI 페이지
+└── docker-compose.api-only.yml  # Docker 설정
 ```
 
-## 🔒 보안
+## 🛠️ 설치 및 실행
 
-- **인증**: Supabase Auth 기반 JWT 토큰
-- **승인 시스템**: 관리자 승인 후 접근 가능
-- **환경 변수**: 민감 정보 보호
-- **HTTPS**: 모든 통신 암호화
+### 1. 의존성 설치
+```bash
+npm install
+```
 
-## 📞 지원
+### 2. 환경 변수 설정
+```bash
+# .env 파일 생성
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-- **GitHub Issues**: https://github.com/eudora25/shinil/issues
-- **개발팀**: admin@admin.com
-- **문서**: [`docs/`](./docs/) 폴더 참조
+### 3. 로컬 실행
+```bash
+npm start
+```
 
-## 📄 라이선스
+### 4. Docker 실행
+```bash
+# 컨테이너 시작
+npm run docker:up
 
-이 프로젝트는 신일제약 내부 사용을 목적으로 개발되었습니다.
+# 컨테이너 중지
+npm run docker:down
 
----
+# 로그 확인
+npm run docker:logs
+```
 
-**최종 업데이트**: 2025-07-25  
-**버전**: 1.3.0  
-**상태**: ✅ 프로덕션 배포 완료 + 🧹 프로젝트 정리 완료 
+## 🌐 접속 정보
+
+- **API 서버**: http://localhost:3001
+- **Swagger UI**: http://localhost:3001/swagger-ui.html
+- **헬스체크**: http://localhost:3001/api/health
+
+## 📚 API 문서
+
+Swagger UI를 통해 모든 API 엔드포인트를 확인하고 테스트할 수 있습니다.
+
+## 🔐 인증
+
+JWT 토큰 기반 인증을 사용합니다. 토큰은 자동으로 갱신됩니다.
+
+## 🐳 Docker
+
+Docker를 사용하여 컨테이너로 실행할 수 있습니다.
+
+```bash
+docker-compose -f docker-compose.api-only.yml up -d
+```

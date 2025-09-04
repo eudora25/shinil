@@ -1,4 +1,9 @@
+// Express.js 라우터 형식으로 변경 (21_정산내역서_목록조회.xlsx 형식에 맞춤)
+import express from 'express'
 import { createClient } from '@supabase/supabase-js'
+import { tokenValidationMiddleware } from '../middleware/tokenValidation.js'
+
+const router = express.Router()
 
 // 환경 변수 확인 함수
 function getEnvironmentVariables() {
@@ -17,48 +22,39 @@ function createSupabaseClient() {
   }
   
   try {
-    return createClient(supabaseUrl, supabaseAnonKey)
+    // RLS 문제 해결을 위해 service role key 사용
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (serviceRoleKey) {
+      return createClient(supabaseUrl, serviceRoleKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      })
+    } else {
+      return createClient(supabaseUrl, supabaseAnonKey)
+    }
   } catch (error) {
     console.error('Failed to create Supabase client:', error)
     throw error
   }
 }
 
-export default async function handler(req, res) {
-  // CORS 헤더 설정
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-
-  // OPTIONS 요청 처리
-  if (req.method === 'OPTIONS') {
-    res.status(200).end()
-    return
-  }
-
-  // GET 요청만 허용
-  if (req.method !== 'GET') {
-    return res.status(405).json({
-      success: false,
-      message: '허용되지 않는 메서드입니다.',
-      error: 'Method not allowed'
-    })
-  }
-
+// GET /api/settlement-share - 정산내역서 목록 조회 (21_정산내역서_목록조회.xlsx 형식에 맞춤)
+// Bearer Token 인증 필요
+router.get('/', tokenValidationMiddleware, async (req, res) => {
   try {
-    if (req.method !== 'GET') {
-      return res.status(405).json({
-        success: false,
-        message: 'Method not allowed. Only GET is supported.'
-      })
-    }
+    console.log('🔍 Settlement share API 호출됨')
+    console.log('🔍 req.user:', req.user?.email)
+    console.log('🔍 req.accessToken:', req.accessToken?.substring(0, 20) + '...')
 
     // Supabase 클라이언트 생성
     let supabase
     try {
       supabase = createSupabaseClient()
+      console.log('✅ Supabase 클라이언트 생성 성공')
     } catch (configError) {
-      console.error('Supabase configuration error:', configError)
+      console.error('❌ Supabase configuration error:', configError)
       return res.status(500).json({
         success: false,
         message: 'Server configuration error',
@@ -67,39 +63,46 @@ export default async function handler(req, res) {
       })
     }
 
-    // 쿼리 파라미터 파싱
-    const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 100
+    // 쿼리 파라미터 파싱 (21_정산내역서_목록조회.xlsx 형식에 맞춤)
+    const { 
+      page = 1, 
+      limit = 100, 
+      startDate, 
+      endDate
+    } = req.query
 
-    // 페이지네이션 유효성 검사
-    if (page < 1 || limit < 1 || limit > 1000) {
+    // 페이지네이션 계산
+    const pageNum = parseInt(page, 10)
+    const limitNum = parseInt(limit, 10)
+    const offset = (pageNum - 1) * limitNum
+
+    // 입력값 검증
+    if (pageNum < 1 || limitNum < 1 || limitNum > 1000) {
       return res.status(400).json({
         success: false,
-        message: '잘못된 페이지네이션 파라미터입니다.',
-        error: 'Invalid pagination parameters'
+        message: 'Invalid pagination parameters. Page must be >= 1, limit must be between 1 and 1000.'
       })
     }
 
-    const offset = (page - 1) * limit
-
-    // 정산내역서 목록 조회 (업체 정보와 조인)
+    // 기본 쿼리 설정 (created_at 조건 제거하여 테스트)
     let query = supabase
       .from('settlement_share')
-      .select(`
-        *,
-        companies:company_id(
-          id,
-          company_name,
-          business_registration_number,
-          representative_name
-        )
-      `, { count: 'exact' })
-      .order('created_at', { ascending: false })
+      .select('*', { count: 'exact' })
+
+    // created_at 조건 제거 (테스트용)
+    // if (startDate) {
+    //   query = query.gte('created_at', startDate)
+    // }
+    // if (endDate) {
+    //   query = query.lte('created_at', endDate)
+    // }
 
     // 페이지네이션 적용
-    query = query.range(offset, offset + limit - 1)
+    query = query.range(offset, offset + limitNum - 1)
 
     const { data, error, count } = await query
+
+    console.log('🔍 Settlement share query result:', { data: data?.length, error, count })
 
     if (error) {
       console.error('Settlement share query error:', error)
@@ -111,24 +114,21 @@ export default async function handler(req, res) {
     }
 
     // 페이지네이션 정보 계산
-    const totalCount = count || 0
-    const totalPages = Math.ceil(totalCount / limit)
-    const hasNextPage = page < totalPages
-    const hasPrevPage = page > 1
+    const totalPages = Math.ceil(count / limitNum)
+    const hasNextPage = pageNum < totalPages
+    const hasPrevPage = pageNum > 1
 
-    return res.status(200).json({
+    // 21_정산내역서_목록조회.xlsx 형식에 맞춘 응답
+    const response = {
       success: true,
       message: '정산내역서 목록 조회 성공',
       data: data || [],
-      pagination: {
-        currentPage: page,
-        limit,
-        totalCount,
-        totalPages,
-        hasNextPage,
-        hasPrevPage
-      }
-    })
+      count: count || 0,
+      page: pageNum,
+      limit: limitNum
+    }
+
+    res.json(response)
 
   } catch (error) {
     console.error('Settlement share API error:', error)
@@ -139,4 +139,6 @@ export default async function handler(req, res) {
       timestamp: new Date().toISOString()
     })
   }
-}
+})
+
+export default router

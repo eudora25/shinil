@@ -1,4 +1,8 @@
+// 토큰 검증 API (04_토큰_검증.xlsx 형식에 맞춤)
+import express from 'express'
 import { createClient } from '@supabase/supabase-js'
+
+const router = express.Router()
 
 // 환경 변수 확인 함수
 function getEnvironmentVariables() {
@@ -24,23 +28,18 @@ function createSupabaseClient() {
   }
 }
 
-export default async function handler(req, res) {
-  // CORS 헤더 설정
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-
-  // OPTIONS 요청 처리
-  if (req.method === 'OPTIONS') {
-    res.status(200).end()
-    return
-  }
-
+// POST /api/verify-token - JWT 토큰 유효성 검증 (04_토큰_검증.xlsx 형식에 맞춤)
+router.post('/', async (req, res) => {
   try {
-    if (req.method !== 'POST') {
-      return res.status(405).json({
+    const { token } = req.body
+    
+    // 필수 파라미터 검증
+    if (!token) {
+      return res.status(400).json({
         success: false,
-        message: 'Method not allowed. Only POST is supported.'
+        valid: false,
+        message: '토큰이 필요합니다.',
+        error: 'TOKEN_MISSING'
       })
     }
 
@@ -52,52 +51,72 @@ export default async function handler(req, res) {
       console.error('Supabase configuration error:', configError)
       return res.status(500).json({
         success: false,
-        message: 'Server configuration error',
-        error: 'Supabase client initialization failed',
-        details: configError.message
+        valid: false,
+        message: '서버 설정 오류',
+        error: 'Supabase client initialization failed'
       })
     }
 
-    // request body에서 토큰 추출
-    const { token } = req.body
-    if (!token) {
-      return res.status(400).json({
-        success: false,
-        message: 'Token is required in request body'
-      })
-    }
-
-    // 토큰 검증
-    const { data: { user }, error } = await supabase.auth.getUser(token)
-
-    if (error || !user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid or expired token',
-        error: error?.message || 'Token verification failed'
-      })
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: 'Token is valid',
-      data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.user_metadata?.user_type || 'user',
-          approvalStatus: user.user_metadata?.approval_status || 'pending'
+    // JWT 토큰 유효성 검증
+    try {
+      const { data: { user }, error: tokenError } = await supabase.auth.getUser(token)
+      
+      if (user && !tokenError) {
+        // 토큰이 유효함
+        console.log(`✅ 토큰 검증 성공: 사용자 ${user.email}`)
+        
+        // 04_토큰_검증.xlsx 형식에 맞춘 응답
+        const response = {
+          success: true,
+          valid: true,
+          user: {
+            id: user.id,
+            email: user.email,
+            created_at: user.created_at,
+            last_sign_in_at: user.last_sign_in_at,
+            user_metadata: user.user_metadata || {}
+          },
+          message: '토큰이 유효합니다.'
         }
+        
+        res.json(response)
+        
+      } else {
+        // 토큰이 유효하지 않음
+        console.log(`❌ 토큰 검증 실패: ${tokenError?.message}`)
+        
+        const response = {
+          success: false,
+          valid: false,
+          message: '토큰이 유효하지 않습니다.',
+          error: tokenError?.message || 'Invalid token'
+        }
+        
+        res.status(401).json(response)
       }
-    })
+      
+    } catch (verificationError) {
+      console.error('Token verification error:', verificationError)
+      
+      const response = {
+        success: false,
+        valid: false,
+        message: '토큰 검증 중 오류가 발생했습니다.',
+        error: verificationError.message
+      }
+      
+      res.status(500).json(response)
+    }
 
   } catch (error) {
-    console.error('Token verification API error:', error)
-    return res.status(500).json({
+    console.error('Verify token API error:', error)
+    res.status(500).json({
       success: false,
+      valid: false,
       message: '서버 오류가 발생했습니다.',
-      error: error.message,
-      timestamp: new Date().toISOString()
+      error: error.message
     })
   }
-}
+})
+
+export default router

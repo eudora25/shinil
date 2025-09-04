@@ -1,4 +1,9 @@
+// Express.js 라우터 형식으로 변경 (11_병원약국_관계정보.xlsx 형식에 맞춤)
+import express from 'express'
 import { createClient } from '@supabase/supabase-js'
+import { tokenValidationMiddleware } from '../middleware/tokenValidation.js'
+
+const router = express.Router()
 
 // 환경 변수 확인 함수
 function getEnvironmentVariables() {
@@ -24,25 +29,10 @@ function createSupabaseClient() {
   }
 }
 
-export default async function handler(req, res) {
-  // CORS 헤더 설정
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-
-  // OPTIONS 요청 처리
-  if (req.method === 'OPTIONS') {
-    res.status(200).end()
-    return
-  }
-
+// GET /api/hospital-pharmacy-mappings - 병원-약국 관계 정보 조회 (11_병원약국_관계정보.xlsx 형식에 맞춤)
+// Bearer Token 인증 필요
+router.get('/', tokenValidationMiddleware, async (req, res) => {
   try {
-    if (req.method !== 'GET') {
-      return res.status(405).json({
-        success: false,
-        message: 'Method not allowed. Only GET is supported.'
-      })
-    }
 
     // Supabase 클라이언트 생성
     let supabase
@@ -58,42 +48,43 @@ export default async function handler(req, res) {
       })
     }
 
-    // 쿼리 파라미터 파싱
-    const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 100
-    const search = req.query.search || ''
-    const clientId = req.query.client_id
-    const pharmacyId = req.query.pharmacy_id
+    // 쿼리 파라미터 파싱 (11_병원약국_관계정보.xlsx 형식에 맞춤)
+    const { 
+      page = 1, 
+      limit = 100, 
+      startDate, 
+      endDate
+    } = req.query
 
-    // 페이지네이션 유효성 검사
-    if (page < 1 || limit < 1 || limit > 1000) {
+    // 페이지네이션 계산
+    const pageNum = parseInt(page, 10)
+    const limitNum = parseInt(limit, 10)
+    const offset = (pageNum - 1) * limitNum
+
+    // 입력값 검증
+    if (pageNum < 1 || limitNum < 1 || limitNum > 1000) {
       return res.status(400).json({
         success: false,
-        message: '잘못된 페이지네이션 파라미터입니다.',
-        error: 'Invalid pagination parameters'
+        message: 'Invalid pagination parameters. Page must be >= 1, limit must be between 1 and 1000.'
       })
     }
 
-    const offset = (page - 1) * limit
-
-    // 중복 관계 문제를 해결하기 위해 관계를 사용하지 않고 기본 데이터만 조회
+    // 기본 쿼리 설정
     let query = supabase
       .from('client_pharmacy_assignments')
       .select('id, client_id, pharmacy_id, created_at', { count: 'exact' })
       .order('created_at', { ascending: false })
 
-    // 병원 ID 필터링
-    if (clientId) {
-      query = query.eq('client_id', clientId)
+    // 날짜 필터링 (startDate, endDate 파라미터 지원)
+    if (startDate) {
+      query = query.gte('created_at', startDate)
     }
-
-    // 약국 ID 필터링
-    if (pharmacyId) {
-      query = query.eq('pharmacy_id', pharmacyId)
+    if (endDate) {
+      query = query.lte('created_at', endDate)
     }
 
     // 페이지네이션 적용
-    query = query.range(offset, offset + limit - 1)
+    query = query.range(offset, offset + limitNum - 1)
 
     const { data: assignments, error, count } = await query
 
@@ -156,24 +147,21 @@ export default async function handler(req, res) {
     }
 
     // 페이지네이션 정보 계산
-    const totalCount = count || 0
-    const totalPages = Math.ceil(totalCount / limit)
-    const hasNextPage = page < totalPages
-    const hasPrevPage = page > 1
+    const totalPages = Math.ceil(count / limitNum)
+    const hasNextPage = pageNum < totalPages
+    const hasPrevPage = pageNum > 1
 
-    return res.status(200).json({
+    // 11_병원약국_관계정보.xlsx 형식에 맞춘 응답
+    const response = {
       success: true,
       message: '병원-약국 관계 정보 목록 조회 성공',
-      data: enrichedData,
-      pagination: {
-        currentPage: page,
-        limit,
-        totalCount,
-        totalPages,
-        hasNextPage,
-        hasPrevPage
-      }
-    })
+      data: enrichedData || [],
+      count: count || 0,
+      page: pageNum,
+      limit: limitNum
+    }
+
+    res.json(response)
 
   } catch (error) {
     console.error('Hospital-pharmacy mappings API error:', error)
@@ -184,4 +172,6 @@ export default async function handler(req, res) {
       timestamp: new Date().toISOString()
     })
   }
-}
+})
+
+export default router
