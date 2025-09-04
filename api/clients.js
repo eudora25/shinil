@@ -46,6 +46,7 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
   try {
     // 환경 변수 확인
     const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
     
     if (!supabaseUrl || !supabaseAnonKey) {
       return res.status(500).json({
@@ -55,8 +56,13 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
       })
     }
 
-    // Supabase 클라이언트 생성
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    // Supabase 클라이언트 생성 (RLS 정책 무시를 위해 Service Role Key 사용)
+    let supabase
+    if (serviceRoleKey) {
+      supabase = createClient(supabaseUrl, serviceRoleKey)
+    } else {
+      supabase = createClient(supabaseUrl, supabaseAnonKey)
+    }
 
     // Authorization 헤더 확인
     const authHeader = req.headers.authorization
