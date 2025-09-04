@@ -2,7 +2,6 @@
   "name": "shinil-api-server",
   "version": "1.0.0",
   "description": "Shinil Project API Server with Swagger UI and Token Authentication",
-  "type": "module",
   "main": "api/index.js",
   "scripts": {
     "start": "node api/index.js",
