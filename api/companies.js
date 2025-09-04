@@ -1,6 +1,6 @@
-const { createClient } = require('@supabase/supabase-js')
+import { createClient } from '@supabase/supabase-js'
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   try {
     // 환경 변수 확인 (개행 문자 제거)
     const supabaseUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)?.trim()
