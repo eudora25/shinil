@@ -56,21 +56,13 @@ module.exports = async function handler(req, res) {
       })
     }
     
-    // Supabase 클라이언트 생성 (다른 방식 시도)
-    const supabase = createClient(supabaseUrl, serviceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      },
-      db: {
-        schema: 'public'
-      }
-    })
+    // Supabase 클라이언트 생성 (기본 방식으로 시도)
+    const supabase = createClient(supabaseUrl, serviceRoleKey)
     
-    // 연결 테스트
+    // 연결 테스트 (간단한 쿼리)
     const { data: testData, error: testError } = await supabase
       .from('clients')
-      .select('count')
+      .select('id')
       .limit(1)
     
     if (testError) {
@@ -81,7 +73,8 @@ module.exports = async function handler(req, res) {
         error: testError.message,
         debug: {
           supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
-          serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing'
+          serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing',
+          testError: testError
         }
       })
     }
