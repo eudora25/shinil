@@ -1,28 +1,3 @@
-<<<<<<< HEAD
-export default function handler(req, res) {
-  // CORS 헤더 설정
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  res.setHeader('Content-Type', 'application/json')
-  
-  // OPTIONS 요청 처리
-  if (req.method === 'OPTIONS') {
-    res.status(200).end()
-    return
-  }
-  
-  // API 응답
-  res.status(200).json({
-    test: "001",
-    status: "OK",
-    timestamp: new Date().toISOString(),
-    version: "1.0.0",
-    environment: "production",
-    message: "Vercel API Routes working correctly"
-  })
-} 
-=======
 import express from 'express'
 import cors from 'cors'
 import path from 'path'
@@ -31,7 +6,6 @@ import envConfig from '../config/env.js'
 import { ipRestrictionMiddleware } from '../middleware/ipRestriction.js'
 import { tokenValidationMiddleware } from '../middleware/tokenValidation.js'
 
-// ES 모듈에서 __dirname 대체
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
@@ -172,4 +146,3 @@ app.listen(PORT, () => {
 })
 
 export default app
->>>>>>> 2f1998dc3c49490144efab1f822ea3a02743a4f0

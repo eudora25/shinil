@@ -1,5 +1,5 @@
 // Express.js 라우터 형식으로 변경 (06_제품정보_조회.xlsx 형식에 맞춤)
-import express from 'express'
+import express from 'express' 
 import { createClient } from '@supabase/supabase-js'
 import { tokenValidationMiddleware } from '../middleware/tokenValidation.js'
 

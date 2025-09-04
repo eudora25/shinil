@@ -5,34 +5,6 @@ import { tokenValidationMiddleware } from '../middleware/tokenValidation.js'
 
 const router = express.Router()
 
-<<<<<<< HEAD
-export default async function handler(req, res) {
-  // CORS 설정
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
-  }
-
-  // GET 요청만 처리
-  if (req.method !== 'GET') {
-    return res.status(405).json({ success: false, message: 'Method not allowed' })
-  }
-
-  try {
-    // 환경 변수에서 Supabase 설정 가져오기
-    const supabaseUrl = process.env.VITE_SUPABASE_URL
-    const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Supabase configuration missing' 
-      })
-    }
-=======
 // 환경 변수 확인 함수
 function getEnvironmentVariables() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
@@ -72,7 +44,6 @@ function createSupabaseClient() {
 // Bearer Token 인증 필요
 router.get('/', tokenValidationMiddleware, async (req, res) => {
   try {
->>>>>>> 2f1998dc3c49490144efab1f822ea3a02743a4f0
 
     // Supabase 클라이언트 생성
     const supabase = createClient(supabaseUrl, supabaseAnonKey)
@@ -97,12 +68,6 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
       })
     }
 
-<<<<<<< HEAD
-    // 쿼리 파라미터 파싱
-    const { page = 1, limit = 100, startDate, endDate } = req.query
-
-    // 기본 쿼리 시작
-=======
     // 쿼리 파라미터 파싱 (19_실적증빙파일.xlsx 형식에 맞춤)
     const { 
       page = 1, 
@@ -125,7 +90,6 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
     }
 
     // 기본 쿼리 설정
->>>>>>> 2f1998dc3c49490144efab1f822ea3a02743a4f0
     let query = supabase
       .from('performance_evidence_files')
       .select('*', { count: 'exact' })
@@ -142,10 +106,6 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
       .order('uploaded_at', { ascending: false })
       .range((page - 1) * limit, page * limit - 1)
 
-<<<<<<< HEAD
-    // 데이터 조회
-    const { data: files, error: filesError, count: totalCount } = await query
-=======
     // 날짜 필터링 (startDate, endDate 파라미터 지원)
     if (startDate) {
       query = query.gte('uploaded_at', startDate)
@@ -156,7 +116,6 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
 
     // 페이지네이션 적용
     query = query.range(offset, offset + limitNum - 1)
->>>>>>> 2f1998dc3c49490144efab1f822ea3a02743a4f0
 
     if (filesError) {
       console.error('Performance evidence files query error:', filesError)
@@ -166,20 +125,6 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
       })
     }
 
-<<<<<<< HEAD
-    // 성공 응답
-    res.status(200).json({
-      success: true,
-      data: files || [],
-      totalCount: totalCount || 0,
-      filters: {
-        startDate: startDate ? new Date(startDate).toISOString() : null,
-        endDate: endDate ? new Date(endDate).toISOString() : null,
-        page: parseInt(page),
-        limit: parseInt(limit)
-      }
-    })
-=======
     // 페이지네이션 정보 계산
     const totalPages = Math.ceil(count / limitNum)
     const hasNextPage = pageNum < totalPages
@@ -196,7 +141,6 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
     }
 
     res.json(response)
->>>>>>> 2f1998dc3c49490144efab1f822ea3a02743a4f0
 
   } catch (error) {
     console.error('Performance evidence files API error:', error)

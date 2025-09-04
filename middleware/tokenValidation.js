@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js'
  * 토큰 검증 미들웨어
  * JWT 토큰의 유효성을 검증하고, 만료 시 자동 갱신
  */
-export const tokenValidationMiddleware = async (req, res, next) => {
+const tokenValidationMiddleware = async (req, res, next) => {
   try {
     // Authorization 헤더에서 Bearer 토큰 추출
     const authHeader = req.headers.authorization
@@ -167,7 +167,7 @@ export const tokenValidationMiddleware = async (req, res, next) => {
  * 선택적 토큰 검증 미들웨어
  * 토큰이 있으면 검증하고, 없으면 다음으로 진행
  */
-export const optionalTokenValidationMiddleware = async (req, res, next) => {
+const optionalTokenValidationMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization
   
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -179,4 +179,4 @@ export const optionalTokenValidationMiddleware = async (req, res, next) => {
   return tokenValidationMiddleware(req, res, next)
 }
 
-export default tokenValidationMiddleware
+export { tokenValidationMiddleware }

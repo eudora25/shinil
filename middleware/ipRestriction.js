@@ -122,7 +122,7 @@ const IP_ACCESS_CONFIG = {
  * IP 제한 미들웨어
  * 허용된 IP에서만 API 접근 가능
  */
-export const ipRestrictionMiddleware = (req, res, next) => {
+const ipRestrictionMiddleware = (req, res, next) => {
   try {
     // 개발 환경에서는 모든 IP 허용 (NODE_ENV가 설정되지 않은 경우도 포함)
     if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
@@ -170,4 +170,4 @@ export const ipRestrictionMiddleware = (req, res, next) => {
   }
 }
 
-export default ipRestrictionMiddleware
+export { ipRestrictionMiddleware }
