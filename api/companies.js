@@ -44,10 +44,8 @@ module.exports = async function handler(req, res) {
       })
     }
 
-    // 데이터 조회
-    const supabase = serviceRoleKey 
-      ? createClient(supabaseUrl, serviceRoleKey)
-      : createClient(supabaseUrl, supabaseAnonKey)
+    // 데이터 조회 (Service Role Key 사용)
+    const supabase = createClient(supabaseUrl, serviceRoleKey || supabaseAnonKey)
 
     const { page = 1, limit = 100 } = req.query
     const pageNum = parseInt(page, 10)
