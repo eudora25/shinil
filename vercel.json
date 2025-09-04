@@ -2,6 +2,7 @@
   "version": 2,
   "rewrites": [
     { "source": "/api/health", "destination": "/api/health.mjs" },
+    { "source": "/api/auth", "destination": "/api/auth.mjs" },
     { "source": "/api/(.*)", "destination": "/api/index.mjs" },
     { "source": "/(.*)", "destination": "/api/index.mjs" }
   ],
