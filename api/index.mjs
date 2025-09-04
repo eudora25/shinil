@@ -33,9 +33,9 @@ app.use(express.static(path.join(__dirname, '..')))
 // API 라우트들
 import authRoutes from './auth.mjs'
 import verifyTokenRoutes from './verify-token.mjs'
-import productsRoutes from './products.mjs'
-import clientsRoutes from './clients.mjs'
-import companiesRoutes from './companies.mjs'
+import productsRoutes from './products.js'
+import clientsRoutes from './clients.js'
+import companiesRoutes from './companies.js'
 import healthRoutes from './health.mjs'
 import noticesRoutes from './notices.mjs'
 import pharmaciesRoutes from './pharmacies.js'
