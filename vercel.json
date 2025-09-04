@@ -1,33 +1,19 @@
 {
   "version": 2,
-  "functions": {
-    "api/companies.mjs": {
-      "runtime": "nodejs18.x"
-    },
-    "api/products.mjs": {
-      "runtime": "nodejs18.x"
-    },
-    "api/clients.mjs": {
-      "runtime": "nodejs18.x"
-    },
-    "api/notices.mjs": {
-      "runtime": "nodejs18.x"
-    },
-    "api/health.mjs": {
-      "runtime": "nodejs18.x"
-    },
-    "api/auth.mjs": {
-      "runtime": "nodejs18.x"
-    },
-    "api/verify-token.mjs": {
-      "runtime": "nodejs18.x"
+  "builds": [
+    {
+      "src": "api/**/*.mjs",
+      "use": "@vercel/node"
     }
-  },
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.mjs" },
-    { "source": "/(.*)", "destination": "/api/index.mjs" }
   ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.mjs"
+    }
+  ]
 }
