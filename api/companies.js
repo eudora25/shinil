@@ -10,7 +10,8 @@ module.exports = async function handler(req, res) {
     console.log('Environment variables updated:', {
       supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
       supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
-      serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing'
+      serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing',
+      allEnvKeys: Object.keys(process.env).filter(key => key.includes('SUPABASE'))
     })
 
     if (!supabaseUrl || !supabaseAnonKey) {
@@ -44,8 +45,23 @@ module.exports = async function handler(req, res) {
       })
     }
 
-    // 데이터 조회 (Service Role Key 사용)
-    const supabase = createClient(supabaseUrl, serviceRoleKey)
+    // 데이터 조회 (Service Role Key만 사용)
+    if (!serviceRoleKey) {
+      return res.status(500).json({
+        success: false,
+        message: 'Service Role Key not configured',
+        debug: {
+          serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing'
+        }
+      })
+    }
+    
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
 
     const { page = 1, limit = 100 } = req.query
     const pageNum = parseInt(page, 10)
