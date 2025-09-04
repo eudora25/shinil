@@ -1,9 +1,11 @@
 {
-  "name": "shinil-project",
+  "name": "shinil-api-server",
   "version": "1.0.0",
-  "description": "Shinil Project API Server",
+  "description": "Shinil Project API Server with Swagger UI and Token Authentication",
   "type": "module",
+  "main": "api/index.js",
   "scripts": {
+<<<<<<< HEAD
     "api": "cd vue-project && node server.js",
     "api:dev": "cd vue-project && npm run dev:api",
     "api:pm2": "pm2 start ecosystem.config.cjs",
@@ -15,15 +17,25 @@
     "dev": "cd vue-project && npm run dev",
     "build": "cd vue-project && npm run build",
     "vercel-build": "cd vue-project && cp .env.production .env && npm install && npm run build && cp swagger-spec.json dist/ && cp swagger-ui.html dist/"
+=======
+    "start": "node api/index.js",
+    "dev": "node api/index.js",
+    "docker:up": "docker-compose -f docker-compose.api-only.yml up -d",
+    "docker:down": "docker-compose -f docker-compose.api-only.yml down",
+    "docker:logs": "docker logs shinil_project-api-server"
+>>>>>>> 2f1998dc3c49490144efab1f822ea3a02743a4f0
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
     "dotenv": "^17.2.1",
-    "node-fetch": "^3.3.2"
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
   },
   "keywords": [
     "api",
     "server",
+    "swagger",
+    "authentication",
     "supabase"
   ],
   "author": "Shinil Project",

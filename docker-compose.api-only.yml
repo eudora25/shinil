@@ -1,0 +1,17 @@
+services:
+  # API 서버만 실행
+  api-server:
+    image: node:18-alpine
+    container_name: shinil_project-api-server
+    ports:
+      - "3001:3001"
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: sh -c "npm install && npm start"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+    env_file:
+      - .env.local
+    restart: unless-stopped

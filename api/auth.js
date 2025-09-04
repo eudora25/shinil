@@ -1,6 +1,13 @@
+<<<<<<< HEAD
+=======
+// Express.js 라우터 형식으로 변경 (03_사용자_로그인.xlsx 형식에 맞춤)
+import express from 'express'
+>>>>>>> 2f1998dc3c49490144efab1f822ea3a02743a4f0
 import { createClient } from '@supabase/supabase-js'
-import { refreshAccessToken, verifyToken } from '../lib/tokenRefresh.js'
 
+const router = express.Router()
+
+<<<<<<< HEAD
 export default async function handler(req, res) {
   // CORS 설정
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -42,44 +49,46 @@ export default async function handler(req, res) {
 
 =======
     const { action, email, password, refreshToken } = req.body
-    
-    // 액션 타입에 따른 처리
-    switch (action) {
-      case 'login':
-        return await handleLogin(req, res, email, password)
-      case 'refresh':
-        return await handleTokenRefresh(req, res, refreshToken)
-      case 'verify':
-        return await handleTokenVerification(req, res)
-      default:
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid action. Use "login", "refresh", or "verify".'
-        })
-    }
-    
+=======
+// 환경 변수 확인 함수
+function getEnvironmentVariables() {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+  
+  return { supabaseUrl, supabaseAnonKey }
+}
+
+// Supabase 클라이언트 생성 함수
+function createSupabaseClient() {
+  const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
+  
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase configuration missing')
+  }
+  
+  try {
+    return createClient(supabaseUrl, supabaseAnonKey)
   } catch (error) {
-    console.error('Auth error details:', {
-      message: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString(),
-      requestBody: req.body ? { action: req.body.action, email: req.body.email } : 'missing'
-    })
-    
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: error.message,
-      timestamp: new Date().toISOString()
-    })
+    console.error('Failed to create Supabase client:', error)
+    throw error
   }
 }
 
-/**
- * 로그인 처리
- */
-async function handleLogin(req, res, email, password) {
+// POST /api/auth - 사용자 로그인 (03_사용자_로그인.xlsx 형식에 맞춤)
+router.post('/', async (req, res) => {
   try {
+    const { email, password } = req.body
+>>>>>>> 2f1998dc3c49490144efab1f822ea3a02743a4f0
+    
+    // 필수 파라미터 검증
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: '이메일과 비밀번호가 필요합니다.',
+        error: 'Missing required parameters'
+      })
+    }
+    
     // Supabase 클라이언트 생성
     let supabase
     try {
@@ -88,12 +97,12 @@ async function handleLogin(req, res, email, password) {
       console.error('Supabase configuration error:', configError)
       return res.status(500).json({
         success: false,
-        message: 'Server configuration error',
-        error: 'Supabase client initialization failed',
-        details: configError.message
+        message: '서버 설정 오류',
+        error: 'Supabase client initialization failed'
       })
     }
 
+<<<<<<< HEAD
     // 필수 필드 검증
 >>>>>>> 14a20b52e32c177e5a54c7475ce8e70453839716
     if (!email || !password) {
@@ -107,10 +116,17 @@ async function handleLogin(req, res, email, password) {
     const { data: { user, session }, error } = await supabase.auth.signInWithPassword({
       email,
       password
+=======
+    // Supabase Auth를 사용한 로그인
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password
+>>>>>>> 2f1998dc3c49490144efab1f822ea3a02743a4f0
     })
 
     if (error) {
       console.error('Login error:', error)
+<<<<<<< HEAD
       return res.status(401).json({ 
         success: false, 
         message: 'Invalid login credentials' 
@@ -167,13 +183,15 @@ async function handleLogin(req, res, email, password) {
     }
     
     if (authError) {
+=======
+>>>>>>> 2f1998dc3c49490144efab1f822ea3a02743a4f0
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password',
-        error: authError.message,
-        errorCode: authError.status
+        message: '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.',
+        error: error.message
       })
     }
+<<<<<<< HEAD
     
     // 사용자 메타데이터 확인
     const userRole = authData.user.user_metadata?.user_type || 'user'
@@ -279,55 +297,46 @@ async function handleTokenRefresh(req, res, refreshToken) {
     });
   }
 }
+=======
 
-/**
- * 토큰 검증 처리
- */
-async function handleTokenVerification(req, res) {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authorization header with Bearer token is required'
-      })
-    }
-    
-    const token = authHeader.substring(7);
-    console.log('토큰 검증 요청 처리 중...');
-    
-    // 토큰 검증
-    const { valid, user, error } = await verifyToken(token);
-    
-    if (!valid) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid or expired token',
-        error: error
-      })
-    }
-    
-    console.log('토큰 검증 성공');
-    
-    return res.status(200).json({
+    // 사용자 정보는 auth.users에서 가져온 data.user를 사용
+    // 별도의 users 테이블 조회는 제거 (테이블이 존재하지 않음)
+    const userData = null // users 테이블이 존재하지 않으므로 null로 설정
+
+    // 이미지에 표시된 응답 형식에 맞춤
+    const response = {
       success: true,
-      message: 'Token is valid',
+      message: '인증 성공',
       data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.user_metadata?.user_type || 'user',
-          approvalStatus: user.user_metadata?.approval_status || 'pending'
-        }
+        token: data.session.access_token,
+        refreshToken: data.session.refresh_token,
+        user: userData || {
+          id: data.user.id,
+          email: data.user.email,
+          created_at: data.user.created_at,
+          last_sign_in_at: data.user.last_sign_in_at,
+          user_metadata: data.user.user_metadata || {}
+        },
+        expiresIn: '24h',
+        expiresAt: new Date(data.session.expires_at * 1000).toISOString()
       }
-    })
-    
+    }
+
+    res.json(response)
+>>>>>>> 2f1998dc3c49490144efab1f822ea3a02743a4f0
+
   } catch (error) {
-    console.error('Token verification error:', error);
-    return res.status(500).json({
+    console.error('Auth API error:', error)
+    res.status(500).json({
       success: false,
-      message: 'Token verification failed',
+      message: '서버 오류가 발생했습니다.',
       error: error.message
-    });
+    })
   }
+<<<<<<< HEAD
 }
+=======
+})
+
+export default router 
+>>>>>>> 2f1998dc3c49490144efab1f822ea3a02743a4f0

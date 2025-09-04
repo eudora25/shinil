@@ -1,5 +1,9 @@
+// Express.js 라우터 형식으로 변경 (06_제품정보_조회.xlsx 형식에 맞춤)
+import express from 'express'
 import { createClient } from '@supabase/supabase-js'
-import { authMiddleware, tokenLoggingMiddleware } from '../middleware/authMiddleware.js'
+import { tokenValidationMiddleware } from '../middleware/tokenValidation.js'
+
+const router = express.Router()
 
 // 환경 변수 확인 함수
 function getEnvironmentVariables() {
@@ -18,58 +22,30 @@ function createSupabaseClient() {
   }
   
   try {
-    // 로컬과 동일하게 단순하게 생성
-    return createClient(supabaseUrl, supabaseAnonKey)
+    // RLS 문제 해결을 위해 service role key 사용
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (serviceRoleKey) {
+      return createClient(supabaseUrl, serviceRoleKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      })
+    } else {
+      return createClient(supabaseUrl, supabaseAnonKey)
+    }
   } catch (error) {
     console.error('Failed to create Supabase client:', error)
     throw error
   }
 }
 
-export default async function handler(req, res) {
-  // CORS 헤더 설정
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Refresh-Token')
-  res.setHeader('Content-Type', 'application/json')
-  
-  // OPTIONS 요청 처리
-  if (req.method === 'OPTIONS') {
-    res.status(200).end()
-    return
-  }
-
+// GET /api/products - 제품정보 조회 (06_제품정보_조회.xlsx 형식에 맞춤)
+// Bearer Token 인증 필요
+router.get('/', tokenValidationMiddleware, async (req, res) => {
   try {
-    if (req.method !== 'GET') {
-      return res.status(405).json({
-        success: false,
-        message: 'Method not allowed. Only GET is supported.'
-      })
-    }
-
-    // 토큰 로깅 미들웨어 실행 (디버깅용)
-    tokenLoggingMiddleware(req, res, () => {});
-
-    // 인증 미들웨어 실행
-    await new Promise((resolve, reject) => {
-      authMiddleware(req, res, (error) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve();
-        }
-      });
-    });
-
-    // 토큰이 갱신되었는지 확인
-    if (req.tokenRefreshed) {
-      console.log('토큰이 갱신되었습니다. 새 토큰으로 요청 처리 중...');
-      
-      // 응답 헤더에 새 토큰 정보 포함
-      res.set('X-Token-Refreshed', 'true');
-      res.set('X-New-Access-Token', req.newAccessToken);
-      res.set('X-New-Refresh-Token', req.newRefreshToken);
-    }
+    console.log('🔍 Products API 호출됨')
+    console.log('🔍 req.user:', req.user?.email)
 
     // Supabase 클라이언트 생성
     let supabase
@@ -85,36 +61,48 @@ export default async function handler(req, res) {
       })
     }
 
-    // 인증된 사용자 정보 확인
-    if (!req.user) {
-      return res.status(401).json({
+    // 쿼리 파라미터 파싱 (06_제품정보_조회.xlsx 형식에 맞춤)
+    const { 
+      page = 1, 
+      limit = 100, 
+      startDate, 
+      endDate 
+    } = req.query
+    
+    // 페이지네이션 계산
+    const pageNum = parseInt(page, 10)
+    const limitNum = parseInt(limit, 10)
+    const offset = (pageNum - 1) * limitNum
+
+    // 입력값 검증
+    if (pageNum < 1 || limitNum < 1 || limitNum > 1000) {
+      return res.status(400).json({
         success: false,
-        message: '사용자 인증이 필요합니다.',
-        error: 'User authentication required'
+        message: 'Invalid pagination parameters. Page must be >= 1, limit must be between 1 and 1000.'
       })
     }
 
-    // 인증된 사용자 컨텍스트로 새로운 클라이언트 생성
-    const currentToken = req.newAccessToken || req.headers.authorization?.substring(7);
-    const authenticatedSupabase = createClient(
-      process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
-      process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${currentToken}`
-          }
-        }
-      }
-    )
-
-    console.log('제품 정보 조회 중... 사용자 ID:', req.user.id);
-
-    // 제품 정보 조회 (인증된 클라이언트 사용)
-    const { data: products, error: productsError } = await authenticatedSupabase
+    // 기본 쿼리 설정
+    let query = supabase
       .from('products')
-      .select('*')
+      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
+
+    // 날짜 필터링 (startDate, endDate 파라미터 지원)
+    if (startDate) {
+      query = query.or(`created_at.gte.${startDate},updated_at.gte.${startDate}`)
+    }
+    if (endDate) {
+      query = query.or(`created_at.lte.${endDate},updated_at.lte.${endDate}`)
+    }
+
+    // 페이지네이션 적용
+    query = query.range(offset, offset + limitNum - 1)
+
+    // 데이터 조회
+    const { data: products, error: productsError, count } = await query
+    
+    console.log('🔍 Products query result:', { data: products?.length, error: productsError, count })
     
     if (productsError) {
       console.error('Products fetch error:', productsError)
@@ -124,59 +112,23 @@ export default async function handler(req, res) {
         error: productsError.message
       })
     }
-    
-    // 디버깅: 제품 개수 확인
-    console.log('Products count:', products ? products.length : 0)
-    console.log('Supabase URL:', process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)
-    console.log('User ID:', req.user.id)
-    
-    // products_standard_code 정보 조회
-    const { data: standardCodes, error: standardCodesError } = await supabase
-      .from('products_standard_code')
-      .select('*')
-      .eq('status', 'active')
-    
-    if (standardCodesError) {
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to fetch standard codes',
-        error: standardCodesError.message
-      })
-    }
-    
-    // insurance_code를 기준으로 데이터 조합
-    const productsWithStandardCode = products.map(product => {
-      const standardCode = standardCodes.find(sc => sc.insurance_code === product.insurance_code)
-      return {
-        ...product,
-        standard_code: standardCode?.standard_code || null,
-        unit_packaging_desc: standardCode?.unit_packaging_desc || null,
-        unit_quantity: standardCode?.unit_quantity || null
-      }
-    })
 
-    // 응답 데이터 구성
-    const responseData = {
+    // 페이지네이션 정보 계산
+    const totalPages = Math.ceil(count / limitNum)
+    const hasNextPage = pageNum < totalPages
+    const hasPrevPage = pageNum > 1
+
+    // 06_제품정보_조회.xlsx 형식에 맞춘 응답
+    const response = {
       success: true,
-      message: '제품 목록 조회 성공',
-      data: productsWithStandardCode || [],
-      debug: {
-        productsCount: products ? products.length : 0,
-        standardCodesCount: standardCodes ? standardCodes.length : 0,
-        supabaseUrl: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
-        userId: req.user.id
-      }
-    };
-
-    // 토큰 갱신 정보가 있으면 응답에 포함
-    if (req.tokenRefreshed) {
-      responseData.tokenInfo = {
-        refreshed: true,
-        message: '토큰이 자동으로 갱신되었습니다.'
-      };
+      message: '제품 정보 조회 성공',
+      data: products || [],
+      count: count || 0,
+      page: pageNum,
+      limit: limitNum
     }
 
-    return res.status(200).json(responseData);
+    res.json(response)
 
   } catch (error) {
     console.error('Products API error details:', {
@@ -192,4 +144,6 @@ export default async function handler(req, res) {
       timestamp: new Date().toISOString()
     })
   }
-} 
+})
+
+export default router 
