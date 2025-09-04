@@ -7,7 +7,7 @@ module.exports = async function handler(req, res) {
     const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlbGtsbmdlcnpmbXV2YWdjdnZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3MzQ5MDUsImV4cCI6MjA2ODMxMDkwNX0.cRe78UqA-HDdVClq0qrXlOXxwNpQWLB6ycFnoHzQI4U'
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlbGtsbmdlcnpmbXV2YWdjdnZmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Mjc3NDkwNSwiZXhwIjoyMDY4MzEwOTA1fQ.gFB7QhW_ZdKtKZO9ok-HjkXh7PQU-eMLWUwVAQXuyvM'
 
-    console.log('Environment variables:', {
+    console.log('Environment variables updated:', {
       supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
       supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
       serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing'
@@ -45,7 +45,7 @@ module.exports = async function handler(req, res) {
     }
 
     // 데이터 조회 (Service Role Key 사용)
-    const supabase = createClient(supabaseUrl, serviceRoleKey || supabaseAnonKey)
+    const supabase = createClient(supabaseUrl, serviceRoleKey)
 
     const { page = 1, limit = 100 } = req.query
     const pageNum = parseInt(page, 10)
