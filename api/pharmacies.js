@@ -46,7 +46,6 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
   try {
     // 환경 변수 확인
     const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
     
     if (!supabaseUrl || !supabaseAnonKey) {
       return res.status(500).json({
