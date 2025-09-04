@@ -1,61 +1,39 @@
-// Express.js 라우터 형식으로 변경 (06_제품정보_조회.xlsx 형식에 맞춤)
-import express from 'express' 
-import { createClient } from '@supabase/supabase-js'
-import { tokenValidationMiddleware } from '../middleware/tokenValidation.js'
+const { createClient } = require('@supabase/supabase-js')
 
-const router = express.Router()
-
-// 환경 변수 확인 함수
-function getEnvironmentVariables() {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
-  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
-  
-  return { supabaseUrl, supabaseAnonKey }
-}
-
-// Supabase 클라이언트 생성 함수
-function createSupabaseClient() {
-  const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
-  
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase configuration missing')
-  }
-  
+module.exports = async function handler(req, res) {
   try {
-    // RLS 문제 해결을 위해 service role key 사용
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (serviceRoleKey) {
-      return createClient(supabaseUrl, serviceRoleKey, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      })
-    } else {
-      return createClient(supabaseUrl, supabaseAnonKey)
-    }
-  } catch (error) {
-    console.error('Failed to create Supabase client:', error)
-    throw error
-  }
-}
-
-// GET /api/products - 제품정보 조회 (06_제품정보_조회.xlsx 형식에 맞춤)
-// Bearer Token 인증 필요
-router.get('/', tokenValidationMiddleware, async (req, res) => {
-  try {
-    console.log('🔍 Products API 호출됨')
-    console.log('🔍 req.user:', req.user?.email)
-
-    // 환경 변수 확인
-    const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
+    // 환경 변수 확인 (개행 문자 제거)
+    const supabaseUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)?.trim()
+    const supabaseAnonKey = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY)?.trim()
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
-    
+
+    // 환경 변수 디버깅
+    console.log('Products API - Environment variables:', {
+      supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
+      supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
+      serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing'
+    })
+
+    // 환경 변수가 없으면 기본값 사용 (개발용)
     if (!supabaseUrl || !supabaseAnonKey) {
       return res.status(500).json({
         success: false,
         message: 'Server configuration error',
-        error: 'Supabase configuration missing'
+        error: 'Supabase environment variables not configured',
+        debug: {
+          supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
+          supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing'
+        }
+      })
+    }
+
+    // Authorization 헤더 확인
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Unauthorized',
+        error: 'Bearer token required'
       })
     }
 
@@ -131,7 +109,10 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
       data: products || [],
       count: count || 0,
       page: pageNum,
-      limit: limitNum
+      limit: limitNum,
+      totalPages,
+      hasNextPage,
+      hasPrevPage
     }
 
     res.json(response)
@@ -150,6 +131,4 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
       timestamp: new Date().toISOString()
     })
   }
-})
-
-export default router 
+}
