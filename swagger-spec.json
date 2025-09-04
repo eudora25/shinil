@@ -1399,24 +1399,6 @@
               "format": "date"
             },
             "example": "2024-12-31"
-          },
-          {
-            "name": "hospital_id",
-            "in": "query",
-            "required": false,
-            "description": "병원 ID로 필터링",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "company_id",
-            "in": "query",
-            "required": false,
-            "description": "업체 ID로 필터링",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "security": [
@@ -1578,24 +1560,6 @@
               "format": "date"
             },
             "example": "2024-12-31"
-          },
-          {
-            "name": "hospital_id",
-            "in": "query",
-            "required": false,
-            "description": "병원 ID로 필터링",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "pharmacy_id",
-            "in": "query",
-            "required": false,
-            "description": "약국 ID로 필터링",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "security": [
@@ -1735,24 +1699,6 @@
               "default": 100
             },
             "example": 100
-          },
-          {
-            "name": "settlement_month",
-            "in": "query",
-            "required": false,
-            "description": "정산월로 필터링",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "company_id",
-            "in": "query",
-            "required": false,
-            "description": "업체 ID로 필터링",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "security": [
