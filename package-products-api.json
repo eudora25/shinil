@@ -1,0 +1,25 @@
+{
+  "name": "shinil-products-api",
+  "version": "1.0.0",
+  "description": "Shinil Products API Server",
+  "main": "api/products.js",
+  "scripts": {
+    "start": "node api/products.js",
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "dotenv": "^17.2.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "api",
+    "products",
+    "supabase"
+  ],
+  "author": "Shinil Project",
+  "license": "MIT"
+}
