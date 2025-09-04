@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     // 환경 변수 확인 (개행 문자 제거)
     const supabaseUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)?.trim()
     const supabaseAnonKey = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY)?.trim()
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlbGtsbmdlcnpmdXV2YWdjdnZmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjczNDkwNSwiZXhwIjoyMDY4MzEwOTA1fQ.gFB7QhW_ZdKtKZO9ok-HjkXh7PQU-eMLWUwVAQXuyvM'
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
 
     // 환경 변수 디버깅
     console.log('Companies API - Environment variables:', {
