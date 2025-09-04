@@ -11,7 +11,12 @@ module.exports = async function handler(req, res) {
       supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
       supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
       serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing',
-      allEnvKeys: Object.keys(process.env).filter(key => key.includes('SUPABASE'))
+      allEnvKeys: Object.keys(process.env).filter(key => key.includes('SUPABASE')),
+      actualValues: {
+        supabaseUrl: supabaseUrl,
+        supabaseAnonKey: supabaseAnonKey ? supabaseAnonKey.substring(0, 20) + '...' : 'Missing',
+        serviceRoleKey: serviceRoleKey ? serviceRoleKey.substring(0, 20) + '...' : 'Missing'
+      }
     })
 
     if (!supabaseUrl || !supabaseAnonKey) {
