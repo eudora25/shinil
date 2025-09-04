@@ -1,8 +1,5 @@
-// Express.js 라우터 형식으로 변경 (03_사용자_로그인.xlsx 형식에 맞춤)
-import express from 'express'
+// Vercel 서버리스 함수 형식 (03_사용자_로그인.xlsx 형식에 맞춤)
 import { createClient } from '@supabase/supabase-js'
-
-const router = express.Router()
 
 // 환경 변수 확인 함수
 function getEnvironmentVariables() {
@@ -29,7 +26,14 @@ function createSupabaseClient() {
 }
 
 // POST /api/auth - 사용자 로그인 (03_사용자_로그인.xlsx 형식에 맞춤)
-router.post('/', async (req, res) => {
+export default async (req, res) => {
+  // POST 메서드만 허용
+  if (req.method !== 'POST') {
+    return res.status(405).json({
+      success: false,
+      message: 'Method not allowed'
+    })
+  }
   try {
     const { email, password } = req.body
     
@@ -111,6 +115,4 @@ router.post('/', async (req, res) => {
       error: error.message
     })
   }
-})
-
-export default router
+}
