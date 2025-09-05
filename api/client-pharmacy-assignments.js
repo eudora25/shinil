@@ -1,41 +1,58 @@
-// Express.js 라우터 형식으로 변경 (13_병원약국_매핑정보.xlsx 형식에 맞춤)
-import express from 'express'
+// Vercel 서버리스 함수 형식으로 변경 (13_병원약국_매핑정보.xlsx 형식에 맞춤)
 import { createClient } from '@supabase/supabase-js'
-import { tokenValidationMiddleware } from '../middleware/tokenValidation.js'
 
-const router = express.Router()
-
-// 환경 변수 확인 함수
-function getEnvironmentVariables() {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
-  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
-  
-  return { supabaseUrl, supabaseAnonKey }
-}
-
-// Supabase 클라이언트 생성 함수
-function createSupabaseClient() {
-  const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
-  
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase configuration missing')
-  }
-  
+export default async function handler(req, res) {
   try {
-    return createClient(supabaseUrl, supabaseAnonKey)
-  } catch (error) {
-    console.error('Failed to create Supabase client:', error)
-    throw error
-  }
-}
+    // GET 메서드만 허용
+    if (req.method !== 'GET') {
+      return res.status(405).json({
+        success: false,
+        message: 'Method not allowed'
+      })
+    }
 
-// GET /api/client-pharmacy-assignments - 병원-약국 매핑정보 조회 (13_병원약국_매핑정보.xlsx 형식에 맞춤)
-// Bearer Token 인증 필요
-router.get('/', tokenValidationMiddleware, async (req, res) => {
-  try {
+    // 환경 변수 확인
+    const supabaseUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)?.trim()
+    const supabaseAnonKey = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY)?.trim()
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
 
-    // Supabase 클라이언트 생성
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return res.status(500).json({
+        success: false,
+        message: 'Supabase configuration missing',
+        debug: {
+          supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
+          supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing'
+        }
+      })
+    }
+
+    // Supabase 클라이언트 생성 (Service Role Key 사용)
+    let supabase
+    if (serviceRoleKey) {
+      supabase = createClient(supabaseUrl, serviceRoleKey)
+    } else {
+      supabase = createClient(supabaseUrl, supabaseAnonKey)
+    }
+
+    // 연결 테스트
+    const { data: testData, error: testError } = await supabase
+      .from('client_pharmacy_assignments')
+      .select('id')
+      .limit(1)
+
+    if (testError) {
+      return res.status(500).json({
+        success: false,
+        message: 'Supabase connection failed',
+        error: testError.message,
+        debug: {
+          supabaseUrl: 'Set',
+          supabaseAnonKey: 'Set',
+          testError: testError
+        }
+      })
+    }
 
     // Authorization 헤더 확인
     const authHeader = req.headers.authorization
@@ -117,7 +134,10 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
       data: data || [],
       count: count || 0,
       page: pageNum,
-      limit: limitNum
+      limit: limitNum,
+      totalPages,
+      hasNextPage,
+      hasPrevPage
     }
 
     res.json(response)
@@ -130,6 +150,4 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
       error: error.message 
     })
   }
-})
-
-export default router
+}
