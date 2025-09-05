@@ -1,41 +1,58 @@
-// Express.js 라우터 형식으로 변경 (14_제품업체_미배정매핑.xlsx 형식에 맞춤)
-import express from 'express'
+// Vercel 서버리스 함수 형식으로 변경 (14_제품업체_미배정매핑.xlsx 형식에 맞춤)
 import { createClient } from '@supabase/supabase-js'
-import { tokenValidationMiddleware } from '../middleware/tokenValidation.js'
 
-const router = express.Router()
-
-// 환경 변수 확인 함수
-function getEnvironmentVariables() {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
-  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
-  
-  return { supabaseUrl, supabaseAnonKey }
-}
-
-// Supabase 클라이언트 생성 함수
-function createSupabaseClient() {
-  const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
-  
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase configuration missing')
-  }
-  
+export default async function handler(req, res) {
   try {
-    return createClient(supabaseUrl, supabaseAnonKey)
-  } catch (error) {
-    console.error('Failed to create Supabase client:', error)
-    throw error
-  }
-}
+    // GET 메서드만 허용
+    if (req.method !== 'GET') {
+      return res.status(405).json({
+        success: false,
+        message: 'Method not allowed'
+      })
+    }
 
-// GET /api/product-company-not-assignments - 제품-업체 미배정 매핑정보 조회 (14_제품업체_미배정매핑.xlsx 형식에 맞춤)
-// Bearer Token 인증 필요
-router.get('/', tokenValidationMiddleware, async (req, res) => {
-  try {
+    // 환경 변수 확인
+    const supabaseUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)?.trim()
+    const supabaseAnonKey = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY)?.trim()
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
 
-    // Supabase 클라이언트 생성
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return res.status(500).json({
+        success: false,
+        message: 'Supabase configuration missing',
+        debug: {
+          supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
+          supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing'
+        }
+      })
+    }
+
+    // Supabase 클라이언트 생성 (Service Role Key 사용)
+    let supabase
+    if (serviceRoleKey) {
+      supabase = createClient(supabaseUrl, serviceRoleKey)
+    } else {
+      supabase = createClient(supabaseUrl, supabaseAnonKey)
+    }
+
+    // 연결 테스트
+    const { data: testData, error: testError } = await supabase
+      .from('products')
+      .select('id')
+      .limit(1)
+
+    if (testError) {
+      return res.status(500).json({
+        success: false,
+        message: 'Supabase connection failed',
+        error: testError.message,
+        debug: {
+          supabaseUrl: 'Set',
+          supabaseAnonKey: 'Set',
+          testError: testError
+        }
+      })
+    }
 
     // Authorization 헤더 확인
     const authHeader = req.headers.authorization
@@ -62,7 +79,8 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
       page = 1, 
       limit = 100, 
       startDate, 
-      endDate
+      endDate,
+      company_id
     } = req.query
 
     // 페이지네이션 계산
@@ -81,13 +99,7 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
     // 기본 쿼리 설정 (모든 상태의 제품 조회)
     let query = supabase
       .from('products')
-      .select(`
-        id,
-        product_name,
-        insurance_code,
-        status,
-        created_at
-      `, { count: 'exact' })
+      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
 
     // 날짜 필터링 (startDate, endDate 파라미터 지원)
@@ -101,11 +113,14 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
     // 페이지네이션 적용
     query = query.range(offset, offset + limitNum - 1)
 
-    if (assignmentsError) {
-      console.error('Product company not assignments query error:', assignmentsError)
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Database query failed' 
+    const { data: products, error: queryError, count } = await query
+
+    if (queryError) {
+      console.error('Product company not assignments query error:', queryError)
+      return res.status(500).json({
+        success: false,
+        message: '제품-업체 미배정 매핑 정보 목록 조회 중 오류가 발생했습니다.',
+        error: queryError.message
       })
     }
 
@@ -115,7 +130,6 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
     const hasPrevPage = pageNum > 1
 
     // 14_제품업체_미배정매핑.xlsx 형식에 맞춘 응답
-    // 현재 products 테이블에 데이터가 없으므로 빈 배열 반환
     const response = {
       success: true,
       message: '제품-업체 미배정 매핑 정보 목록 조회 성공',
@@ -123,7 +137,9 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
       count: count || 0,
       page: pageNum,
       limit: limitNum,
-      note: products && products.length === 0 ? '현재 products 테이블에 데이터가 없습니다.' : null
+      totalPages,
+      hasNextPage,
+      hasPrevPage
     }
 
     res.json(response)
@@ -136,6 +152,4 @@ router.get('/', tokenValidationMiddleware, async (req, res) => {
       error: error.message 
     })
   }
-})
-
-export default router
+}
