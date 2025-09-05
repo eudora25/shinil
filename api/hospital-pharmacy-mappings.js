@@ -54,9 +54,9 @@ export default async function handler(req, res) {
       supabase = createClient(supabaseUrl, supabaseAnonKey)
     }
 
-    // 연결 테스트 (간단한 쿼리)
+    // 연결 테스트 (간단한 쿼리) - client_pharmacy_assignments 테이블 사용
     const { data: testData, error: testError } = await supabase
-      .from('hospital_pharmacy_mappings')
+      .from('client_pharmacy_assignments')
       .select('id')
       .limit(1)
 
@@ -95,9 +95,9 @@ export default async function handler(req, res) {
       })
     }
 
-    // 기본 쿼리 설정
+    // 기본 쿼리 설정 - client_pharmacy_assignments 테이블 사용
     let query = supabase
-      .from('hospital_pharmacy_mappings')
+      .from('client_pharmacy_assignments')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
 
