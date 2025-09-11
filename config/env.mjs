@@ -16,6 +16,13 @@ if (nodeEnv === 'production') {
   envFile = '.env.local'
 }
 
+<<<<<<< HEAD
+// .env 파일 로드
+config({ 
+  path: path.join(__dirname, '..', envFile),
+  override: true // 기존 환경 변수보다 .env 파일 우선
+})
+=======
 // .env 파일 로드 시도
 try {
   config({ 
@@ -26,6 +33,7 @@ try {
 } catch (error) {
   console.log(`⚠️ 환경 파일 로드 실패: ${envFile} - 런타임 환경 변수 사용`)
 }
+>>>>>>> 6498a7c01ae8609f577b78e0fd9326bb9412e516
 
 // 환경 변수 검증
 const requiredEnvVars = [
