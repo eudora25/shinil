@@ -16,42 +16,9 @@ try {
     override: true
   })
   console.log(`✅ 환경 파일 로드 성공: ${envFile}`)
-
-
 } catch (error) {
   console.log(`⚠️ 환경 파일 로드 실패: ${envFile} - 런타임 환경 변수 사용`)
 }
-
-// 환경 변수 확인 함수
-function getEnvironmentVariables() {
-  const requiredEnvVars = [
-    'VITE_SUPABASE_URL',
-    'VITE_SUPABASE_ANON_KEY'
-  ]
-
-  const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar])
-
-  if (missingEnvVars.length > 0) {
-    console.error('❌ 필수 환경 변수가 설정되지 않았습니다:', missingEnvVars)
-    return false
-  }
-
-  return true
-}
-
-// Supabase 클라이언트 생성 함수
-function createSupabaseClient() {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL
-  const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Supabase 환경 변수가 설정되지 않았습니다')
-  }
-
-  return createClient(supabaseUrl, supabaseKey)
-}
-
-const serverStartTime = Date.now()
 
 // IP 제한 함수
 function checkIPAccess(req) {
@@ -167,6 +134,37 @@ function ipToLong(ip) {
   return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet), 0) >>> 0
 }
 
+// 환경 변수 확인 함수
+function getEnvironmentVariables() {
+  const requiredEnvVars = [
+    'VITE_SUPABASE_URL',
+    'VITE_SUPABASE_ANON_KEY'
+  ]
+
+  const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar])
+
+  if (missingEnvVars.length > 0) {
+    console.error('❌ 필수 환경 변수가 설정되지 않았습니다:', missingEnvVars)
+    return false
+  }
+
+  return true
+}
+
+// Supabase 클라이언트 생성 함수
+function createSupabaseClient() {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL
+  const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase 환경 변수가 설정되지 않았습니다')
+  }
+
+  return createClient(supabaseUrl, supabaseKey)
+}
+
+const serverStartTime = Date.now()
+
 export default async function handler(req, res) {
   try {
     // IP 접근 권한 확인
@@ -193,24 +191,25 @@ export default async function handler(req, res) {
       .limit(1)
 
     if (error) {
-      console.error('Supabase 연결 오류:', error)
+      console.error('Supabase 연결 테스트 실패:', error)
       return res.status(500).json({
-        error: 'Database connection failed',
-        message: '데이터베이스 연결에 실패했습니다',
-        details: error.message
+        success: false,
+        message: '데이터베이스 연결에 실패했습니다.',
+        error: error.message
       })
     }
 
     // 서버 상태 정보
-    const uptime = Date.now() - serverStartTime
+    const uptime = Math.floor((Date.now() - serverStartTime) / 1000)
     const memoryUsage = process.memoryUsage()
 
-    return res.status(200).json({
+    // 성공 응답
+    res.json({
       success: true,
       message: 'API 서버가 정상적으로 작동 중입니다',
       data: {
         status: 'healthy',
-        uptime: `${Math.floor(uptime / 1000)}초`,
+        uptime: `${uptime}초`,
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
         memory: {
@@ -225,11 +224,11 @@ export default async function handler(req, res) {
     })
 
   } catch (error) {
-    console.error('Health check 오류:', error)
+    console.error('Health check error:', error)
     return res.status(500).json({
-      error: 'Internal server error',
-      message: '서버 내부 오류가 발생했습니다',
-      details: error.message
+      success: false,
+      message: '서버 내부 오류가 발생했습니다.',
+      error: error.message
     })
   }
 }
