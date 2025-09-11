@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import '../config/env.mjs'
 
 // 환경 변수 확인 함수
 function getEnvironmentVariables() {
