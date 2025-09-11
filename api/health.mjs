@@ -54,6 +54,11 @@ function checkIPAccess(req) {
                    '127.0.0.1'
 
   console.log('🔍 클라이언트 IP 확인:', clientIP)
+  console.log('🔍 X-Forwarded-For:', req.headers['x-forwarded-for'])
+  console.log('🔍 X-Real-IP:', req.headers['x-real-ip'])
+  console.log('🔍 Connection Remote Address:', req.connection?.remoteAddress)
+  console.log('🔍 Socket Remote Address:', req.socket?.remoteAddress)
+  console.log('🔍 Request IP:', req.ip)
   console.log('🔒 허용된 IP 목록:', allowedIPs.join(', '))
 
   // IP 허용 여부 확인

@@ -1,0 +1,115 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "신일 프로젝트 API",
+    "description": "신일 프로젝트의 모든 API 엔드포인트 문서",
+    "version": "1.0.0",
+    "contact": {
+      "name": "신일 프로젝트 개발팀"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://sinil-api.vercel.app",
+      "description": "프로덕션 서버"
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "API 서버 상태 확인",
+        "description": "API 서버의 상태와 데이터베이스 연결을 확인합니다.",
+        "tags": ["시스템"],
+        "responses": {
+          "200": {
+            "description": "서버가 정상적으로 작동 중",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "status": { "type": "string" },
+                        "uptime": { "type": "string" },
+                        "timestamp": { "type": "string" },
+                        "environment": { "type": "string" },
+                        "memory": {
+                          "type": "object",
+                          "properties": {
+                            "used": { "type": "string" },
+                            "total": { "type": "string" }
+                          }
+                        },
+                        "database": {
+                          "type": "object",
+                          "properties": {
+                            "connected": { "type": "boolean" },
+                            "message": { "type": "string" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth": {
+      "post": {
+        "summary": "사용자 로그인",
+        "description": "이메일과 비밀번호로 사용자 로그인을 수행합니다.",
+        "tags": ["인증"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "로그인 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "session": {
+                          "type": "object",
+                          "properties": {
+                            "access_token": { "type": "string" },
+                            "refresh_token": { "type": "string" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
