@@ -117,8 +117,8 @@ export default async function handler(req, res) {
       return res.status(403).json(ipCheck.error)
     }
 
-    // swagger-spec.json 파일 읽기
-    const specPath = path.join(__dirname, '..', 'swagger-spec.json')
+    // swagger-spec.json 파일 읽기 (vue-project 폴더에서)
+    const specPath = path.join(__dirname, '..', 'vue-project', 'swagger-spec.json')
     
     console.log('🔍 Swagger spec 파일 경로:', specPath)
     console.log('🔍 파일 존재 여부:', fs.existsSync(specPath))
