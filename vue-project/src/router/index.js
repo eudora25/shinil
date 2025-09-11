@@ -44,6 +44,13 @@ const router = createRouter({
       },
       meta: { requiresAuth: false, isApi: true }
     },
+    {
+      path: '/swagger-ui.html',
+      name: 'SwaggerUI',
+      component: {
+        template: '<div><h1>Swagger UI</h1><p>API Documentation</p><a href="/swagger-ui.html" target="_blank">Open Swagger UI</a></div>'
+      }
+    },
     
     // 기본 라우트
     {
