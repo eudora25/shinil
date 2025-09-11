@@ -1,6 +1,5 @@
 {
-  "buildCommand": "cd vue-project && npm run build",
-  "outputDirectory": "vue-project/dist",
+  "buildCommand": "npm install",
   "functions": {
     "api/**/*.js": {
       "runtime": "nodejs18.x",
@@ -13,25 +12,23 @@
     }
   },
   "env": {
-    "VITE_SUPABASE_URL": "https://selklngerzfmuvagcvvf.supabase.co",
-    "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlbGtsbmdlcnpmbXV2YWdjdnZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3MzQ5MDUsImV4cCI6MjA2ODMxMDkwNX0.cRe78UqA-HDdVClq0qrXlOXxwNpQWLB6ycFnoHzQI4U"
+    "NODE_ENV": "production"
   },
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "/api/$1"
+    },
+    {
+      "source": "/swagger-ui.html",
+      "destination": "/swagger-ui.html"
+    },
+    {
+      "source": "/swagger-spec.json",
+      "destination": "/swagger-spec.json"
     }
   ],
   "headers": [
-    {
-      "source": "/swagger-ui.html",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "text/html"
-        }
-      ]
-    },
     {
       "source": "/swagger-ui.html",
       "headers": [
