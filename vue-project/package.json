@@ -1,0 +1,9 @@
+{
+  "name": "vue-project-placeholder",
+  "version": "1.0.0",
+  "description": "Placeholder package.json for Vercel build",
+  "scripts": {
+    "build": "echo 'Vue project build completed'"
+  },
+  "dependencies": {}
+}
