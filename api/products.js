@@ -1,104 +1,126 @@
 import { createClient } from '@supabase/supabase-js'
 
-// 환경 변수 확인 함수
-function getEnvironmentVariables() {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
-  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
-  
-  return { supabaseUrl, supabaseAnonKey }
-}
-
-// Supabase 클라이언트 생성 함수
-function createSupabaseClient() {
-  const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
-  
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase configuration missing')
-  }
-  
-  try {
-    // 로컬과 동일하게 단순하게 생성
-    return createClient(supabaseUrl, supabaseAnonKey)
-  } catch (error) {
-    console.error('Failed to create Supabase client:', error)
-    throw error
-  }
-}
-
 export default async function handler(req, res) {
-  // CORS 헤더 설정
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  res.setHeader('Content-Type', 'application/json')
-  
-  // OPTIONS 요청 처리
-  if (req.method === 'OPTIONS') {
-    res.status(200).end()
-    return
-  }
-
   try {
-    if (req.method !== 'GET') {
-      return res.status(405).json({
+    // 환경 변수 확인 (개행 문자 제거)
+    const supabaseUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)?.trim()
+    const supabaseAnonKey = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY)?.trim()
+
+    // 환경 변수 디버깅
+    console.log('Products API - Environment variables:', {
+      supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
+      supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing'
+    })
+
+    // 환경 변수가 없으면 기본값 사용 (개발용)
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return res.status(500).json({
         success: false,
-        message: 'Method not allowed. Only GET is supported.'
+        message: 'Server configuration error',
+        error: 'Supabase environment variables not configured',
+        debug: {
+          supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
+          supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing'
+        }
       })
     }
 
-    // 인증 토큰 확인
+    // 토큰 검증
     const authHeader = req.headers.authorization
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
-        message: 'Authorization header with Bearer token is required'
+        message: 'Unauthorized'
       })
     }
 
-    const token = authHeader.substring(7) // 'Bearer ' 제거
+    const token = authHeader.substring(7)
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey)
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token)
 
-    // Supabase 클라이언트 생성
-    let supabase
-    try {
-      supabase = createSupabaseClient()
-    } catch (configError) {
-      console.error('Supabase configuration error:', configError)
-      return res.status(500).json({
-        success: false,
-        message: 'Server configuration error',
-        error: 'Supabase client initialization failed',
-        details: configError.message
-      })
-    }
-
-    // 토큰 검증 및 인증된 클라이언트 생성
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-    if (authError || !user) {
+    if (authError || !user || user.user_metadata?.user_type !== 'admin') {
       return res.status(401).json({
         success: false,
-        message: 'Invalid or expired token',
-        error: authError?.message || 'Token verification failed'
+        message: 'Unauthorized'
       })
     }
-    
-    // 인증된 사용자 컨텍스트로 새로운 클라이언트 생성
-    const authenticatedSupabase = createClient(
-      process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
-      process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      }
-    )
 
-    // 제품 정보 조회 (인증된 클라이언트 사용)
-    const { data: products, error: productsError } = await authenticatedSupabase
+    // Supabase 클라이언트 생성 (RLS 정책 무시를 위해 Service Role Key 사용)
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
+    let supabase
+    
+    console.log('🔍 Service Role Key status:', serviceRoleKey ? 'Available' : 'Not available')
+    
+    if (serviceRoleKey) {
+      console.log('🔍 Using Service Role Key for RLS bypass')
+      supabase = createClient(supabaseUrl, serviceRoleKey)
+    } else {
+      console.log('🔍 Service Role Key not available, using Anon Key')
+      supabase = createClient(supabaseUrl, supabaseAnonKey)
+    }
+    
+    // 연결 테스트 (간단한 쿼리)
+    const { data: testData, error: testError } = await supabase
       .from('products')
-      .select('*')
+      .select('id')
+      .limit(1)
+    
+    if (testError) {
+      console.error('Supabase connection test failed:', testError)
+      return res.status(500).json({
+        success: false,
+        message: 'Supabase connection failed',
+        error: testError.message,
+        debug: {
+          supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
+          supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
+          testError: testError
+        }
+      })
+    }
+
+    // 쿼리 파라미터 파싱 (06_제품정보_조회.xlsx 형식에 맞춤)
+    const { 
+      page = 1, 
+      limit = 100, 
+      startDate, 
+      endDate 
+    } = req.query
+    
+    // 페이지네이션 계산
+    const pageNum = parseInt(page, 10)
+    const limitNum = parseInt(limit, 10)
+    const offset = (pageNum - 1) * limitNum
+
+    // 입력값 검증
+    if (pageNum < 1 || limitNum < 1 || limitNum > 1000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid pagination parameters. Page must be >= 1, limit must be between 1 and 1000.'
+      })
+    }
+
+    // 기본 쿼리 설정
+    let query = supabase
+      .from('products')
+      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
+
+    // 날짜 필터링 (startDate, endDate 파라미터 지원)
+    if (startDate) {
+      query = query.or(`created_at.gte.${startDate},updated_at.gte.${startDate}`)
+    }
+    if (endDate) {
+      query = query.or(`created_at.lte.${endDate},updated_at.lte.${endDate}`)
+    }
+
+    // 페이지네이션 적용
+    query = query.range(offset, offset + limitNum - 1)
+
+    // 데이터 조회
+    const { data: products, error: productsError, count } = await query
+    
+    console.log('🔍 Products query result:', { data: products?.length, error: productsError, count })
     
     if (productsError) {
       console.error('Products fetch error:', productsError)
@@ -108,48 +130,26 @@ export default async function handler(req, res) {
         error: productsError.message
       })
     }
-    
-    // 디버깅: 제품 개수 확인
-    console.log('Products count:', products ? products.length : 0)
-    console.log('Supabase URL:', process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)
-    console.log('User ID:', user.id)
-    
-    // products_standard_code 정보 조회
-    const { data: standardCodes, error: standardCodesError } = await supabase
-      .from('products_standard_code')
-      .select('*')
-      .eq('status', 'active')
-    
-    if (standardCodesError) {
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to fetch standard codes',
-        error: standardCodesError.message
-      })
-    }
-    
-    // insurance_code를 기준으로 데이터 조합
-    const productsWithStandardCode = products.map(product => {
-      const standardCode = standardCodes.find(sc => sc.insurance_code === product.insurance_code)
-      return {
-        ...product,
-        standard_code: standardCode?.standard_code || null,
-        unit_packaging_desc: standardCode?.unit_packaging_desc || null,
-        unit_quantity: standardCode?.unit_quantity || null
-      }
-    })
 
-    return res.status(200).json({
+    // 페이지네이션 정보 계산
+    const totalPages = Math.ceil(count / limitNum)
+    const hasNextPage = pageNum < totalPages
+    const hasPrevPage = pageNum > 1
+
+    // 06_제품정보_조회.xlsx 형식에 맞춘 응답
+    const response = {
       success: true,
-      message: '제품 목록 조회 성공',
-      data: productsWithStandardCode || [],
-      debug: {
-        productsCount: products ? products.length : 0,
-        standardCodesCount: standardCodes ? standardCodes.length : 0,
-        supabaseUrl: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
-        userId: user.id
-      }
-    })
+      message: '제품 정보 조회 성공',
+      data: products || [],
+      count: count || 0,
+      page: pageNum,
+      limit: limitNum,
+      totalPages,
+      hasNextPage,
+      hasPrevPage
+    }
+
+    res.json(response)
 
   } catch (error) {
     console.error('Products API error details:', {
@@ -165,4 +165,4 @@ export default async function handler(req, res) {
       timestamp: new Date().toISOString()
     })
   }
-} 
+}

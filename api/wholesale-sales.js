@@ -1,100 +1,107 @@
+// Vercel 서버리스 함수 형식으로 변경 (15_도매매출_조회.xlsx 형식에 맞춤)
 import { createClient } from '@supabase/supabase-js'
 
-// 환경 변수 확인 함수
-function getEnvironmentVariables() {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
-  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
-  
-  return { supabaseUrl, supabaseAnonKey }
-}
-
-// Supabase 클라이언트 생성 함수
-function createSupabaseClient() {
-  const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables()
-  
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase configuration missing')
-  }
-  
-  try {
-    return createClient(supabaseUrl, supabaseAnonKey)
-  } catch (error) {
-    console.error('Failed to create Supabase client:', error)
-    throw error
-  }
-}
-
 export default async function handler(req, res) {
-  // CORS 헤더 설정
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-
-  // OPTIONS 요청 처리
-  if (req.method === 'OPTIONS') {
-    res.status(200).end()
-    return
-  }
-
   try {
-    if (req.method !== 'GET') {
-      return res.status(405).json({
-        success: false,
-        message: 'Method not allowed. Only GET is supported.'
-      })
-    }
+    // 환경 변수 확인 (개행 문자 제거)
+    const supabaseUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)?.trim()
+    const supabaseAnonKey = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY)?.trim()
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
 
-    // Supabase 클라이언트 생성
-    let supabase
-    try {
-      supabase = createSupabaseClient()
-    } catch (configError) {
-      console.error('Supabase configuration error:', configError)
+    // 환경 변수 디버깅
+    console.log('Wholesale Sales API - Environment variables:', {
+      supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
+      supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
+      serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing'
+    })
+
+    // 환경 변수가 없으면 기본값 사용 (개발용)
+    if (!supabaseUrl || !supabaseAnonKey) {
       return res.status(500).json({
         success: false,
         message: 'Server configuration error',
-        error: 'Supabase client initialization failed',
-        details: configError.message
+        error: 'Supabase configuration missing'
       })
     }
 
-    // 쿼리 파라미터 파싱
-    const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 100
-    const search = req.query.search || ''
-    const pharmacyCode = req.query.pharmacy_code
-    const standardCode = req.query.standard_code
-    const startDate = req.query.start_date
-    const endDate = req.query.end_date
+    // 토큰 검증
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized'
+      })
+    }
 
-    // 페이지네이션 유효성 검사
-    if (page < 1 || limit < 1 || limit > 1000) {
+    const token = authHeader.substring(7)
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey)
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token)
+
+    if (authError || !user || user.user_metadata?.user_type !== 'admin') {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized'
+      })
+    }
+
+    // Supabase 클라이언트 생성 (RLS 정책 무시를 위해 Service Role Key 사용)
+    let supabase
+    if (serviceRoleKey) {
+      console.log('🔍 Using Service Role Key for RLS bypass')
+      supabase = createClient(supabaseUrl, serviceRoleKey)
+    } else {
+      console.log('🔍 Service Role Key not available, using Anon Key')
+      supabase = createClient(supabaseUrl, supabaseAnonKey)
+    }
+
+    // 연결 테스트 (간단한 쿼리)
+    const { data: testData, error: testError } = await supabase
+      .from('wholesale_sales')
+      .select('id')
+      .limit(1)
+
+    if (testError) {
+      console.error('Supabase connection test failed:', testError)
+      return res.status(500).json({
+        success: false,
+        message: 'Supabase connection failed',
+        error: testError.message,
+        debug: {
+          supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
+          supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
+          testError: testError
+        }
+      })
+    }
+
+    // 쿼리 파라미터 파싱 (15_도매매출_조회.xlsx 형식에 맞춤)
+    const { 
+      page = 1, 
+      limit = 100, 
+      startDate, 
+      endDate
+    } = req.query
+
+    // 페이지네이션 계산
+    const pageNum = parseInt(page, 10)
+    const limitNum = parseInt(limit, 10)
+    const offset = (pageNum - 1) * limitNum
+
+    // 입력값 검증
+    if (pageNum < 1 || limitNum < 1 || limitNum > 1000) {
       return res.status(400).json({
         success: false,
-        message: '잘못된 페이지네이션 파라미터입니다.',
-        error: 'Invalid pagination parameters'
+        message: 'Invalid pagination parameters. Page must be >= 1, limit must be between 1 and 1000.'
       })
     }
 
-    const offset = (page - 1) * limit
-
-    // 도매 매출 목록 조회
+    // 기본 쿼리 설정
     let query = supabase
       .from('wholesale_sales')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
 
-    // 약국 코드 필터링
-    if (pharmacyCode) {
-      query = query.eq('pharmacy_code', pharmacyCode)
-    }
-
-    // 표준 코드 필터링
-    if (standardCode) {
-      query = query.eq('standard_code', standardCode)
-    }
-
-    // 날짜 범위 필터링
+    // 날짜 필터링 (startDate, endDate 파라미터 지원)
     if (startDate) {
       query = query.gte('sales_date', startDate)
     }
@@ -102,48 +109,50 @@ export default async function handler(req, res) {
       query = query.lte('sales_date', endDate)
     }
 
-    // 검색 기능
-    if (search && search.trim()) {
-      const searchTerm = search.trim()
-      query = query.or(`pharmacy_name.ilike.%${searchTerm}%,product_name.ilike.%${searchTerm}%`)
-    }
-
     // 페이지네이션 적용
-    query = query.range(offset, offset + limit - 1)
+    query = query.range(offset, offset + limitNum - 1)
 
+    // 데이터 조회
     const { data, error, count } = await query
 
+    console.log('🔍 Wholesale Sales query result:', { data: data?.length, error, count })
+
     if (error) {
-      console.error('Wholesale sales query error:', error)
+      console.error('Wholesale Sales fetch error:', error)
       return res.status(500).json({
         success: false,
-        message: '도매 매출 목록 조회 중 오류가 발생했습니다.',
+        message: 'Failed to fetch wholesale sales',
         error: error.message
       })
     }
 
     // 페이지네이션 정보 계산
-    const totalCount = count || 0
-    const totalPages = Math.ceil(totalCount / limit)
-    const hasNextPage = page < totalPages
-    const hasPrevPage = page > 1
+    const totalPages = Math.ceil(count / limitNum)
+    const hasNextPage = pageNum < totalPages
+    const hasPrevPage = pageNum > 1
 
-    return res.status(200).json({
+    // 15_도매매출_조회.xlsx 형식에 맞춘 응답
+    const response = {
       success: true,
       message: '도매 매출 목록 조회 성공',
       data: data || [],
-      pagination: {
-        currentPage: page,
-        limit,
-        totalCount,
-        totalPages,
-        hasNextPage,
-        hasPrevPage
-      }
-    })
+      count: count || 0,
+      page: pageNum,
+      limit: limitNum,
+      totalPages,
+      hasNextPage,
+      hasPrevPage
+    }
+
+    res.json(response)
 
   } catch (error) {
-    console.error('Wholesale sales API error:', error)
+    console.error('Wholesale Sales API error details:', {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    })
+
     return res.status(500).json({
       success: false,
       message: '서버 오류가 발생했습니다.',
