@@ -22,19 +22,6 @@ try {
 
 // IP 제한 함수
 function checkIPAccess(req) {
-  // 테스트를 위해 모든 IP 차단 (임시)
-  console.log('🔒 IP 차단 테스트 모드: 모든 IP 차단')
-  return { 
-    allowed: false, 
-    error: {
-      success: false,
-      message: 'IP 차단 테스트 중입니다.',
-      error: 'IP_ACCESS_DENIED_TEST',
-      clientIP: req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown',
-      timestamp: new Date().toISOString()
-    }
-  }
-  
   // 개발 환경에서는 모든 IP 허용
   if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
     console.log('🔓 개발 환경: 모든 IP 허용')
