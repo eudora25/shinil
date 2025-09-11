@@ -41,15 +41,6 @@
       ]
     },
     {
-      "source": "/swagger-ui.html",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "text/html"
-        }
-      ]
-    },
-    {
       "source": "/swagger-spec.json",
       "headers": [
         {
