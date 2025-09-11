@@ -8,7 +8,11 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 // 환경에 따라 적절한 .env 파일 로드
+<<<<<<< HEAD
 const envFile = process.env.NODE_ENV === 'production' ? '../.env.production' : '../.env.local'
+=======
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.local'
+>>>>>>> 6498a7c01ae8609f577b78e0fd9326bb9412e516
 config({ path: path.join(__dirname, envFile) })
 
 // 환경변수 로딩 확인

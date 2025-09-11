@@ -3,6 +3,8 @@ version: '3.8'
 services:
   # API 서버
   api-server:
+    env_file:
+      - ./vue-project/.env.local
     build:
       context: ./vue-project
       dockerfile: Dockerfile.api
@@ -15,16 +17,16 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3001
-      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
-      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+      - JWT_EXPIRY=86400
+      - JWT_REFRESH_EXPIRY=2592000
     networks:
       - shinil-network
-    depends_on:
-      - supabase
     restart: unless-stopped
 
   # Vue.js 애플리케이션
   vue-app:
+    env_file:
+      - ./vue-project/.env.local
     build:
       context: ./vue-project
       dockerfile: Dockerfile
@@ -37,72 +39,11 @@ services:
     environment:
       - NODE_ENV=development
       - DOCKER_ENV=true
-      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
-      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
     networks:
       - shinil-network
     depends_on:
       - api-server
-      - supabase
-
-  # Supabase 개발 환경
-  supabase:
-    image: supabase/supabase-dev
-    container_name: shinil_project-supabase
-    ports:
-      - "54321-54327:54321-54327"
-      - "8000-8001:8000-8001"
-      - "8443-8444:8443-8444"
-    environment:
-      - POSTGRES_PASSWORD=postgres
-      - JWT_SECRET=your-super-secret-jwt-token-with-at-least-32-characters-long
-      - DASHBOARD_USERNAME=supabase
-      - DASHBOARD_PASSWORD=this_password_is_insecure_and_should_be_updated
-      - API_EXTERNAL_URL=http://127.0.0.1:54321
-      - PGRST_DB_URI=postgres://postgres:postgres@docker.for.mac.localhost:5432/postgres
-      - KONG_DATABASE=off
-      - KONG_PLUGINS=request-transformer,cors,key-auth
-      - KONG_DECLARATIVE_CONFIG=/var/lib/kong/kong.yml
-    volumes:
-      - supabase-data:/var/lib/postgresql/data
-      - ./supabase:/supabase
-    networks:
-      - shinil-network
-
-  # PostgreSQL (Supabase용)
-  postgres:
-    image: postgres:15
-    container_name: shinil_project-postgres
-    command: postgres -c wal_level=logical -c max_replication_slots=10 -c max_wal_senders=10
-    environment:
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    networks:
-      - shinil-network
-
-  # pgAdmin (선택사항)
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: shinil_project-pgadmin
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
-      - PGADMIN_DEFAULT_PASSWORD=admin
-    ports:
-      - "5050:80"
-    depends_on:
-      - postgres
-    networks:
-      - shinil-network
-
-
-
-volumes:
-  supabase-data:
-  postgres-data:
+    restart: unless-stopped
 
 networks:
   shinil-network:

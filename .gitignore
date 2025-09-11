@@ -128,11 +128,7 @@ venv/
 env/
 ENV/
 
-# Test files
-tests/test-*.js
-tests/test-*.html
-tests/*-test.js
-tests/*-test.html
+# Test files (removed)
 
 # Temporary test files
 temp-*.js
@@ -161,9 +157,7 @@ __pycache__/
 *.pyd
 .Python
 
-# Check and fix files
-scripts/check_*.py
-scripts/fix_*.py
+# Check and fix files (removed)
 
 # API documentation files (if generated)
 API_Files/
