@@ -168,6 +168,12 @@ const serverStartTime = Date.now()
 
 export default async function handler(req, res) {
   try {
+    // IP 접근 권한 확인
+    const ipCheck = checkIPAccess(req)
+    if (!ipCheck.allowed) {
+      return res.status(403).json(ipCheck.error)
+    }
+
     // 환경 변수 확인
     if (!getEnvironmentVariables()) {
       return res.status(500).json({

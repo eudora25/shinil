@@ -162,6 +162,12 @@ function createSupabaseClient() {
 
 // POST /api/auth - 사용자 로그인 (03_사용자_로그인.xlsx 형식에 맞춤)
 export default async (req, res) => {
+  // IP 접근 권한 확인
+  const ipCheck = checkIPAccess(req)
+  if (!ipCheck.allowed) {
+    return res.status(403).json(ipCheck.error)
+  }
+
   // POST 메서드만 허용
   if (req.method !== 'POST') {
     return res.status(405).json({
