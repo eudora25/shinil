@@ -11,7 +11,7 @@
     "docker:up": "docker-compose -f docker-compose.api-only.yml up -d",
     "docker:down": "docker-compose -f docker-compose.api-only.yml down",
     "docker:logs": "docker logs shinil_project-api-server",
-    "vercel-build": "npm install"
+    "vercel-build": "echo 'Starting Vercel build...' && npm install && echo 'Vercel build completed'"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",

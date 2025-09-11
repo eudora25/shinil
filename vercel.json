@@ -2,7 +2,8 @@
   "buildCommand": "npm install",
   "build": {
     "env": {
-      "NODE_ENV": "production"
+      "NODE_ENV": "production",
+      "VERCEL_BUILD_CACHE_BUST": "1"
     }
   },
   "env": {
