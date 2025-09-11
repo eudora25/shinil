@@ -90,7 +90,7 @@
                     "timestamp": {
                       "type": "string",
                       "format": "date-time",
-                      "example": "2024-01-01T00:00:00.000Z"
+                      "example": "2025-01-01T00:00:00.000Z"
                     },
                     "environment": {
                       "type": "string",
@@ -129,7 +129,7 @@
                     "timestamp": {
                       "type": "string",
                       "format": "date-time",
-                      "example": "2024-01-01T00:00:00.000Z"
+                      "example": "2025-01-01T00:00:00.000Z"
                     },
                     "uptime": {
                       "type": "number",
@@ -1387,7 +1387,7 @@
               "type": "string",
               "format": "date"
             },
-            "example": "2024-01-01"
+            "example": "2025-01-01"
           },
           {
             "name": "endDate",
@@ -1398,7 +1398,7 @@
               "type": "string",
               "format": "date"
             },
-            "example": "2024-12-31"
+            "example": "2025-12-31"
           }
         ],
         "security": [
@@ -1548,7 +1548,7 @@
               "type": "string",
               "format": "date"
             },
-            "example": "2024-01-01"
+            "example": "2025-01-01"
           },
           {
             "name": "endDate",
@@ -1559,7 +1559,7 @@
               "type": "string",
               "format": "date"
             },
-            "example": "2024-12-31"
+            "example": "2025-12-31"
           }
         ],
         "security": [
@@ -1673,7 +1673,7 @@
       "get": {
         "tags": ["매출 관리"],
         "summary": "도매 매출 조회",
-        "description": "도매 매출 정보를 조회합니다.",
+        "description": "도매 매출 정보를 조회합니다. sales_date가 지정된 날짜 범위에 포함되는 경우를 검색합니다.",
         "parameters": [
           {
             "name": "page",
@@ -1699,6 +1699,28 @@
               "default": 100
             },
             "example": 100
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": false,
+            "description": "검색 시작일 (YYYY-MM-DD 형식). sales_date가 이 날짜 이후인 경우",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2025-06-01"
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": false,
+            "description": "검색 종료일 (YYYY-MM-DD 형식). sales_date가 이 날짜 이전인 경우",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2025-09-04"
           }
         ],
         "security": [
@@ -1762,6 +1784,11 @@
                           "unit_price": {
                             "type": "number",
                             "description": "단가"
+                          },
+                          "sales_date": {
+                            "type": "string",
+                            "format": "date",
+                            "description": "매출일"
                           },
                           "created_at": {
                             "type": "string",
@@ -2762,7 +2789,7 @@
               "type": "string",
               "format": "date"
             },
-            "example": "2024-01-01"
+            "example": "2025-01-01"
           },
           {
             "name": "endDate",
@@ -2773,7 +2800,7 @@
               "type": "string",
               "format": "date"
             },
-            "example": "2024-12-31"
+            "example": "2025-12-31"
           }
         ],
         "security": [
@@ -2886,7 +2913,7 @@
               "type": "string",
               "format": "date"
             },
-            "example": "2024-01-01"
+            "example": "2025-01-01"
           },
           {
             "name": "endDate",
@@ -2897,7 +2924,7 @@
               "type": "string",
               "format": "date"
             },
-            "example": "2024-12-31"
+            "example": "2025-12-31"
           }
         ],
         "security": [
