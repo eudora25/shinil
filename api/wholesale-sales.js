@@ -28,48 +28,22 @@ function checkIPAccess(req) {
     return { allowed: true }
   }
 
-  // 허용된 IP 목록
-  const allowedIPs = [
-    '127.0.0.1',        // localhost
-    '::1',              // localhost IPv6
-    '192.168.1.119',    // 예시: 허용할 IP 주소
-    '203.241.xxx.xxx',  // 예시: 허용할 IP 주소 (실제 IP로 변경 필요)
-    '1.214.163.196',    // 현재 사용자 IP
-    '192.168.65.1',     // Docker/개발 환경 IP
-    '::ffff:192.168.65.1',  // IPv4-mapped IPv6 형식
-    '112.187.169.69',   // 추가 허용 IP
-    '58.229.119.165',   // 추가 허용 IP
-    '172.19.0.1',       // Docker 컨테이너 네트워크 IP
-    '::ffff:172.19.0.1', // Docker 컨테이너 네트워크 IP (IPv6 형식)
-    '172.64.149.246',   // 현재 클라이언트 IP
-    '::ffff:172.64.149.246', // 현재 클라이언트 IP (IPv6 형식)
-    '1.229.109.223',    // 현재 클라이언트 IP
-    '::ffff:1.229.109.223', // 현재 클라이언트 IP (IPv6 형식)
-    '172.18.0.6',       // Docker 컨테이너 네트워크 IP
-    '::ffff:172.18.0.6', // Docker 컨테이너 네트워크 IP (IPv6 형식)
-    '172.18.0.1',       // Docker 컨테이너 네트워크 IP
-    '::ffff:172.18.0.1', // Docker 컨테이너 네트워크 IP (IPv6 형식)
-    '172.18.0.0/16',    // Docker 컨테이너 네트워크 대역
-    '172.19.0.0/16',    // Docker 컨테이너 네트워크 대역
-    '172.20.0.0/16',    // Docker 컨테이너 네트워크 대역
-    '172.21.0.0/16',    // Docker 컨테이너 네트워크 대역
-    '172.22.0.0/16',    // Docker 컨테이너 네트워크 대역
-    '172.23.0.0/16',    // Docker 컨테이너 네트워크 대역
-    '172.24.0.0/16',    // Docker 컨테이너 네트워크 대역
-    '172.25.0.0/16',    // Docker 컨테이너 네트워크 대역
-    '172.26.0.0/16',    // Docker 컨테이너 네트워크 대역
-    '172.27.0.0/16',    // Docker 컨테이너 네트워크 대역
-    '172.28.0.0/16',    // Docker 컨테이너 네트워크 대역
-    '172.29.0.0/16',    // Docker 컨테이너 네트워크 대역
-    '172.30.0.0/16',    // Docker 컨테이너 네트워크 대역
-    '172.31.0.0/16',    // Docker 컨테이너 네트워크 대역
-  ]
-
-  // 환경 변수에서 IP 목록 로드
+    // 환경 변수에서 허용된 IP 목록 로드
   const envIPs = process.env.ALLOWED_IPS
-  if (envIPs) {
-    allowedIPs.push(...envIPs.split(',').map(ip => ip.trim()))
+  if (!envIPs) {
+    console.log('❌ ALLOWED_IPS 환경 변수가 설정되지 않았습니다')
+    return { 
+      allowed: false, 
+      error: {
+        success: false,
+        message: 'IP 접근 제한 설정이 올바르지 않습니다.',
+        error: 'IP_CONFIG_ERROR',
+        timestamp: new Date().toISOString()
+      }
+    }
   }
+
+  const allowedIPs = envIPs.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0)
 
   // 클라이언트 IP 확인
   const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
