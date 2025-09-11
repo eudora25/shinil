@@ -6,7 +6,9 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: () => import('@/components/HomeComponent.vue')
+      component: {
+        template: '<div><h1>Shinil API Server</h1><p>Welcome to Shinil API Server</p></div>'
+      }
     },
     
     // API 라우트들 (컴포넌트 없이 텍스트 응답)
