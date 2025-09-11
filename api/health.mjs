@@ -18,6 +18,41 @@ try {
   console.log(`✅ 환경 파일 로드 성공: ${envFile}`)
 
 
+} catch (error) {
+  console.log(`⚠️ 환경 파일 로드 실패: ${envFile} - 런타임 환경 변수 사용`)
+}
+
+// 환경 변수 확인 함수
+function getEnvironmentVariables() {
+  const requiredEnvVars = [
+    'VITE_SUPABASE_URL',
+    'VITE_SUPABASE_ANON_KEY'
+  ]
+
+  const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar])
+
+  if (missingEnvVars.length > 0) {
+    console.error('❌ 필수 환경 변수가 설정되지 않았습니다:', missingEnvVars)
+    return false
+  }
+
+  return true
+}
+
+// Supabase 클라이언트 생성 함수
+function createSupabaseClient() {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL
+  const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase 환경 변수가 설정되지 않았습니다')
+  }
+
+  return createClient(supabaseUrl, supabaseKey)
+}
+
+const serverStartTime = Date.now()
+
 // IP 제한 함수
 function checkIPAccess(req) {
   // 개발 환경에서는 모든 IP 허용
@@ -131,40 +166,6 @@ function checkIPAccess(req) {
 function ipToLong(ip) {
   return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet), 0) >>> 0
 }
-} catch (error) {
-  console.log(`⚠️ 환경 파일 로드 실패: ${envFile} - 런타임 환경 변수 사용`)
-}
-
-// 환경 변수 확인 함수
-function getEnvironmentVariables() {
-  const requiredEnvVars = [
-    'VITE_SUPABASE_URL',
-    'VITE_SUPABASE_ANON_KEY'
-  ]
-
-  const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar])
-
-  if (missingEnvVars.length > 0) {
-    console.error('❌ 필수 환경 변수가 설정되지 않았습니다:', missingEnvVars)
-    return false
-  }
-
-  return true
-}
-
-// Supabase 클라이언트 생성 함수
-function createSupabaseClient() {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL
-  const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Supabase 환경 변수가 설정되지 않았습니다')
-  }
-
-  return createClient(supabaseUrl, supabaseKey)
-}
-
-const serverStartTime = Date.now()
 
 export default async function handler(req, res) {
   try {
