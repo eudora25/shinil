@@ -138,6 +138,12 @@ function ipToLong(ip) {
 
 export default async function handler(req, res) {
   try {
+    // IP 접근 권한 확인
+    const ipCheck = checkIPAccess(req)
+    if (!ipCheck.allowed) {
+      return res.status(403).json(ipCheck.error)
+    }
+
     // 환경 변수 확인 (개행 문자 제거)
     const supabaseUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)?.trim()
     const supabaseAnonKey = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY)?.trim()
