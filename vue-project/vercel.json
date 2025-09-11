@@ -20,6 +20,14 @@
     {
       "source": "/api/(.*)",
       "destination": "/api/$1"
+    },
+    {
+      "source": "/swagger-ui.html",
+      "destination": "/swagger-ui.html"
+    },
+    {
+      "source": "/swagger-spec.json",
+      "destination": "/swagger-spec.json"
     }
   ],
   "headers": [
