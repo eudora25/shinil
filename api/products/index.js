@@ -1,5 +1,26 @@
 import { createClient } from '@supabase/supabase-js'
 
+import { config } from 'dotenv'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// 환경 변수 로드
+const nodeEnv = process.env.NODE_ENV || 'development'
+const envFile = nodeEnv === 'production' ? '.env.production' : '.env.local'
+
+try {
+  config({ 
+    path: path.join(__dirname, '..', envFile),
+    override: true
+  })
+  console.log(`✅ 환경 파일 로드 성공: ${envFile}`)
+} catch (error) {
+  console.log(`⚠️ 환경 파일 로드 실패: ${envFile} - 런타임 환경 변수 사용`)
+}
+
 export default async function handler(req, res) {
   console.log('🚀 === Products API 호출 시작 ===')
   console.log('📝 Method:', req.method)

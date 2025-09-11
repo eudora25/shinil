@@ -1,6 +1,27 @@
 // Vercel 서버리스 함수 형식 (04_토큰_검증.xlsx 형식에 맞춤)
 import { createClient } from '@supabase/supabase-js'
 
+import { config } from 'dotenv'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// 환경 변수 로드
+const nodeEnv = process.env.NODE_ENV || 'development'
+const envFile = nodeEnv === 'production' ? '.env.production' : '.env.local'
+
+try {
+  config({ 
+    path: path.join(__dirname, '..', envFile),
+    override: true
+  })
+  console.log(`✅ 환경 파일 로드 성공: ${envFile}`)
+} catch (error) {
+  console.log(`⚠️ 환경 파일 로드 실패: ${envFile} - 런타임 환경 변수 사용`)
+}
+
 // 환경 변수 확인 함수
 function getEnvironmentVariables() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
