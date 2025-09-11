@@ -1,0 +1,28 @@
+// 프로덕션 환경 변수 설정
+// 이 파일은 Vercel 배포 시 환경 변수를 직접 설정합니다.
+
+export const productionEnv = {
+  NODE_ENV: 'production',
+  PORT: 3001,
+  
+  // Supabase 설정 (프로덕션용)
+  VITE_SUPABASE_URL: 'https://vaeolqywqckiwwtspxfp.supabase.co',
+  VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhZW9scXl3cWNraXd3dHNweGZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNDg0MTIsImV4cCI6MjA2MjYyNDQxMn0.Br2-nlOUu2j7_44O5k_lDWAzxTMVnvOQINhNJyYZb30',
+  
+  // API 서버 설정
+  API_BASE_URL: 'https://sinil-api.vercel.app',
+  CORS_ORIGIN: 'https://sinil-api.vercel.app',
+  
+  // 로깅 설정
+  LOG_LEVEL: 'info',
+  
+  // 보안 설정
+  JWT_SECRET: 'your-production-jwt-secret-key',
+  SESSION_SECRET: 'your-production-session-secret',
+  
+  // IP 제한 설정
+  ALLOWED_IPS: '127.0.0.1,::1,192.168.1.119,203.241.xxx.xxx,1.214.163.196,192.168.65.1,::ffff:192.168.65.1,112.187.169.69,58.229.119.165,172.19.0.1,::ffff:172.19.0.1,172.64.149.246,::ffff:172.64.149.246,1.229.109.223,::ffff:1.229.109.223,172.18.0.6,::ffff:172.18.0.6,172.18.0.0/16,172.19.0.0/16,172.20.0.0/16,172.21.0.0/16,172.22.0.0/16,172.23.0.0/16,172.24.0.0/16,172.25.0.0/16,172.26.0.0/16,172.27.0.0/16,172.28.0.0/16,172.29.0.0/16,172.30.0.0/16,172.31.0.0/16',
+  
+  // Supabase Service Role Key (RLS 우회용)
+  SUPABASE_SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhZW9scXl3cWNraXd3dHNweGZwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NzA0ODQxMiwiZXhwIjoyMDYyNjI0NDEyfQ.fJoKwqr_HvJ5Hz2ZwaQ5gHcqiu9b7oRcZR945Nf2w0g'
+}
