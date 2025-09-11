@@ -120,11 +120,16 @@ export default async function handler(req, res) {
     // swagger-spec.json 파일 읽기
     const specPath = path.join(__dirname, '..', 'swagger-spec.json')
     
+    console.log('🔍 Swagger spec 파일 경로:', specPath)
+    console.log('🔍 파일 존재 여부:', fs.existsSync(specPath))
+    
     if (!fs.existsSync(specPath)) {
+      console.log('❌ Swagger spec 파일을 찾을 수 없습니다:', specPath)
       return res.status(404).json({
         success: false,
         message: 'Swagger spec 파일을 찾을 수 없습니다.',
-        error: 'FILE_NOT_FOUND'
+        error: 'FILE_NOT_FOUND',
+        path: specPath
       })
     }
 
