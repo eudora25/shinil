@@ -61,43 +61,19 @@ export default async function handler(req, res) {
 
     console.log('📝 쿼리 파라미터:', { page, limit, startDate, endDate, settlement_month, client_id })
 
-    // 여러 가능한 테이블명 시도
-    const possibleTableNames = [
-      'settlement_shares',
-      'settlement_share', 
-      'settlements',
-      'settlement',
-      'shares',
-      'settlement_data',
-      'settlement_list'
-    ]
+    // 테이블 구조 확인
+    console.log('🔍 settlement_share 테이블 구조 확인 중...')
+    const { data: sampleData, error: sampleError } = await supabase
+      .from('settlement_share')
+      .select('*')
+      .limit(1)
 
-    let tableName = null
-    let sampleData = null
-
-    for (const table of possibleTableNames) {
-      console.log(`🔍 테이블 "${table}" 확인 중...`)
-      const { data, error } = await supabase
-        .from(table)
-        .select('*')
-        .limit(1)
-
-      if (!error) {
-        tableName = table
-        sampleData = data
-        console.log(`✅ 테이블 "${table}" 찾음!`)
-        break
-      } else {
-        console.log(`❌ 테이블 "${table}" 없음:`, error.message)
-      }
-    }
-
-    if (!tableName) {
+    if (sampleError) {
+      console.error('❌ 테이블 접근 에러:', sampleError)
       return res.status(500).json({
         success: false,
-        message: '정산 관련 테이블을 찾을 수 없습니다.',
-        error: 'No settlement table found',
-        attempted_tables: possibleTableNames
+        message: '데이터베이스 테이블 접근 중 오류가 발생했습니다.',
+        error: sampleError.message
       })
     }
 
@@ -105,7 +81,7 @@ export default async function handler(req, res) {
 
     // 기본 쿼리 구성
     let query = supabase
-      .from(tableName)
+      .from('settlement_share')
       .select('*', { count: 'exact' })
 
     // 날짜 필터 적용

@@ -61,10 +61,10 @@ export default async function handler(req, res) {
 
     console.log('📝 쿼리 파라미터:', { page, limit, year, status })
 
-    // 먼저 테이블 구조 확인
-    console.log('🔍 테이블 구조 확인 중...')
+    // 테이블 구조 확인
+    console.log('🔍 settlement_month 테이블 구조 확인 중...')
     const { data: sampleData, error: sampleError } = await supabase
-      .from('settlement_months')
+      .from('settlement_month')
       .select('*')
       .limit(1)
 
@@ -81,7 +81,7 @@ export default async function handler(req, res) {
 
     // 기본 쿼리 구성
     let query = supabase
-      .from('settlement_months')
+      .from('settlement_month')
       .select('*', { count: 'exact' })
 
     // 필터 적용
