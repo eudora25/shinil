@@ -144,12 +144,25 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('❌ Settlement Share API 에러:', error)
+    console.error('❌ 에러 스택:', error.stack)
+    console.error('❌ 에러 상세:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    })
+    
     res.status(500).json({
-      success: false,
-      message: '서버 오류가 발생했습니다.',
-      error: error.message,
-      timestamp: new Date().toISOString()
+      error: {
+        code: "500",
+        message: "A server error has occurred"
+      },
+      debug: {
+        success: false,
+        message: '서버 오류가 발생했습니다.',
+        error: error.message,
+        errorName: error.name,
+        timestamp: new Date().toISOString()
+      }
     })
   }
-}
 }
