@@ -81,8 +81,8 @@ export default async function handler(req, res) {
 
     // 검색 조건 추가 (실제 컬럼명으로 수정)
     if (search) {
-      // 일반적인 제품 테이블 컬럼명들로 검색
-      query = query.or(`product_name.ilike.%${search}%, product_code.ilike.%${search}%, name.ilike.%${search}%, code.ilike.%${search}%`)
+      // product_name 컬럼으로 검색
+      query = query.or(`product_name.ilike.%${search}%, product_code.ilike.%${search}%`)
     }
 
     if (category) {
