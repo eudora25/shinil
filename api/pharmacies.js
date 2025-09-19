@@ -40,16 +40,21 @@ export default async function handler(req, res) {
     console.log('Supabase Key:', supabaseAnonKey ? '설정됨' : '미설정')
     console.log('Service Role Key:', serviceRoleKey ? '설정됨' : '미설정')
 
-    // Supabase 클라이언트 생성
-    if (!supabaseUrl || !supabaseAnonKey) {
+    // Supabase 클라이언트 생성 (Service Role Key 사용 - RLS 우회)
+    if (!supabaseUrl || !serviceRoleKey) {
       return res.status(500).json({
         success: false,
         message: 'Server configuration error',
-        error: 'Supabase environment variables not configured'
+        error: 'Supabase environment variables not configured',
+        debug: {
+          supabaseUrl: !!supabaseUrl,
+          serviceRoleKey: !!serviceRoleKey
+        }
       })
     }
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    console.log('🔑 Service Role Key 사용하여 Supabase 클라이언트 생성')
+    const supabase = createClient(supabaseUrl, serviceRoleKey)
 
     // 쿼리 파라미터 파싱
     const { page = 1, limit = 100, search, region, type } = req.query

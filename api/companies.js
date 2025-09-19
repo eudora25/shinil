@@ -30,8 +30,8 @@ export default async function handler(req, res) {
     console.log('Supabase Key:', supabaseAnonKey ? '설정됨' : '미설정')
     console.log('Service Role Key:', serviceRoleKey ? '설정됨' : '미설정')
 
-    // Supabase 클라이언트 생성
-    if (!supabaseUrl || !supabaseAnonKey) {
+    // Supabase 클라이언트 생성 (Service Role Key 사용 - RLS 우회)
+    if (!supabaseUrl || !serviceRoleKey) {
       return res.status(500).json({
         success: false,
         message: 'Server configuration error',
@@ -80,7 +80,7 @@ export default async function handler(req, res) {
     }
 
     const token = authHeader.substring(7)
-    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey)
+    const supabaseAuth = createClient(supabaseUrl, serviceRoleKey)
     const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token)
 
     if (authError || !user || user.user_metadata?.user_type !== 'admin') {
@@ -96,7 +96,7 @@ export default async function handler(req, res) {
     if (serviceRoleKey) {
       supabase = createClient(supabaseUrl, serviceRoleKey)
     } else {
-      supabase = createClient(supabaseUrl, supabaseAnonKey)
+      supabase = createClient(supabaseUrl, serviceRoleKey)
     }
     
     // 연결 테스트 (간단한 쿼리)
