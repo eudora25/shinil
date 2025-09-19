@@ -56,10 +56,10 @@ export default async function handler(req, res) {
     console.log('🔑 Service Role Key 사용하여 Supabase 클라이언트 생성')
     const supabase = createClient(supabaseUrl, serviceRoleKey)
 
-    // 쿼리 파라미터 파싱
-    const { page = 1, limit = 100, startDate, endDate, settlement_month, client_id } = req.query
+    // 쿼리 파라미터 파싱 (실제 컬럼명에 맞게 수정)
+    const { page = 1, limit = 100, settlement_month, company_id, share_enabled } = req.query
 
-    console.log('📝 쿼리 파라미터:', { page, limit, startDate, endDate, settlement_month, client_id })
+    console.log('📝 쿼리 파라미터:', { page, limit, settlement_month, company_id, share_enabled })
 
     // 테이블 구조 확인
     console.log('🔍 settlement_share 테이블 구조 확인 중...')
@@ -84,17 +84,17 @@ export default async function handler(req, res) {
       .from('settlement_share')
       .select('*', { count: 'exact' })
 
-    // 날짜 필터 적용
-    if (startDate && endDate) {
-      query = query.gte('settlement_date', startDate).lte('settlement_date', endDate)
-    }
-
+    // 필터 적용 (실제 컬럼명 사용)
     if (settlement_month) {
       query = query.eq('settlement_month', settlement_month)
     }
 
-    if (client_id) {
-      query = query.eq('client_id', client_id)
+    if (company_id) {
+      query = query.eq('company_id', company_id)
+    }
+
+    if (share_enabled !== undefined) {
+      query = query.eq('share_enabled', share_enabled === 'true')
     }
 
     // 페이지네이션 적용
@@ -102,8 +102,8 @@ export default async function handler(req, res) {
     const to = from + limit - 1
     query = query.range(from, to)
 
-    // 정렬 (최신순)
-    query = query.order('settlement_date', { ascending: false })
+    // 정렬 (생성일 기준 최신순)
+    query = query.order('created_at', { ascending: false })
 
     console.log('🔍 Supabase 쿼리 실행 중...')
     const { data, error, count } = await query
@@ -132,10 +132,9 @@ export default async function handler(req, res) {
           totalPages: Math.ceil((count || 0) / limit)
         },
         filters: {
-          startDate: startDate || null,
-          endDate: endDate || null,
           settlement_month: settlement_month || null,
-          client_id: client_id || null
+          company_id: company_id || null,
+          share_enabled: share_enabled || null
         }
       },
       timestamp: new Date().toISOString()
@@ -152,4 +151,5 @@ export default async function handler(req, res) {
       timestamp: new Date().toISOString()
     })
   }
+}
 }
