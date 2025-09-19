@@ -56,14 +56,33 @@ export default async function handler(req, res) {
 
     console.log('📝 쿼리 파라미터:', { page, limit, search, category, company_id })
 
-    // 기본 쿼리 구성
+    // 먼저 테이블 구조 확인을 위해 간단한 쿼리 실행
+    console.log('🔍 테이블 구조 확인 중...')
+    const { data: sampleData, error: sampleError } = await supabase
+      .from('products')
+      .select('*')
+      .limit(1)
+
+    if (sampleError) {
+      console.error('❌ 테이블 접근 에러:', sampleError)
+      return res.status(500).json({
+        success: false,
+        message: '데이터베이스 테이블 접근 중 오류가 발생했습니다.',
+        error: sampleError.message
+      })
+    }
+
+    console.log('✅ 테이블 구조 확인 완료:', sampleData?.[0] ? Object.keys(sampleData[0]) : '테이블이 비어있음')
+
+    // 기본 쿼리 구성 (실제 컬럼명 사용)
     let query = supabase
       .from('products')
       .select('*', { count: 'exact' })
 
-    // 검색 조건 추가
+    // 검색 조건 추가 (실제 컬럼명으로 수정)
     if (search) {
-      query = query.or(`name.ilike.%${search}%, code.ilike.%${search}%`)
+      // 일반적인 제품 테이블 컬럼명들로 검색
+      query = query.or(`product_name.ilike.%${search}%, product_code.ilike.%${search}%, name.ilike.%${search}%, code.ilike.%${search}%`)
     }
 
     if (category) {
@@ -79,8 +98,8 @@ export default async function handler(req, res) {
     const to = from + limit - 1
     query = query.range(from, to)
 
-    // 정렬 (기본: 이름순)
-    query = query.order('name', { ascending: true })
+    // 정렬 (실제 컬럼명으로 수정)
+    query = query.order('product_name', { ascending: true })
 
     console.log('🔍 Supabase 쿼리 실행 중...')
     const { data, error, count } = await query
