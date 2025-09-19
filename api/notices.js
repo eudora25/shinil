@@ -86,7 +86,7 @@ export default async function handler(req, res) {
 
     // 검색 조건 추가 (실제 컬럼명으로 수정)
     if (search) {
-      query = query.or(`title.ilike.%${search}%, content.ilike.%${search}%, notice_title.ilike.%${search}%, notice_content.ilike.%${search}%`)
+      query = query.or(`title.ilike.%${search}%, content.ilike.%${search}%`)
     }
 
     if (category) {

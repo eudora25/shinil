@@ -86,7 +86,7 @@ export default async function handler(req, res) {
 
     // 검색 조건 추가 (실제 컬럼명으로 수정)
     if (search) {
-      query = query.or(`pharmacy_name.ilike.%${search}%, pharmacy_code.ilike.%${search}%, name.ilike.%${search}%, code.ilike.%${search}%, address.ilike.%${search}%`)
+      query = query.or(`name.ilike.%${search}%, code.ilike.%${search}%, address.ilike.%${search}%`)
     }
 
     if (region) {
@@ -103,7 +103,7 @@ export default async function handler(req, res) {
     query = query.range(from, to)
 
     // 정렬 (실제 컬럼명으로 수정)
-    query = query.order('pharmacy_name', { ascending: true })
+    query = query.order('name', { ascending: true })
 
     console.log('🔍 Supabase 쿼리 실행 중...')
     const { data, error, count } = await query

@@ -68,7 +68,7 @@ export default async function handler(req, res) {
 
     // 검색 조건 추가 (실제 컬럼명으로 수정)
     if (search) {
-      query = query.or(`client_name.ilike.%${search}%, client_code.ilike.%${search}%, name.ilike.%${search}%, code.ilike.%${search}%, address.ilike.%${search}%`)
+      query = query.or(`name.ilike.%${search}%, code.ilike.%${search}%, address.ilike.%${search}%`)
     }
 
     if (type) {
@@ -85,7 +85,7 @@ export default async function handler(req, res) {
     query = query.range(from, to)
 
     // 정렬 (기본: 이름순)
-    query = query.order('client_name', { ascending: true })
+    query = query.order('name', { ascending: true })
 
     console.log('🔍 Supabase 쿼리 실행 중...')
     const { data, error, count } = await query
