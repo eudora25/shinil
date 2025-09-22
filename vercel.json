@@ -2,6 +2,10 @@
   "version": 2,
   "builds": [
     {
+      "src": "public/**/*",
+      "use": "@vercel/static"
+    },
+    {
       "src": "api/**/*.js",
       "use": "@vercel/node"
     },
@@ -16,16 +20,8 @@
       "dest": "/api/$1"
     },
     {
-      "src": "/swagger-ui.html",
-      "dest": "/api/swagger-ui.mjs"
-    },
-    {
-      "src": "/swagger-spec.json",
-      "dest": "/api/swagger-spec.mjs"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/api/index.js"
+      "dest": "/public/$1"
     }
   ],
   "functions": {
@@ -35,8 +31,5 @@
     "api/**/*.mjs": {
       "runtime": "nodejs18.x"
     }
-  },
-  "env": {
-    "NODE_ENV": "production"
   }
 }
