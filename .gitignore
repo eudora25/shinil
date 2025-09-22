@@ -150,7 +150,8 @@ docs/
 exports/*.xlsx
 exports/*.xls
 
-# Python cache files
+# Python files and cache
+*.py
 __pycache__/
 *.pyc
 *.pyo

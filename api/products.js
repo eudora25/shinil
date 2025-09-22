@@ -118,51 +118,6 @@ export default async function handler(req, res) {
     console.log('🔑 Service Role Key 사용하여 Supabase 클라이언트 생성')
     const supabase = createClient(supabaseUrl, serviceRoleKey)
 
-    // Bearer 토큰 검증
-    const authHeader = req.headers.authorization
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('❌ Authorization 헤더가 없거나 Bearer 형식이 아님')
-      return res.status(401).json({
-        success: false,
-        data: [],
-        count: 0,
-        page: 1,
-        limit: 100
-      })
-    }
-
-    const token = authHeader.substring(7)
-    console.log('🔍 토큰 검증 중...')
-    
-    // 토큰 검증을 위한 Supabase Auth 클라이언트 (anon key 사용)
-    const supabaseAuth = createClient(supabaseUrl, serviceRoleKey)
-    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token)
-    
-    if (authError || !user) {
-      console.log('❌ 토큰 검증 실패:', authError?.message)
-      return res.status(401).json({
-        success: false,
-        data: [],
-        count: 0,
-        page: 1,
-        limit: 100
-      })
-    }
-
-    // 관리자 권한 확인
-    if (user.user_metadata?.user_type !== 'admin') {
-      console.log('❌ 관리자 권한 필요:', user.user_metadata?.user_type)
-      return res.status(401).json({
-        success: false,
-        data: [],
-        count: 0,
-        page: 1,
-        limit: 100
-      })
-    }
-
-    console.log('✅ 토큰 검증 성공:', user.email)
-
     // 쿼리 파라미터 파싱
     const { page = 1, limit = 100, search, category, company_id } = req.query
 
