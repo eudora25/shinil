@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/swagger-ui.html",
+      "destination": "/api/swagger-ui.mjs"
+    },
+    {
+      "source": "/swagger-spec.json", 
+      "destination": "/api/swagger-spec.mjs"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    }
+  ]
+}

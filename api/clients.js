@@ -60,6 +60,61 @@ export default async function handler(req, res) {
       })
     }
 
+    // 토큰 검증
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('❌ Authorization 헤더가 없거나 Bearer 형식이 아님')
+      return res.status(401).json({
+        success: false,
+        message: 'Authorization 헤더가 필요합니다'
+      })
+    }
+
+    const token = authHeader.substring(7)
+    console.log('🔍 토큰 검증 시작:', token.substring(0, 20) + '...')
+    
+    const supabaseAuth = createClient(supabaseUrl, serviceRoleKey)
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token)
+
+    console.log('🔍 Supabase 토큰 검증 결과:')
+    console.log('- authError:', authError)
+    console.log('- user 존재:', !!user)
+    console.log('- user_type:', user?.user_metadata?.user_type)
+
+    if (authError) {
+      console.log('❌ 토큰 인증 오류:', authError)
+      return res.status(401).json({
+        success: false,
+        message: 'Token authentication failed',
+        debug: {
+          error: authError.message,
+          code: authError.code
+        }
+      })
+    }
+
+    if (!user) {
+      console.log('❌ 사용자 정보를 찾을 수 없음')
+      return res.status(401).json({
+        success: false,
+        message: 'User not found'
+      })
+    }
+
+    if (user.user_metadata?.user_type !== 'admin') {
+      console.log('❌ 관리자 권한 부족. 현재 user_type:', user.user_metadata?.user_type)
+      return res.status(403).json({
+        success: false,
+        message: 'Admin access required',
+        debug: {
+          userType: user.user_metadata?.user_type,
+          required: 'admin'
+        }
+      })
+    }
+
+    console.log('✅ 토큰 검증 성공 - Admin 사용자:', user.email)
+
     console.log('🔑 Service Role Key 사용하여 Supabase 클라이언트 생성')
     const supabase = createClient(supabaseUrl, serviceRoleKey)
 

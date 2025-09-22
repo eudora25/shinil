@@ -1,12 +1,7 @@
 // Vercel 서버리스 함수 형식으로 변경 (18_실적흡수율_정보.xlsx 형식에 맞춤)
 import { createClient } from '@supabase/supabase-js'
 
-import { config } from 'dotenv'
-import path from 'path'
-import { fileURLToPath } from 'url'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 // 환경 변수 로드
 const nodeEnv = process.env.NODE_ENV || 'development'
@@ -22,87 +17,9 @@ try {
 
 // IP 제한 함수
 function checkIPAccess(req) {
-  // 개발 환경에서는 모든 IP 허용
-  if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
-    console.log('🔓 개발 환경: 모든 IP 허용')
-    return { allowed: true }
-  }
-
-    // 환경 변수에서 허용된 IP 목록 로드
-  const envIPs = process.env.ALLOWED_IPS
-  if (!envIPs) {
-    console.log('❌ ALLOWED_IPS 환경 변수가 설정되지 않았습니다')
-    return { 
-      allowed: false, 
-      error: {
-        success: false,
-        message: 'IP 접근 제한 설정이 올바르지 않습니다.',
-        error: 'IP_CONFIG_ERROR',
-        timestamp: new Date().toISOString()
-      }
-    }
-  }
-
-  const allowedIPs = envIPs.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0)
-
-  // 클라이언트 IP 확인
-  const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-                   req.headers['x-real-ip'] ||
-                   req.connection?.remoteAddress ||
-                   req.socket?.remoteAddress ||
-                   req.ip ||
-                   '127.0.0.1'
-
-  console.log('🔍 클라이언트 IP 확인:', clientIP)
-  console.log('🔒 허용된 IP 목록:', allowedIPs.join(', '))
-
-  // IP 허용 여부 확인
-  const isAllowed = allowedIPs.some(allowedIP => {
-    // 정확한 IP 매칭
-    if (allowedIP === clientIP) return true
-    
-    // IPv4-mapped IPv6 주소 처리 (::ffff:192.168.65.1 -> 192.168.65.1)
-    if (clientIP.startsWith('::ffff:')) {
-      const ipv4Part = clientIP.substring(7) // ::ffff: 제거
-      if (allowedIP === ipv4Part) return true
-    }
-    
-    // IPv4 주소를 IPv4-mapped IPv6로 변환해서 매칭
-    if (allowedIP.includes('.') && !allowedIP.includes(':')) {
-      const mappedIPv6 = `::ffff:${allowedIP}`
-      if (clientIP === mappedIPv6) return true
-    }
-    
-    // CIDR 표기법 지원 (예: 192.168.1.0/24)
-    if (allowedIP.includes('/')) {
-      const [network, bits] = allowedIP.split('/')
-      const mask = ~((1 << (32 - parseInt(bits))) - 1)
-      const networkLong = ipToLong(network) & mask
-      const ipLong = ipToLong(clientIP) & mask
-      return networkLong === ipLong
-    }
-    
-    return false
-  })
-
-  if (!isAllowed) {
-    console.log('🚫 IP 접근 차단:', clientIP)
-    return { 
-      allowed: false, 
-      error: {
-        success: false,
-        message: '접근이 허용되지 않은 IP입니다.',
-        error: 'IP_ACCESS_DENIED',
-        clientIP: clientIP,
-        timestamp: new Date().toISOString()
-      }
-    }
-  }
-
-  console.log('✅ IP 접근 허용:', clientIP)
+  console.log("🔓 Vercel 환경: IP 제한 비활성화")
   return { allowed: true }
 }
-
 // IP 주소를 long으로 변환
 function ipToLong(ip) {
   return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet), 0) >>> 0
@@ -114,9 +31,9 @@ function ipToLong(ip) {
 export default async function handler(req, res) {
   try {
     // 환경 변수 확인 (개행 문자 제거)
-    const supabaseUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)?.trim()
-    const supabaseAnonKey = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY)?.trim()
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
+    const supabaseUrl = (process.env.VITE_SUPABASE_URL || "https://vaeolqywqckiwwtspxfp.supabase.co" || process.env.SUPABASE_URL)?.trim()
+    const supabaseAnonKey = (process.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhZW9scXl3cWNraXd3dHNweGZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNDg0MTIsImV4cCI6MjA2MjYyNDQxMn0.Br2-nlOUu2j7_44O5k_lDWAzxTMVnvOQINhNJyYZb30" || process.env.SUPABASE_ANON_KEY)?.trim()
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhZW9scXl3cWNraXd3dHNweGZwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NzA0ODQxMiwiZXhwIjoyMDYyNjI0NDEyfQ.fJoKwqr_HvJ5Hz2ZwaQ5gHcqiu9b7oRcZR945Nf2w0g"?.trim()
 
     // 환경 변수 디버깅
     console.log('Performance Records Absorption API - Environment variables:', {
