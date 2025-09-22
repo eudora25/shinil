@@ -23,9 +23,9 @@ try {
 
 // IP 제한 함수
 function checkIPAccess(req) {
-  // 개발 환경에서는 모든 IP 허용
-  if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
-    console.log('🔓 개발 환경: 모든 IP 허용')
+  // 개발 환경 또는 Vercel 환경에서는 모든 IP 허용
+  if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV || process.env.VERCEL) {
+    console.log('🔓 개발/Vercel 환경: 모든 IP 허용')
     return { allowed: true }
   }
 
