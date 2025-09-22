@@ -185,6 +185,7 @@ test-*.html
 package-lock.json
 yarn.lock
 
-# Environment files (except production)
+# Environment files (보안상 모든 환경 파일 제외)
 .env.development
 .env.test
+.env.production
