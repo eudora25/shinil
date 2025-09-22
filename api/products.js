@@ -161,11 +161,12 @@ export default async function handler(req, res) {
     }
 
     // 날짜 필터링 (startDate, endDate 파라미터 지원)
+    // created_at 또는 updated_at이 지정된 날짜 범위에 포함되는 경우
     if (startDate) {
-      query = query.gte('created_at', startDate)
+      query = query.or(`created_at.gte.${startDate},updated_at.gte.${startDate}`)
     }
     if (endDate) {
-      query = query.lte('created_at', endDate)
+      query = query.or(`created_at.lte.${endDate},updated_at.lte.${endDate}`)
     }
 
     // 페이지네이션 적용
