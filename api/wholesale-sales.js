@@ -28,8 +28,10 @@ export default async function handler(req, res) {
     if (!supabaseUrl || !supabaseAnonKey) {
       return res.status(500).json({
         success: false,
-        message: 'Server configuration error',
-        error: 'Supabase configuration missing'
+        data: [],
+        count: 0,
+        page: 1,
+        limit: 100
       })
     }
 
@@ -38,7 +40,10 @@ export default async function handler(req, res) {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
-        message: 'Unauthorized'
+        data: [],
+        count: 0,
+        page: 1,
+        limit: 100
       })
     }
 
@@ -49,7 +54,10 @@ export default async function handler(req, res) {
     if (authError || !user || user.user_metadata?.user_type !== 'admin') {
       return res.status(401).json({
         success: false,
-        message: 'Unauthorized'
+        data: [],
+        count: 0,
+        page: 1,
+        limit: 100
       })
     }
 
@@ -73,13 +81,10 @@ export default async function handler(req, res) {
       console.error('Supabase connection test failed:', testError)
       return res.status(500).json({
         success: false,
-        message: 'Supabase connection failed',
-        error: testError.message,
-        debug: {
-          supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
-          supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
-          testError: testError
-        }
+        data: [],
+        count: 0,
+        page: 1,
+        limit: 100
       })
     }
 
@@ -100,7 +105,10 @@ export default async function handler(req, res) {
     if (pageNum < 1 || limitNum < 1 || limitNum > 1000) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid pagination parameters. Page must be >= 1, limit must be between 1 and 1000.'
+        data: [],
+        count: 0,
+        page: 1,
+        limit: 100
       })
     }
 
@@ -130,8 +138,10 @@ export default async function handler(req, res) {
       console.error('Wholesale Sales fetch error:', error)
       return res.status(500).json({
         success: false,
-        message: 'Failed to fetch wholesale sales',
-        error: error.message
+        data: [],
+        count: 0,
+        page: parseInt(page) || 1,
+        limit: parseInt(limit) || 100
       })
     }
 
@@ -140,10 +150,9 @@ export default async function handler(req, res) {
     const hasNextPage = pageNum < totalPages
     const hasPrevPage = pageNum > 1
 
-    // 15_도매매출_조회.xlsx 형식에 맞춘 응답
+    // 15_도매매출_조회.xlsx 스펙에 맞춘 응답
     const response = {
       success: true,
-      message: '도매 매출 목록 조회 성공',
       data: data || [],
       count: count || 0,
       page: pageNum,
@@ -164,9 +173,10 @@ export default async function handler(req, res) {
 
     return res.status(500).json({
       success: false,
-      message: '서버 오류가 발생했습니다.',
-      error: error.message,
-      timestamp: new Date().toISOString()
+      data: [],
+      count: 0,
+      page: 1,
+      limit: 100
     })
   }
 }

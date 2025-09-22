@@ -149,14 +149,21 @@ export default async function handler(req, res) {
     // IP 접근 권한 확인
     const ipCheck = checkIPAccess(req)
     if (!ipCheck.allowed) {
-      return res.status(403).json(ipCheck.error)
+      return res.status(403).json({
+        status: 'access_denied',
+        timestamp: new Date().toISOString(),
+        uptime: Math.floor((Date.now() - serverStartTime) / 1000),
+        environment: process.env.NODE_ENV || 'development'
+      })
     }
 
     // 환경 변수 확인
     if (!getEnvironmentVariables()) {
       return res.status(500).json({
-        error: 'Environment variables not configured',
-        message: '필수 환경 변수가 설정되지 않았습니다'
+        status: 'config_error',
+        timestamp: new Date().toISOString(),
+        uptime: Math.floor((Date.now() - serverStartTime) / 1000),
+        environment: process.env.NODE_ENV || 'development'
       })
     }
 
@@ -172,9 +179,10 @@ export default async function handler(req, res) {
     if (error) {
       console.error('Supabase 연결 테스트 실패:', error)
       return res.status(500).json({
-        success: false,
-        message: '데이터베이스 연결에 실패했습니다.',
-        error: error.message
+        status: 'unhealthy',
+        timestamp: new Date().toISOString(),
+        uptime: Math.floor((Date.now() - serverStartTime) / 1000),
+        environment: process.env.NODE_ENV || 'development'
       })
     }
 
@@ -182,32 +190,21 @@ export default async function handler(req, res) {
     const uptime = Math.floor((Date.now() - serverStartTime) / 1000)
     const memoryUsage = process.memoryUsage()
 
-    // 성공 응답
+    // 02_시스템_헬스체크.xlsx 스펙에 맞춘 응답
     res.json({
-      success: true,
-      message: 'API 서버가 정상적으로 작동 중입니다',
-      data: {
-        status: 'healthy',
-        uptime: `${uptime}초`,
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development',
-        memory: {
-          used: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
-          total: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`
-        },
-        database: {
-          connected: true,
-          message: 'Supabase 연결 성공'
-        }
-      }
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: uptime,
+      environment: process.env.NODE_ENV || 'development'
     })
 
   } catch (error) {
     console.error('Health check error:', error)
     return res.status(500).json({
-      success: false,
-      message: '서버 내부 오류가 발생했습니다.',
-      error: error.message
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      uptime: Math.floor((Date.now() - serverStartTime) / 1000),
+      environment: process.env.NODE_ENV || 'development'
     })
   }
 }

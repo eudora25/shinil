@@ -119,25 +119,23 @@ export default async function handler(req, res) {
 
     console.log('✅ 정산내역서 데이터 조회 성공:', data?.length || 0, '개')
 
-    // 21_정산내역서_목록조회.xlsx 형식에 맞춘 응답
+    // 페이지네이션 정보 계산 (10번~18번과 동일한 형식)
+    const pageNum = parseInt(page)
+    const limitNum = parseInt(limit)
+    const totalPages = Math.ceil((count || 0) / limitNum)
+    const hasNextPage = pageNum < totalPages
+    const hasPrevPage = pageNum > 1
+
+    // 21_정산내역서_목록조회.xlsx 스펙에 맞춘 응답
     const response = {
       success: true,
-      message: '정산내역서 목록 조회 성공',
-      data: {
-        settlement_shares: data || [],
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total: count || 0,
-          totalPages: Math.ceil((count || 0) / limit)
-        },
-        filters: {
-          settlement_month: settlement_month || null,
-          company_id: company_id || null,
-          share_enabled: share_enabled || null
-        }
-      },
-      timestamp: new Date().toISOString()
+      data: data || [],
+      count: count || 0,
+      page: pageNum,
+      limit: limitNum,
+      totalPages,
+      hasNextPage,
+      hasPrevPage
     }
 
     res.json(response)
@@ -152,17 +150,14 @@ export default async function handler(req, res) {
     })
     
     res.status(500).json({
-      error: {
-        code: "500",
-        message: "A server error has occurred"
-      },
-      debug: {
-        success: false,
-        message: '서버 오류가 발생했습니다.',
-        error: error.message,
-        errorName: error.name,
-        timestamp: new Date().toISOString()
-      }
+      success: false,
+      data: [],
+      count: 0,
+      page: 1,
+      limit: 100,
+      totalPages: 0,
+      hasNextPage: false,
+      hasPrevPage: false
     })
   }
 }

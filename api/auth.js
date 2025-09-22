@@ -56,7 +56,12 @@ export default async (req, res) => {
   const ipCheck = checkIPAccess(req)
   if (!ipCheck.allowed) {
     console.log('❌ IP 접근 거부됨')
-    return res.status(403).json(ipCheck.error)
+    return res.status(403).json({
+      success: false,
+      token: null,
+      user: null,
+      message: 'IP 접근이 제한되었습니다.'
+    })
   }
 
   // POST 메서드만 허용
@@ -64,6 +69,8 @@ export default async (req, res) => {
     console.log('❌ 잘못된 HTTP 메서드:', req.method)
     return res.status(405).json({
       success: false,
+      token: null,
+      user: null,
       message: 'Method not allowed'
     })
   }
@@ -76,6 +83,8 @@ export default async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
+        token: null,
+        user: null,
         message: '이메일과 비밀번호를 입력해주세요.'
       })
     }
@@ -93,14 +102,17 @@ export default async (req, res) => {
       console.error('Authentication error:', error)
       return res.status(401).json({
         success: false,
-        message: '이메일 또는 비밀번호가 올바르지 않습니다.',
-        error: error.message
+        token: null,
+        user: null,
+        message: '이메일 또는 비밀번호가 올바르지 않습니다.'
       })
     }
 
     if (!data.user || !data.session) {
       return res.status(401).json({
         success: false,
+        token: null,
+        user: null,
         message: '인증에 실패했습니다.'
       })
     }
@@ -121,23 +133,18 @@ export default async (req, res) => {
       console.log('Profile fetch error (non-critical):', profileError)
     }
 
-    // 03_사용자_로그인.xlsx 형식에 맞춘 응답
+    // 03_사용자_로그인.xlsx 스펙에 맞춘 응답
     const response = {
       success: true,
-      message: '인증 성공',
-      data: {
-        token: data.session.access_token,
-        refreshToken: data.session.refresh_token,
-        user: userData || {
-          id: data.user.id,
-          email: data.user.email,
-          created_at: data.user.created_at,
-          last_sign_in_at: data.user.last_sign_in_at,
-          user_metadata: data.user.user_metadata || {}
-        },
-        expiresIn: '24h',
-        expiresAt: new Date(data.session.expires_at * 1000).toISOString()
-      }
+      token: data.session.access_token,
+      user: userData || {
+        id: data.user.id,
+        email: data.user.email,
+        created_at: data.user.created_at,
+        last_sign_in_at: data.user.last_sign_in_at,
+        user_metadata: data.user.user_metadata || {}
+      },
+      message: '인증 성공'
     }
 
     res.json(response)
@@ -146,8 +153,9 @@ export default async (req, res) => {
     console.error('Auth API error:', error)
     res.status(500).json({
       success: false,
-      message: '서버 오류가 발생했습니다.',
-      error: error.message
+      token: null,
+      user: null,
+      message: '서버 오류가 발생했습니다.'
     })
   }
 }

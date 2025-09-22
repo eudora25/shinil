@@ -62,9 +62,9 @@ export default async function handler(req, res) {
     console.log('📝 쿼리 파라미터:', { page, limit, year, status })
 
     // 테이블 구조 확인
-    console.log('🔍 settlement_month 테이블 구조 확인 중...')
+    console.log('🔍 settlement_months 테이블 구조 확인 중...')
     const { data: sampleData, error: sampleError } = await supabase
-      .from('settlement_month')
+      .from('settlement_months')
       .select('*')
       .limit(1)
 
@@ -72,8 +72,13 @@ export default async function handler(req, res) {
       console.error('❌ 테이블 접근 에러:', sampleError)
       return res.status(500).json({
         success: false,
-        message: '데이터베이스 테이블 접근 중 오류가 발생했습니다.',
-        error: sampleError.message
+        data: [],
+        count: 0,
+        page: 1,
+        limit: 100,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPrevPage: false
       })
     }
 
@@ -81,7 +86,7 @@ export default async function handler(req, res) {
 
     // 기본 쿼리 구성
     let query = supabase
-      .from('settlement_month')
+      .from('settlement_months')
       .select('*', { count: 'exact' })
 
     // 필터 적용
@@ -108,31 +113,35 @@ export default async function handler(req, res) {
       console.error('❌ Supabase 쿼리 에러:', error)
       return res.status(500).json({
         success: false,
-        message: '데이터베이스 조회 중 오류가 발생했습니다.',
-        error: error.message
+        data: [],
+        count: 0,
+        page: 1,
+        limit: 100,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPrevPage: false
       })
     }
 
     console.log('✅ 정산월 데이터 조회 성공:', data?.length || 0, '개')
 
-    // 20_정산월_목록조회.xlsx 형식에 맞춘 응답
+    // 페이지네이션 정보 계산 (10번~18번과 동일한 형식)
+    const pageNum = parseInt(page)
+    const limitNum = parseInt(limit)
+    const totalPages = Math.ceil((count || 0) / limitNum)
+    const hasNextPage = pageNum < totalPages
+    const hasPrevPage = pageNum > 1
+
+    // 20_정산월_목록조회.xlsx 스펙에 맞춘 응답
     const response = {
       success: true,
-      message: '정산월 목록 조회 성공',
-      data: {
-        settlement_months: data || [],
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total: count || 0,
-          totalPages: Math.ceil((count || 0) / limit)
-        },
-        filters: {
-          year: year || null,
-          status: status || null
-        }
-      },
-      timestamp: new Date().toISOString()
+      data: data || [],
+      count: count || 0,
+      page: pageNum,
+      limit: limitNum,
+      totalPages,
+      hasNextPage,
+      hasPrevPage
     }
 
     res.json(response)
@@ -141,9 +150,13 @@ export default async function handler(req, res) {
     console.error('❌ Settlement Months API 에러:', error)
     res.status(500).json({
       success: false,
-      message: '서버 오류가 발생했습니다.',
-      error: error.message,
-      timestamp: new Date().toISOString()
+      data: [],
+      count: 0,
+      page: 1,
+      limit: 100,
+      totalPages: 0,
+      hasNextPage: false,
+      hasPrevPage: false
     })
   }
 }

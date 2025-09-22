@@ -31,7 +31,7 @@ app.use(ipRestrictionMiddleware)
 app.use(express.static(path.join(__dirname, '..')))
 
 // API 라우트들
-import authRoutes from './auth.mjs'
+import authRoutes from './auth.js'
 import verifyTokenRoutes from './verify-token.mjs'
 import productsRoutes from './products.js'
 import clientsRoutes from './clients.js'
@@ -51,6 +51,8 @@ import performanceAbsorptionRoutes from './performance-records-absorption.js'
 import performanceEvidenceRoutes from './performance-evidence-files.js'
 import settlementMonthsRoutes from './settlement-months.js'
 import settlementRoutes from './settlement-share.js'
+import swaggerUIHandler from './swagger-ui.mjs'
+import swaggerSpecHandler from './swagger-spec.mjs'
 
 // API 엔드포인트 등록
 app.use('/api/auth', authRoutes)
@@ -74,21 +76,24 @@ app.use('/api/performance-evidence-files', performanceEvidenceRoutes)
 app.use('/api/settlement-months', settlementMonthsRoutes)
 app.use('/api/settlement-share', settlementRoutes)
 
-// API 루트 엔드포인트 추가 (01_API_상태확인.xlsx 형식에 맞춤)
+// API 루트 엔드포인트 (01_API_상태확인.xlsx 스펙에 맞춤)
 app.get('/api/', (req, res) => {
   res.json({
     name: 'Shinil PMS API Server',
     version: '1.0.0',
     status: 'running',
     timestamp: new Date().toISOString(),
-    environment: 'production'
+    environment: envConfig.NODE_ENV || 'production'
   })
 })
 
 // Swagger UI 라우트
-app.get('/swagger-ui.html', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'swagger-ui.html'))
-})
+app.get('/swagger-ui.html', swaggerUIHandler)
+app.get('/swagger-spec.json', swaggerSpecHandler)
+
+// API 경로로 Swagger UI 접근 (Vercel 배포 버전과 동일)
+app.get('/api/swagger-ui', swaggerUIHandler)
+app.get('/api/swagger-spec', swaggerSpecHandler)
 
 // 루트 경로
 app.get('/', (req, res) => {
@@ -98,6 +103,7 @@ app.get('/', (req, res) => {
     environment: envConfig.NODE_ENV,
     endpoints: {
       swagger: '/swagger-ui.html',
+      'swagger-api': '/api/swagger-ui',
       health: '/api/health',
       auth: '/api/auth',
       'verify-token': '/api/verify-token',
@@ -116,6 +122,7 @@ app.use('*', (req, res) => {
     availableRoutes: [
       '/',
       '/swagger-ui.html',
+      '/api/swagger-ui',
       '/api/health',
       '/api/auth',
       '/api/verify-token',

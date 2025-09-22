@@ -18,7 +18,13 @@ export default async function handler(req, res) {
     const ipCheck = checkIPAccess(req)
     if (!ipCheck.allowed) {
       console.log('❌ IP 접근 거부됨')
-      return res.status(403).json(ipCheck.error)
+      return res.status(403).json({
+        success: false,
+        data: [],
+        count: 0,
+        page: 1,
+        limit: 100
+      })
     }
 
     // GET 메서드만 허용
@@ -26,7 +32,10 @@ export default async function handler(req, res) {
       console.log('❌ 잘못된 HTTP 메서드:', req.method)
       return res.status(405).json({
         success: false,
-        message: 'Method not allowed'
+        data: [],
+        count: 0,
+        page: 1,
+        limit: 100
       })
     }
 
@@ -44,17 +53,60 @@ export default async function handler(req, res) {
     if (!supabaseUrl || !serviceRoleKey) {
       return res.status(500).json({
         success: false,
-        message: 'Server configuration error',
-        error: 'Supabase environment variables not configured',
-        debug: {
-          supabaseUrl: !!supabaseUrl,
-          serviceRoleKey: !!serviceRoleKey
-        }
+        data: [],
+        count: 0,
+        page: 1,
+        limit: 100
       })
     }
 
     console.log('🔑 Service Role Key 사용하여 Supabase 클라이언트 생성')
     const supabase = createClient(supabaseUrl, serviceRoleKey)
+
+    // Bearer 토큰 검증
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('❌ Authorization 헤더가 없거나 Bearer 형식이 아님')
+      return res.status(401).json({
+        success: false,
+        data: [],
+        count: 0,
+        page: 1,
+        limit: 100
+      })
+    }
+
+    const token = authHeader.substring(7)
+    console.log('🔍 토큰 검증 중...')
+    
+    // 토큰 검증을 위한 Supabase Auth 클라이언트
+    const supabaseAuth = createClient(supabaseUrl, serviceRoleKey)
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token)
+    
+    if (authError || !user) {
+      console.log('❌ 토큰 검증 실패:', authError?.message)
+      return res.status(401).json({
+        success: false,
+        data: [],
+        count: 0,
+        page: 1,
+        limit: 100
+      })
+    }
+
+    // 관리자 권한 확인
+    if (user.user_metadata?.user_type !== 'admin') {
+      console.log('❌ 관리자 권한 필요:', user.user_metadata?.user_type)
+      return res.status(401).json({
+        success: false,
+        data: [],
+        count: 0,
+        page: 1,
+        limit: 100
+      })
+    }
+
+    console.log('✅ 토큰 검증 성공:', user.email)
 
     // 쿼리 파라미터 파싱
     const { page = 1, limit = 100, search, region, type } = req.query
@@ -72,8 +124,10 @@ export default async function handler(req, res) {
       console.error('❌ 테이블 접근 에러:', sampleError)
       return res.status(500).json({
         success: false,
-        message: '데이터베이스 테이블 접근 중 오류가 발생했습니다.',
-        error: sampleError.message
+        data: [],
+        count: 0,
+        page: 1,
+        limit: 100
       })
     }
 
@@ -112,32 +166,22 @@ export default async function handler(req, res) {
       console.error('❌ Supabase 쿼리 에러:', error)
       return res.status(500).json({
         success: false,
-        message: '데이터베이스 조회 중 오류가 발생했습니다.',
-        error: error.message
+        data: [],
+        count: 0,
+        page: parseInt(page),
+        limit: parseInt(limit)
       })
     }
 
     console.log('✅ 약국 데이터 조회 성공:', data?.length || 0, '개')
 
-    // 08_약국정보_조회.xlsx 형식에 맞춘 응답
+    // 08_약국정보_조회.xlsx 스펙에 맞춘 응답
     const response = {
       success: true,
-      message: '약국 정보 조회 성공',
-      data: {
-        pharmacies: data || [],
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total: count || 0,
-          totalPages: Math.ceil((count || 0) / limit)
-        },
-        filters: {
-          search: search || null,
-          region: region || null,
-          type: type || null
-        }
-      },
-      timestamp: new Date().toISOString()
+      data: data || [],
+      count: count || 0,
+      page: parseInt(page),
+      limit: parseInt(limit)
     }
 
     res.json(response)
@@ -146,9 +190,10 @@ export default async function handler(req, res) {
     console.error('❌ Pharmacies API 에러:', error)
     res.status(500).json({
       success: false,
-      message: '서버 오류가 발생했습니다.',
-      error: error.message,
-      timestamp: new Date().toISOString()
+      data: [],
+      count: 0,
+      page: 1,
+      limit: 100
     })
   }
 }
