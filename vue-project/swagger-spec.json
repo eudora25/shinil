@@ -2484,6 +2484,28 @@
               "default": 100
             },
             "example": 100
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": false,
+            "description": "검색 시작일 (YYYY-MM-DD 형식, 기본값: 오늘)",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2025-08-01"
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": false,
+            "description": "검색 종료일 (YYYY-MM-DD 형식, 기본값: 오늘)",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2025-09-01"
           }
         ],
         "security": [
