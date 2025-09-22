@@ -118,10 +118,10 @@ export default async function handler(req, res) {
     console.log('🔑 Service Role Key 사용하여 Supabase 클라이언트 생성')
     const supabase = createClient(supabaseUrl, serviceRoleKey)
 
-    // 쿼리 파라미터 파싱
-    const { page = 1, limit = 100, search, category, company_id } = req.query
+    // 쿼리 파라미터 파싱 (06_제품정보_조회.xlsx 형식에 맞춤)
+    const { page = 1, limit = 100, search, category, company_id, startDate, endDate } = req.query
 
-    console.log('📝 쿼리 파라미터:', { page, limit, search, category, company_id })
+    console.log('📝 쿼리 파라미터:', { page, limit, search, category, company_id, startDate, endDate })
 
     // 먼저 테이블 구조 확인을 위해 간단한 쿼리 실행
     console.log('🔍 테이블 구조 확인 중...')
@@ -158,6 +158,14 @@ export default async function handler(req, res) {
 
     if (company_id) {
       query = query.eq('company_id', company_id)
+    }
+
+    // 날짜 필터링 (startDate, endDate 파라미터 지원)
+    if (startDate) {
+      query = query.gte('created_at', startDate)
+    }
+    if (endDate) {
+      query = query.lte('created_at', endDate)
     }
 
     // 페이지네이션 적용
